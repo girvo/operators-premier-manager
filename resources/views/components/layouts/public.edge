@@ -47,7 +47,7 @@
     </nav>
 
     <main>
-      @!section('content')
+      {{{ await $slots.main() }}}
     </main>
 
     <footer class="bg-valorant-gray border-t border-valorant-red/20 py-8 mt-auto">

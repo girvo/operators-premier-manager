@@ -86,7 +86,7 @@
         </div>
       @endif
       
-      @!section('content')
+      {{{ await $slots.main() }}}
     </main>
   </body>
 </html>

@@ -1,6 +1,4 @@
-@layout('layouts/app')
-
-@section('content')
+@layouts.app({ title: 'My Availability' })
 <div class="space-y-6">
   <div>
     <h1 class="text-3xl font-bold text-valorant-red">My Availability</h1>
@@ -30,7 +28,7 @@
             @endif
           </div>
           @each(day in grid)
-            @set('slot', day.hours.find(h => h.localHour === hour))
+            @let(slot = day.hours.find(h => h.localHour === hour))
             <div class="p-0.5">
               <button
                 class="w-full h-8 rounded text-xs transition {{ slot.isAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-valorant-dark hover:bg-valorant-gray border border-valorant-light/10' }}"
