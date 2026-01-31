@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {{ title ?? 'Operators' }} | Operators Valorant Team
+    </title>
+
+    <script src="https://cdn.tailwindcss.com">
+
+    </script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              valorant: {
+                red: "#ff4655",
+                dark: "#0f1923",
+                gray: "#1f2326",
+                light: "#ece8e1"
+              }
+            }
+          }
+        }
+      };
+    </script>
+  </head>
+  <body class="bg-valorant-dark text-valorant-light min-h-screen">
+    <nav class="bg-valorant-gray border-b border-valorant-red/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <a href="/" class="text-xl font-bold text-valorant-red">OPERATORS</a>
+          <div class="flex items-baseline space-x-4">
+            <a href="/" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Home</a>
+            <a href="/roster" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Roster</a>
+            <a href="/results" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Results</a>
+            <a
+              href="/login"
+              class="px-4 py-2 text-sm font-medium bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+            >Team Login</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      @!section('content')
+    </main>
+
+    <footer class="bg-valorant-gray border-t border-valorant-red/20 py-8 mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-valorant-light/50">
+        <p>
+          &copy; {{ new Date().getFullYear() }} Operators - Valorant Premier Team
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

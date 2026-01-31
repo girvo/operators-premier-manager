@@ -1,0 +1,106 @@
+@layout('layouts/app')
+
+@section('content')
+<div class="space-y-8">
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold text-valorant-red">Matches</h1>
+    @if(auth.user?.isAdmin)
+      <a href="/matches/new" class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">Schedule Match</a>
+    @endif
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold mb-4">Upcoming Matches</h2>
+    @if(upcomingMatches.length === 0)
+      <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 text-center text-valorant-light/50">No upcoming matches scheduled</div>
+    @else
+      <div class="space-y-4">
+        @each(match in upcomingMatches)
+          <div id="match-{{ match.id }}" class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="flex items-center space-x-3">
+                  <span class="text-sm px-2 py-1 rounded {{ match.matchType === 'official' ? 'bg-valorant-red/20 text-valorant-red' : 'bg-valorant-light/10 text-valorant-light/70' }}">
+                    {{ match.matchType === 'official' ? 'Official' : 'Scrim' }}
+                  </span>
+                  <span class="text-sm text-valorant-light/50">{{ match.scheduledAt.setZone(timezone).toFormat('EEE, dd LLL yyyy \'at\' h:mm a') }}</span>
+                </div>
+                <h3 class="text-xl font-semibold mt-2">vs {{ match.opponentName }}</h3>
+                @if(match.map)
+                  <span class="text-sm text-valorant-light/70">{{ match.map }}</span>
+                @endif
+              </div>
+              <div class="flex items-center space-x-4">
+                <div class="text-right">
+                  @set('yesCount', match.availabilities.filter(a => a.status === 'yes').length)
+                  @set('maybeCount', match.availabilities.filter(a => a.status === 'maybe').length)
+                  <div class="text-sm">
+                    <span class="text-green-400">{{ yesCount }} yes</span>
+                    @if(maybeCount > 0)
+                      <span class="text-yellow-400 ml-2">{{ maybeCount }} maybe</span>
+                    @endif
+                  </div>
+                </div>
+                <a href="/matches/{{ match.id }}" class="px-4 py-2 bg-valorant-dark rounded hover:bg-valorant-gray transition">View</a>
+                @if(auth.user?.isAdmin)
+                  <a href="/matches/{{ match.id }}/edit" class="text-sm hover:text-valorant-red transition">Edit</a>
+                  <button hx-delete="/matches/{{ match.id }}" hx-target="#match-{{ match.id }}" hx-swap="outerHTML" hx-confirm="Are you sure you want to delete this match?" class="text-sm text-red-400 hover:text-red-300 transition">Delete</button>
+                @endif
+              </div>
+            </div>
+          </div>
+        @end
+      </div>
+    @endif
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold mb-4">Past Matches</h2>
+    @if(pastMatches.length === 0)
+      <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 text-center text-valorant-light/50">No past matches</div>
+    @else
+      <div class="space-y-4">
+        @each(match in pastMatches)
+          <div id="match-{{ match.id }}" class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="flex items-center space-x-3">
+                  <span class="text-sm px-2 py-1 rounded {{ match.matchType === 'official' ? 'bg-valorant-red/20 text-valorant-red' : 'bg-valorant-light/10 text-valorant-light/70' }}">
+                    {{ match.matchType === 'official' ? 'Official' : 'Scrim' }}
+                  </span>
+                  <span class="text-sm text-valorant-light/50">{{ match.scheduledAt.setZone(timezone).toFormat('EEE, dd LLL yyyy') }}</span>
+                </div>
+                <h3 class="text-xl font-semibold mt-2">vs {{ match.opponentName }}</h3>
+                @if(match.map)
+                  <span class="text-sm text-valorant-light/70">{{ match.map }}</span>
+                @endif
+              </div>
+              <div class="flex items-center space-x-4">
+                <div id="result-{{ match.id }}">
+                  @if(match.result === 'win')
+                    <span class="px-3 py-1 bg-green-900/50 text-green-400 rounded font-bold">WIN</span>
+                  @elseif(match.result === 'loss')
+                    <span class="px-3 py-1 bg-red-900/50 text-red-400 rounded font-bold">LOSS</span>
+                  @elseif(match.result === 'draw')
+                    <span class="px-3 py-1 bg-yellow-900/50 text-yellow-400 rounded font-bold">DRAW</span>
+                  @else
+                    <span class="text-valorant-light/50">Pending</span>
+                  @endif
+                </div>
+                @if(auth.user?.isAdmin)
+                  <div class="flex space-x-1">
+                    <button hx-put="/matches/{{ match.id }}/result" hx-vals='{"result": "win"}' hx-target="#result-{{ match.id }}" hx-swap="innerHTML" class="px-2 py-1 text-xs bg-green-900/30 text-green-400 rounded hover:bg-green-900/50">W</button>
+                    <button hx-put="/matches/{{ match.id }}/result" hx-vals='{"result": "loss"}' hx-target="#result-{{ match.id }}" hx-swap="innerHTML" class="px-2 py-1 text-xs bg-red-900/30 text-red-400 rounded hover:bg-red-900/50">L</button>
+                    <button hx-put="/matches/{{ match.id }}/result" hx-vals='{"result": "draw"}' hx-target="#result-{{ match.id }}" hx-swap="innerHTML" class="px-2 py-1 text-xs bg-yellow-900/30 text-yellow-400 rounded hover:bg-yellow-900/50">D</button>
+                  </div>
+                @endif
+                <a href="/matches/{{ match.id }}" class="text-sm hover:text-valorant-red transition">View</a>
+              </div>
+            </div>
+          </div>
+        @end
+      </div>
+    @endif
+  </div>
+</div>
+@end

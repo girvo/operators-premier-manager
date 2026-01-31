@@ -11,6 +11,10 @@
 
 import 'reflect-metadata'
 import { Ignitor, prettyPrintError } from '@adonisjs/core'
+import edge from 'edge.js'
+import { migrate } from 'edge.js/plugins/migrate'
+
+edge.use(migrate)
 
 /**
  * URL to the application root. AdonisJS need it to resolve

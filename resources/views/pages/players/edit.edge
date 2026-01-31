@@ -1,0 +1,53 @@
+@layout('layouts/app')
+
+@section('content')
+<div class="max-w-2xl">
+  <a href="/players" class="text-sm text-valorant-light/50 hover:text-valorant-red transition">&larr; Back to Players</a>
+  <h1 class="text-3xl font-bold text-valorant-red mt-2 mb-6">Edit Player</h1>
+
+  <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+    <form action="/players/{{ player.id }}?_method=PUT" method="POST" class="space-y-6">
+      {{ csrfField() }}
+
+      <div>
+        <label for="fullName" class="block text-sm font-medium text-valorant-light mb-2">Full Name</label>
+        <input type="text" id="fullName" name="fullName" value="{{ player.fullName }}" required class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
+      </div>
+
+      <div>
+        <label for="email" class="block text-sm font-medium text-valorant-light mb-2">Email</label>
+        <input type="email" id="email" name="email" value="{{ player.email }}" required class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-valorant-light mb-2">Password</label>
+        <input type="password" id="password" name="password" minlength="8" placeholder="Leave blank to keep current password" class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
+      </div>
+
+      <div>
+        <label for="role" class="block text-sm font-medium text-valorant-light mb-2">Role</label>
+        <select id="role" name="role" required class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
+          <option value="player" {{ player.role === 'player' ? 'selected' : '' }}>Player</option>
+          <option value="admin" {{ player.role === 'admin' ? 'selected' : '' }}>Admin</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="timezone" class="block text-sm font-medium text-valorant-light mb-2">Timezone</label>
+        <select id="timezone" name="timezone" required class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
+          <option value="Australia/Sydney" {{ player.timezone === 'Australia/Sydney' ? 'selected' : '' }}>Australia/Sydney (AEST/AEDT)</option>
+          <option value="Australia/Brisbane" {{ player.timezone === 'Australia/Brisbane' ? 'selected' : '' }}>Australia/Brisbane (AEST)</option>
+          <option value="Australia/Melbourne" {{ player.timezone === 'Australia/Melbourne' ? 'selected' : '' }}>Australia/Melbourne (AEST/AEDT)</option>
+          <option value="Australia/Perth" {{ player.timezone === 'Australia/Perth' ? 'selected' : '' }}>Australia/Perth (AWST)</option>
+          <option value="Pacific/Auckland" {{ player.timezone === 'Pacific/Auckland' ? 'selected' : '' }}>New Zealand (NZST/NZDT)</option>
+        </select>
+      </div>
+
+      <div class="flex justify-end space-x-4">
+        <a href="/players" class="px-4 py-2 text-valorant-light/70 hover:text-valorant-light transition">Cancel</a>
+        <button type="submit" class="px-6 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">Update Player</button>
+      </div>
+    </form>
+  </div>
+</div>
+@end

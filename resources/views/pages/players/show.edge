@@ -1,0 +1,44 @@
+@layout('layouts/app')
+
+@section('content')
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <a href="/players" class="text-sm text-valorant-light/50 hover:text-valorant-red transition">&larr; Back to Players</a>
+      <h1 class="text-3xl font-bold text-valorant-red mt-2">{{ player.fullName ?? 'No name' }}</h1>
+    </div>
+    @if(auth.user?.isAdmin)
+      <a href="/players/{{ player.id }}/edit" class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">
+        Edit Player
+      </a>
+    @endif
+  </div>
+
+  <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+    <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <dt class="text-sm text-valorant-light/50">Email</dt>
+        <dd class="mt-1">{{ player.email }}</dd>
+      </div>
+      <div>
+        <dt class="text-sm text-valorant-light/50">Role</dt>
+        <dd class="mt-1">
+          @if(player.role === 'admin')
+            <span class="px-2 py-1 text-xs bg-valorant-red/20 text-valorant-red rounded">Admin</span>
+          @else
+            <span class="px-2 py-1 text-xs bg-valorant-light/10 text-valorant-light/70 rounded">Player</span>
+          @endif
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm text-valorant-light/50">Timezone</dt>
+        <dd class="mt-1">{{ player.timezone }}</dd>
+      </div>
+      <div>
+        <dt class="text-sm text-valorant-light/50">Member Since</dt>
+        <dd class="mt-1">{{ player.createdAt.toFormat('dd LLL yyyy') }}</dd>
+      </div>
+    </dl>
+  </div>
+</div>
+@end

@@ -1,0 +1,39 @@
+@layout('layouts/app')
+
+@section('content')
+<div class="space-y-6">
+  <h1 class="text-3xl font-bold text-valorant-red">Strat Books</h1>
+  <p class="text-valorant-light/70">Select a map to view strategies</p>
+
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    @each(map in maps)
+      <a href="/strats/{{ map.slug }}" class="block bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red p-6 text-center transition">
+        <div class="text-4xl mb-2">
+          @if(map.slug === 'ascent')
+            &#127963;
+          @elseif(map.slug === 'bind')
+            &#127961;
+          @elseif(map.slug === 'haven')
+            &#127981;
+          @elseif(map.slug === 'split')
+            &#127983;
+          @elseif(map.slug === 'icebox')
+            &#10052;
+          @elseif(map.slug === 'lotus')
+            &#127800;
+          @elseif(map.slug === 'sunset')
+            &#127773;
+          @elseif(map.slug === 'abyss')
+            &#127754;
+          @else
+            &#127758;
+          @endif
+        </div>
+        <h3 class="text-lg font-semibold">{{ map.name }}</h3>
+      </a>
+    @empty
+      <div class="col-span-full text-center text-valorant-light/50 py-8">No active maps found</div>
+    @end
+  </div>
+</div>
+@end

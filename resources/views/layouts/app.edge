@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {{ title ?? 'Operators' }} | Operators
+    </title>
+
+    <script src="https://cdn.tailwindcss.com">
+
+    </script>
+    <script src="https://unpkg.com/htmx.org@1.9.10">
+
+    </script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              valorant: {
+                red: "#ff4655",
+                dark: "#0f1923",
+                gray: "#1f2326",
+                light: "#ece8e1"
+              }
+            }
+          }
+        }
+      };
+    </script>
+
+    <style>
+      [hx-indicator] .htmx-indicator {
+        display: none;
+      }
+      
+      .htmx-request .htmx-indicator {
+        display: inline-block;
+      }
+      
+      .htmx-request.htmx-indicator {
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body class="bg-valorant-dark text-valorant-light min-h-screen">
+    <nav class="bg-valorant-gray border-b border-valorant-red/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <a href="/dashboard" class="text-xl font-bold text-valorant-red">OPERATORS</a>
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a href="/dashboard" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Dashboard</a>
+              <a href="/matches" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Matches</a>
+              <a href="/availability" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Availability</a>
+              <a href="/players" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Players</a>
+              <a href="/strats" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Strats</a>
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-valorant-light/70">{{ auth.user?.fullName ?? auth.user?.email }}</span>
+            @if(auth.user?.isAdmin)
+              <span class="px-2 py-1 text-xs bg-valorant-red/20 text-valorant-red rounded">Admin</span>
+            @endif
+            <form action="/logout" method="POST" class="inline">
+              {{ csrfField() }}
+            <button type="submit" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Logout</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      @if(flashMessages.has('success'))
+        <div class="mb-4 p-4 bg-green-900/50 border border-green-500 rounded text-green-200">
+          {{ flashMessages.get('success') }}
+        </div>
+      @endif
+      
+      @if(flashMessages.has('error'))
+        <div class="mb-4 p-4 bg-red-900/50 border border-red-500 rounded text-red-200">
+          {{ flashMessages.get('error') }}
+        </div>
+      @endif
+      
+      @!section('content')
+    </main>
+  </body>
+</html>

@@ -1,0 +1,24 @@
+@layout('layouts/public')
+
+@section('content')
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+  <h1 class="text-4xl font-bold text-valorant-red mb-8 text-center">Our Roster</h1>
+
+  @if(players.length === 0)
+    <p class="text-center text-valorant-light/70">No players to display yet.</p>
+  @else
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      @each(player in players)
+        <div class="bg-valorant-gray rounded-lg p-6 border border-valorant-red/20 text-center">
+          <div class="w-20 h-20 bg-valorant-red/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <span class="text-2xl font-bold text-valorant-red">
+              {{ player.fullName ? player.fullName.charAt(0).toUpperCase() : '?' }}
+            </span>
+          </div>
+          <h3 class="text-lg font-semibold">{{ player.fullName ?? 'Unknown' }}</h3>
+        </div>
+      @end
+    </div>
+  @endif
+</div>
+@end

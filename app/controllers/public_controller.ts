@@ -1,0 +1,23 @@
+import type { HttpContext } from '@adonisjs/core/http'
+import User from '#models/user'
+import Match from '#models/match'
+
+export default class PublicController {
+  async home({ view }: HttpContext) {
+    return view.render('pages/public/home')
+  }
+
+  async roster({ view }: HttpContext) {
+    const players = await User.query().where('role', 'player').orderBy('fullName', 'asc')
+    return view.render('pages/public/roster', { players })
+  }
+
+  async results({ view }: HttpContext) {
+    const matches = await Match.query()
+      .whereNotNull('result')
+      .orderBy('scheduledAt', 'desc')
+      .limit(20)
+
+    return view.render('pages/public/results', { matches })
+  }
+}

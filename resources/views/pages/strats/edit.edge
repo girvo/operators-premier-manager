@@ -1,0 +1,61 @@
+@layout('layouts/app')
+
+@section('content')
+<div class="max-w-2xl">
+  <a href="/strats/{{ map.slug }}" class="text-sm text-valorant-light/50 hover:text-valorant-red transition">&larr; Back to {{ map.name }}</a>
+  <h1 class="text-3xl font-bold text-valorant-red mt-2 mb-6">Edit Strat</h1>
+
+  <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 mb-6">
+    <form action="/strats/{{ map.slug }}/{{ strat.id }}?_method=PUT" method="POST" class="space-y-6">
+      {{ csrfField() }}
+
+      <div>
+        <label for="title" class="block text-sm font-medium text-valorant-light mb-2">Title</label>
+        <input type="text" id="title" name="title" value="{{ strat.title }}" required class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
+      </div>
+
+      <div>
+        <label for="description" class="block text-sm font-medium text-valorant-light mb-2">Description (optional)</label>
+        <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">{{ strat.description }}</textarea>
+      </div>
+
+      <div>
+        <label for="valoplantUrl" class="block text-sm font-medium text-valorant-light mb-2">Valoplant URL (optional)</label>
+        <input type="url" id="valoplantUrl" name="valoplantUrl" value="{{ strat.valoplantUrl }}" placeholder="https://valoplant.gg/..." class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
+      </div>
+
+      <div class="flex justify-end space-x-4">
+        <a href="/strats/{{ map.slug }}" class="px-4 py-2 text-valorant-light/70 hover:text-valorant-light transition">Cancel</a>
+        <button type="submit" class="px-6 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">Update Strat</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+    <h2 class="text-xl font-semibold mb-4">Images</h2>
+
+    @if(strat.images.length > 0)
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        @each(image in strat.images)
+          <div id="image-{{ image.id }}" class="relative group">
+            <img src="/uploads/strats/{{ image.filename }}" alt="{{ image.originalName }}" class="w-full h-32 object-cover rounded border border-valorant-light/10">
+            <button hx-delete="/strat-images/{{ image.id }}" hx-target="#image-{{ image.id }}" hx-swap="outerHTML" hx-confirm="Delete this image?" class="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-sm">&times;</button>
+          </div>
+        @end
+      </div>
+    @else
+      <p class="text-valorant-light/50 mb-4">No images uploaded yet.</p>
+    @endif
+
+    <form action="/strats/{{ map.slug }}/{{ strat.id }}/images" method="POST" enctype="multipart/form-data" class="space-y-4">
+      {{ csrfField() }}
+      <div>
+        <label for="image" class="block text-sm font-medium text-valorant-light mb-2">Upload Image</label>
+        <input type="file" id="image" name="image" accept="image/*" required class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-valorant-red file:text-white file:cursor-pointer">
+        <p class="text-xs text-valorant-light/50 mt-1">Max 5MB. JPG, PNG, GIF, WebP accepted.</p>
+      </div>
+      <button type="submit" class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">Upload</button>
+    </form>
+  </div>
+</div>
+@end
