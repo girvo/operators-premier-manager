@@ -1,0 +1,72 @@
+<div id="team-availability" class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6" hx-swap-oob="true">
+  <h2 class="text-xl font-semibold mb-4">
+    Team Availability
+  </h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div>
+      <h3 class="text-green-400 font-medium mb-2">
+        Available ({{ match.availabilities.filter(a => a.status === 'yes').length }})
+      </h3>
+      <ul class="space-y-1">
+        @each(availability in match.availabilities.filter(a => a.status === 'yes'))
+          <li class="text-sm">
+            {{ availability.user.fullName ?? availability.user.email }}
+          </li>
+        @else
+          <li class="text-sm text-valorant-light/50">
+            No responses yet
+          </li>
+        @end
+      </ul>
+    </div>
+    <div>
+      <h3 class="text-yellow-400 font-medium mb-2">
+        Maybe ({{ match.availabilities.filter(a => a.status === 'maybe').length }})
+      </h3>
+      <ul class="space-y-1">
+        @each(availability in match.availabilities.filter(a => a.status === 'maybe'))
+          <li class="text-sm">
+            {{ availability.user.fullName ?? availability.user.email }}
+          </li>
+        @else
+          <li class="text-sm text-valorant-light/50">
+            -
+          </li>
+        @end
+      </ul>
+    </div>
+    <div>
+      <h3 class="text-red-400 font-medium mb-2">
+        Unavailable ({{ match.availabilities.filter(a => a.status === 'no').length }})
+      </h3>
+      <ul class="space-y-1">
+        @each(availability in match.availabilities.filter(a => a.status === 'no'))
+          <li class="text-sm">
+            {{ availability.user.fullName ?? availability.user.email }}
+          </li>
+        @else
+          <li class="text-sm text-valorant-light/50">
+            -
+          </li>
+        @end
+      </ul>
+    </div>
+  </div>
+
+  @let(respondedUserIds = match.availabilities.map(a => a.userId))
+  @let(notResponded = players.filter(p => !respondedUserIds.includes(p.id)))
+  @if(notResponded.length > 0)
+    <div class="mt-4 pt-4 border-t border-valorant-red/10">
+      <h3 class="text-valorant-light/50 font-medium mb-2">
+        Not Responded ({{ notResponded.length }})
+      </h3>
+      <ul class="flex flex-wrap gap-2">
+        @each(player in notResponded)
+          <li class="text-sm px-2 py-1 bg-valorant-dark rounded">
+            {{ player.fullName ?? player.email }}
+          </li>
+        @end
+      </ul>
+    </div>
+  @endif
+</div>

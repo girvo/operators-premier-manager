@@ -1,3 +1,3 @@
 - [ ] Choosing my availability on a match doesn't update til I refresh
 - [ ] Deleting a match doesn't update til I refresh
-- [ ] Registrations admin page is completely busted
+- [x] Registrations admin page is completely busted
