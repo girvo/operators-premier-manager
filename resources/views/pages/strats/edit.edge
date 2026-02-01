@@ -72,13 +72,13 @@
                 alt="{{ image.originalName }}"
                 class="w-full h-32 object-cover rounded border border-valorant-light/10"
               />
-            <button
-              hx-delete="/strat-images/{{ image.id }}"
-              hx-target="#image-{{ image.id }}"
-              hx-swap="delete"
-              hx-confirm="Delete this image?"
-              class="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-red-700"
-            >
+              <button
+                hx-delete="/strat-images/{{ image.id }}"
+                hx-target="#image-{{ image.id }}"
+                hx-swap="delete"
+                hx-confirm="Delete this image?"
+                class="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-red-700"
+              >
                 <span class="htmx-indicator">
                   @!component('components/spinner', { size: 'xs' })
                 </span>
@@ -92,7 +92,7 @@
           No images uploaded yet.
         </p>
       @endif
-
+      
       <form
         action="/strats/{{ map.slug }}/{{ strat.id }}/images"
         method="POST"

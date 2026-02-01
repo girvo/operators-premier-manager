@@ -38,7 +38,6 @@ export default class MatchesController {
       return view.render('partials/schedule_availability_check', { datetime: null })
     }
 
-    // Parse the datetime in the admin's timezone
     const datetime = DateTime.fromFormat(datetimeParam, 'yyyy-MM-dd HH:mm', {
       zone: user.timezone,
     })
@@ -47,29 +46,24 @@ export default class MatchesController {
       return view.render('partials/schedule_availability_check', { datetime: null })
     }
 
-    // Convert to UTC for lookup
     const utcDatetime = datetime.toUTC()
     const utcDayOfWeek = utcDatetime.weekday === 7 ? 0 : utcDatetime.weekday
     const utcHour = utcDatetime.hour
 
-    // Get all roster players
     const rosterPlayers = await User.query()
       .where('isOnRoster', true)
       .where('approvalStatus', 'approved')
       .orderBy('fullName', 'asc')
 
-    // Get all availability records for this day/hour
     const availabilities = await WeeklyAvailability.query()
       .where('dayOfWeek', utcDayOfWeek)
       .where('hour', utcHour)
 
-    // Build availability lookup by userId
     const availabilityByUserId: Record<number, boolean> = {}
     for (const avail of availabilities) {
       availabilityByUserId[avail.userId] = avail.isAvailable
     }
 
-    // Build player list with availability status
     const players = rosterPlayers.map((player) => {
       const isAvailable = availabilityByUserId[player.id]
       let availabilityStatus: 'available' | 'unavailable' | 'unknown'
@@ -93,8 +87,7 @@ export default class MatchesController {
     const availableCount = players.filter((p) => p.availabilityStatus === 'available').length
     const totalCount = players.length
 
-    // Format the datetime for display in admin's timezone
-    const formattedDatetime = datetime.toFormat('cccc, LLL d, yyyy \'at\' h:mm a')
+    const formattedDatetime = datetime.toFormat("cccc, LLL d, yyyy 'at' h:mm a")
 
     return view.render('partials/schedule_availability_check', {
       datetime: datetimeParam,
@@ -109,7 +102,6 @@ export default class MatchesController {
     const user = auth.user!
     const data = await request.validateUsing(createMatchValidator)
 
-    // Parse the datetime in user's timezone and convert to UTC
     const scheduledAt = DateTime.fromFormat(data.scheduledAt, 'yyyy-MM-dd HH:mm', {
       zone: user.timezone,
     }).toUTC()
@@ -137,7 +129,6 @@ export default class MatchesController {
 
     const players = await User.query().orderBy('fullName', 'asc')
 
-    // Get current user's availability for this match
     const userAvailability = match.availabilities.find((a) => a.userId === user.id)
 
     return view.render('pages/matches/show', {
@@ -159,7 +150,6 @@ export default class MatchesController {
     const match = await Match.findOrFail(params.id)
     const data = await request.validateUsing(updateMatchValidator)
 
-    // Parse the datetime in user's timezone and convert to UTC
     const scheduledAt = DateTime.fromFormat(data.scheduledAt, 'yyyy-MM-dd HH:mm', {
       zone: user.timezone,
     }).toUTC()

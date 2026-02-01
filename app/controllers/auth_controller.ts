@@ -72,11 +72,9 @@ export default class AuthController {
 
     const discordUser = await discord.user()
 
-    // Look for existing user by discord_id
     let user = await User.findBy('discordId', discordUser.id)
 
     if (user) {
-      // Update Discord info (may have changed)
       user.discordUsername = discordUser.nickName
       user.discordAvatarUrl = discordUser.avatarUrl
       await user.save()
@@ -98,7 +96,6 @@ export default class AuthController {
       return response.redirect('/dashboard')
     }
 
-    // Check if email already exists (manual account)
     if (discordUser.email) {
       const existingUser = await User.findBy('email', discordUser.email)
       if (existingUser) {
@@ -110,7 +107,6 @@ export default class AuthController {
       }
     }
 
-    // Create new user with pending status
     user = await User.create({
       email: discordUser.email || `discord_${discordUser.id}@placeholder.local`,
       fullName: discordUser.nickName || discordUser.name,

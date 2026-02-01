@@ -8,7 +8,6 @@
     <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
       <form action="/matches/{{ match.id }}?_method=PUT" method="POST" class="space-y-6">
         {{ csrfField() }}
-
         <div>
           <label for="matchType" class="block text-sm font-medium text-valorant-light mb-2">Match Type</label>
           <select
@@ -34,8 +33,8 @@
             id="opponentName"
             name="opponentName"
             value="{{ match.opponentName }}"
-            {{ match.matchType === 'scrim' ? 'required' : '' }}
             class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+            {{ match.matchType === 'scrim' ? 'required' : '' }}
           />
         </div>
 
@@ -95,26 +94,25 @@
 
   <script>
     function toggleOpponentField() {
-      const matchType = document.getElementById('matchType').value;
-      const opponentField = document.getElementById('opponentField');
-      const opponentInput = document.getElementById('opponentName');
-
-      if (matchType === 'scrim') {
-        opponentField.classList.remove('hidden');
+      const matchType = document.getElementById("matchType").value;
+      const opponentField = document.getElementById("opponentField");
+      const opponentInput = document.getElementById("opponentName");
+      if (matchType === "scrim") {
+        opponentField.classList.remove("hidden");
         opponentInput.required = true;
       } else {
-        opponentField.classList.add('hidden');
+        opponentField.classList.add("hidden");
         opponentInput.required = false;
       }
     }
-
     // Initialize Flatpickr
-    flatpickr('#scheduledAt', {
+
+    flatpickr("#scheduledAt", {
       enableTime: true,
-      dateFormat: 'Y-m-d H:i',
+      dateFormat: "Y-m-d H:i",
       altInput: true,
-      altFormat: 'F j, Y at h:i K',
-      time_24hr: false,
+      altFormat: "F j, Y at h:i K",
+      time_24hr: false
     });
   </script>
 @end

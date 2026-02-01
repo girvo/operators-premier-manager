@@ -6,75 +6,74 @@
     <title>
       {{ title ?? 'Operators' }} | Operators
     </title>
-    <meta name="csrf-token" content="{{ csrfToken }}">
+    <meta name="csrf-token" content="{{ csrfToken }}" />
 
     <script src="https://cdn.tailwindcss.com">
 
     </script>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-      document.addEventListener('htmx:configRequest', function(evt) {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (csrfToken) {
-          evt.detail.headers['x-csrf-token'] = csrfToken;
-        }
+    <script src="https://unpkg.com/htmx.org@1.9.10">
 
-        const xsrfToken = document.cookie
-          .split('; ')
-          .find(row => row.trim().startsWith('XSRF-TOKEN='))
-          ?.split('=')[1]
-          ?.replace(/^"|"$/g, '');
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr">
+
+    </script>
+    <script>
+      document.addEventListener("htmx:configRequest", function(evt) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+        if (csrfToken) {
+          evt.detail.headers["x-csrf-token"] = csrfToken;
+        }
+        const xsrfToken = document.cookie.split("; ").find(row => row.trim().startsWith("XSRF-TOKEN="))?.split("=")[1]?.replace(/^"|"$/g, "");
         if (xsrfToken) {
-          evt.detail.headers['X-XSRF-TOKEN'] = decodeURIComponent(xsrfToken);
+          evt.detail.headers["X-XSRF-TOKEN"] = decodeURIComponent(xsrfToken);
         }
       });
-
       // Toast notification system
-      function showToast(message, type = 'error') {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
+
+      function showToast(message, type = "error") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
         const colors = {
-          error: 'bg-red-900/90 border-red-500 text-red-200',
-          success: 'bg-green-900/90 border-green-500 text-green-200',
-          warning: 'bg-yellow-900/90 border-yellow-500 text-yellow-200'
+          error: "bg-red-900/90 border-red-500 text-red-200",
+          success: "bg-green-900/90 border-green-500 text-green-200",
+          warning: "bg-yellow-900/90 border-yellow-500 text-yellow-200"
         };
         toast.className = `toast-enter p-4 rounded border ${colors[type] || colors.error} shadow-lg flex items-center gap-3 max-w-sm`;
         toast.innerHTML = `
-          <span class="flex-1">${message}</span>
-          <button onclick="this.parentElement.remove()" class="text-current opacity-70 hover:opacity-100">&times;</button>
-        `;
+                <span class="flex-1">${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-current opacity-70 hover:opacity-100">&times;</button>
+              `;
         container.appendChild(toast);
         setTimeout(() => {
-          toast.classList.replace('toast-enter', 'toast-exit');
+          toast.classList.replace("toast-enter", "toast-exit");
           setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        }, 5e3);
       }
-
       // Global HTMX error handling
-      document.addEventListener('htmx:responseError', function(evt) {
+
+      document.addEventListener("htmx:responseError", function(evt) {
         const xhr = evt.detail.xhr;
-        let message = 'Request failed';
+        let message = "Request failed";
         if (xhr.status === 422) {
-          message = xhr.responseText || 'Validation error';
+          message = xhr.responseText || "Validation error";
         } else if (xhr.status === 403) {
-          message = 'You do not have permission to perform this action';
+          message = "You do not have permission to perform this action";
         } else if (xhr.status === 404) {
-          message = 'Resource not found';
+          message = "Resource not found";
         } else if (xhr.status >= 500) {
-          message = 'Server error. Please try again.';
+          message = "Server error. Please try again.";
         }
         showToast(message);
       });
 
-      document.addEventListener('htmx:sendError', function(evt) {
-        showToast('Network error. Please check your connection.');
+      document.addEventListener("htmx:sendError", function(evt) {
+        showToast("Network error. Please check your connection.");
       });
 
-      document.addEventListener('htmx:timeout', function(evt) {
-        showToast('Request timed out. Please try again.');
+      document.addEventListener("htmx:timeout", function(evt) {
+        showToast("Request timed out. Please try again.");
       });
     </script>
 
@@ -97,48 +96,76 @@
 
     <style>
       /* HTMX Loading Indicators */
+      
       .htmx-indicator {
         display: none;
       }
-
+      
       .htmx-request .htmx-indicator,
       .htmx-request.htmx-indicator {
         display: inline-flex;
       }
-
+      
       /* Disabled state during request */
+      
       .htmx-request {
         pointer-events: none;
         opacity: 0.7;
       }
-
+      
       /* Hide content during request (for swapping text with spinner) */
+      
       .htmx-request .htmx-hide-on-request {
         display: none;
       }
-
+      
       /* Toast animations */
+      
       @keyframes toast-in {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
       }
+      
       @keyframes toast-out {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
       }
-      .toast-enter { animation: toast-in 0.3s ease-out forwards; }
-      .toast-exit { animation: toast-out 0.3s ease-in forwards; }
-
+      
+      .toast-enter {
+        animation: toast-in 0.3s ease-out forwards;
+      }
+      
+      .toast-exit {
+        animation: toast-out 0.3s ease-in forwards;
+      }
+      
       /* Flatpickr Valorant theme overrides */
+      
       .flatpickr-calendar {
         background: #1f2326;
         border: 1px solid rgba(255, 70, 85, 0.2);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
       }
+      
       .flatpickr-calendar.arrowTop::before,
       .flatpickr-calendar.arrowTop::after {
         border-bottom-color: #1f2326;
       }
+      
       .flatpickr-months .flatpickr-month,
       .flatpickr-current-month .flatpickr-monthDropdown-months,
       .flatpickr-weekdays,
@@ -146,43 +173,54 @@
         background: #1f2326;
         color: #ece8e1;
       }
+      
       .flatpickr-day {
         color: #ece8e1;
       }
+      
       .flatpickr-day:hover {
         background: rgba(255, 70, 85, 0.2);
         border-color: transparent;
       }
+      
       .flatpickr-day.selected {
         background: #ff4655;
         border-color: #ff4655;
       }
+      
       .flatpickr-day.today {
         border-color: #ff4655;
       }
+      
       .flatpickr-time {
         border-top: 1px solid rgba(255, 70, 85, 0.2);
       }
+      
       .flatpickr-time input,
       .flatpickr-time .flatpickr-am-pm {
         color: #ece8e1;
       }
+      
       .flatpickr-time input:hover,
       .flatpickr-time input:focus,
       .flatpickr-time .flatpickr-am-pm:hover {
         background: rgba(255, 70, 85, 0.2);
       }
+      
       .numInputWrapper:hover {
         background: rgba(255, 70, 85, 0.1);
       }
+      
       .flatpickr-current-month input.cur-year {
         color: #ece8e1;
       }
+      
       .flatpickr-months .flatpickr-prev-month,
       .flatpickr-months .flatpickr-next-month {
         color: #ece8e1;
         fill: #ece8e1;
       }
+      
       .flatpickr-months .flatpickr-prev-month:hover,
       .flatpickr-months .flatpickr-next-month:hover {
         color: #ff4655;
@@ -318,17 +356,18 @@
           {{ flashMessages.get('success') }}
         </div>
       @endif
-
+      
       @if(flashMessages.has('error'))
         <div class="mb-4 p-4 bg-red-900/50 border border-red-500 rounded text-red-200">
           {{ flashMessages.get('error') }}
         </div>
       @endif
-
+      
       {{{ await $slots.main() }}}
     </main>
 
     <!-- Toast notification container -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+    </div>
   </body>
 </html>

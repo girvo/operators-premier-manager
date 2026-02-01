@@ -88,7 +88,6 @@ export default class StratsController {
       .preload('images')
       .firstOrFail()
 
-    // Delete associated images from filesystem
     const uploadsDir = app.makePath('storage/uploads/strats')
     for (const image of strat.images) {
       const filePath = path.join(uploadsDir, image.filename)
@@ -132,7 +131,6 @@ export default class StratsController {
     const filename = `${cuid()}.${image.extname}`
     const uploadsDir = app.makePath('storage/uploads/strats')
 
-    // Ensure directory exists
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true })
     }
@@ -158,7 +156,6 @@ export default class StratsController {
   async deleteImage({ params, request, response, session }: HttpContext) {
     const image = await StratImage.findOrFail(params.id)
 
-    // Delete from filesystem
     const uploadsDir = app.makePath('storage/uploads/strats')
     const filePath = path.join(uploadsDir, image.filename)
     if (fs.existsSync(filePath)) {

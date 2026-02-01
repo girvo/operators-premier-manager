@@ -19,7 +19,6 @@ export default class MatchAvailabilityController {
       }
     )
 
-    // Fetch updated match data for the partial
     const match = await Match.query()
       .where('id', matchId)
       .preload('availabilities', (query) => {
@@ -29,16 +28,13 @@ export default class MatchAvailabilityController {
 
     const players = await User.query().orderBy('fullName', 'asc')
 
-    // Get current user's availability for this match
     const userAvailability = match.availabilities.find((a) => a.userId === user.id)
 
-    // Render the availability buttons
     const buttonsHtml = await view.render('partials/match_availability_buttons', {
       match,
       userAvailability,
     })
 
-    // Render the team availability partial
     const teamAvailabilityHtml = await view.render('partials/team_match_availability', {
       match,
       players,

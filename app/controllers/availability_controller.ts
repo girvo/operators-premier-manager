@@ -8,7 +8,6 @@ export default class AvailabilityController {
     const user = auth.user!
     const timezone = user.timezone
 
-    // Get all existing availabilities for this user
     const availabilities = await WeeklyAvailability.query().where('userId', user.id)
 
     // Create a set of available UTC slots for quick lookup
@@ -62,7 +61,6 @@ export default class AvailabilityController {
       }
     )
 
-    // Return the updated slot HTML for HTMx
     const localTime = TimezoneService.toLocal(utcDayOfWeek, utcHour, user.timezone)
 
     return response.send(`

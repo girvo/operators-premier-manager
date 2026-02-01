@@ -10,7 +10,6 @@
         <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
           <form action="/matches" method="POST" class="space-y-6">
             {{ csrfField() }}
-
             <div>
               <label for="matchType" class="block text-sm font-medium text-valorant-light mb-2">Match Type</label>
               <select
@@ -106,7 +105,9 @@
           </div>
           <div id="availability-loading" class="hidden text-center py-8">
             @!component('components/spinner', { size: 'md', className: 'mx-auto text-valorant-red' })
-            <p class="text-sm text-valorant-light/50 mt-2">Checking availability...</p>
+            <p class="text-sm text-valorant-light/50 mt-2">
+              Checking availability...
+            </p>
           </div>
         </div>
       </div>
@@ -115,31 +116,30 @@
 
   <script>
     function toggleOpponentField() {
-      const matchType = document.getElementById('matchType').value;
-      const opponentField = document.getElementById('opponentField');
-      const opponentInput = document.getElementById('opponentName');
-
-      if (matchType === 'scrim') {
-        opponentField.classList.remove('hidden');
+      const matchType = document.getElementById("matchType").value;
+      const opponentField = document.getElementById("opponentField");
+      const opponentInput = document.getElementById("opponentName");
+      if (matchType === "scrim") {
+        opponentField.classList.remove("hidden");
         opponentInput.required = true;
       } else {
-        opponentField.classList.add('hidden');
+        opponentField.classList.add("hidden");
         opponentInput.required = false;
-        opponentInput.value = '';
+        opponentInput.value = "";
       }
     }
-
     // Run on page load to set initial state
-    toggleOpponentField();
 
+    toggleOpponentField();
     // Initialize Flatpickr
-    const fp = flatpickr('#scheduledAt', {
+
+    const fp = flatpickr("#scheduledAt", {
       enableTime: true,
-      dateFormat: 'Y-m-d H:i',
+      dateFormat: "Y-m-d H:i",
       altInput: true,
-      altFormat: 'F j, Y at h:i K',
+      altFormat: "F j, Y at h:i K",
       time_24hr: false,
-      minDate: 'today',
+      minDate: "today",
       onChange: function(selectedDates, dateStr) {
         if (dateStr) {
           checkAvailability(dateStr);
@@ -148,20 +148,18 @@
     });
 
     function checkAvailability(datetime) {
-      const panel = document.getElementById('availability-panel');
-      const loading = document.getElementById('availability-loading');
-
+      const panel = document.getElementById("availability-panel");
+      const loading = document.getElementById("availability-loading");
       // Show loading state
-      panel.classList.add('hidden');
-      loading.classList.remove('hidden');
-
+      panel.classList.add("hidden");
+      loading.classList.remove("hidden");
       // Fetch availability
-      htmx.ajax('GET', '/matches/check-availability?datetime=' + encodeURIComponent(datetime), {
-        target: '#availability-panel',
-        swap: 'innerHTML'
+      htmx.ajax("GET", "/matches/check-availability?datetime=" + encodeURIComponent(datetime), {
+        target: "#availability-panel",
+        swap: "innerHTML"
       }).then(function() {
-        panel.classList.remove('hidden');
-        loading.classList.add('hidden');
+        panel.classList.remove("hidden");
+        loading.classList.add("hidden");
       });
     }
   </script>

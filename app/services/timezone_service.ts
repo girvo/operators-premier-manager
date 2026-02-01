@@ -10,8 +10,6 @@ export default class TimezoneService {
     hour: number,
     timezone: string
   ): { dayOfWeek: number; hour: number } {
-    // Create a DateTime in the user's timezone for the given day/hour
-    // Use a reference week (e.g., a Sunday that we know)
     // Luxon uses 1=Monday, 7=Sunday, but we use 0=Sunday, 1=Monday, etc.
     const luxonWeekday = (dayOfWeek === 0 ? 7 : dayOfWeek) as WeekdayNumbers
     const referenceDate = DateTime.fromObject(
@@ -21,7 +19,6 @@ export default class TimezoneService {
 
     const utcDate = referenceDate.toUTC()
 
-    // Convert back to 0-6 format
     let utcDayOfWeek = utcDate.weekday
     if (utcDayOfWeek === 7) utcDayOfWeek = 0
 
@@ -39,7 +36,6 @@ export default class TimezoneService {
     hour: number,
     timezone: string
   ): { dayOfWeek: number; hour: number } {
-    // Create a DateTime in UTC for the given day/hour
     const luxonWeekday = (dayOfWeek === 0 ? 7 : dayOfWeek) as WeekdayNumbers
     const referenceDate = DateTime.fromObject(
       { weekday: luxonWeekday, hour, minute: 0, second: 0 },
@@ -48,7 +44,6 @@ export default class TimezoneService {
 
     const localDate = referenceDate.setZone(timezone)
 
-    // Convert back to 0-6 format
     let localDayOfWeek = localDate.weekday
     if (localDayOfWeek === 7) localDayOfWeek = 0
 

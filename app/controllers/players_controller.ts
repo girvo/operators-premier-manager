@@ -127,7 +127,6 @@ export default class PlayersController {
         return response.redirect().back()
       }
 
-      // Delete old logo if exists
       if (player.logoFilename) {
         const oldPath = app.makePath('storage/uploads/players', player.logoFilename)
         if (fs.existsSync(oldPath)) {
@@ -155,7 +154,6 @@ export default class PlayersController {
   async destroy({ params, request, response, session }: HttpContext) {
     const player = await User.findOrFail(params.id)
 
-    // Delete logo file if exists
     if (player.logoFilename) {
       const logoPath = app.makePath('storage/uploads/players', player.logoFilename)
       if (fs.existsSync(logoPath)) {
@@ -163,7 +161,6 @@ export default class PlayersController {
       }
     }
 
-    // Handle HTMx requests
     if (request.header('HX-Request')) {
       await player.delete()
       return response.send('')
@@ -186,7 +183,6 @@ export default class PlayersController {
       await player.save()
     }
 
-    // Handle HTMx requests - return the updated logo display partial
     if (request.header('HX-Request')) {
       return view.render('partials/player_logo', { player, editable: true })
     }
