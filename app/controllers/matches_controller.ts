@@ -34,11 +34,13 @@ export default class MatchesController {
     const data = await request.validateUsing(createMatchValidator)
 
     // Parse the datetime in user's timezone and convert to UTC
-    const scheduledAt = DateTime.fromISO(data.scheduledAt, { zone: user.timezone }).toUTC()
+    const scheduledAt = DateTime.fromFormat(data.scheduledAt, 'yyyy-MM-dd HH:mm', {
+      zone: user.timezone,
+    }).toUTC()
 
     await Match.create({
       scheduledAt,
-      opponentName: data.opponentName,
+      opponentName: data.opponentName || null,
       map: data.map || null,
       matchType: data.matchType,
       notes: data.notes || null,
@@ -82,10 +84,12 @@ export default class MatchesController {
     const data = await request.validateUsing(updateMatchValidator)
 
     // Parse the datetime in user's timezone and convert to UTC
-    const scheduledAt = DateTime.fromISO(data.scheduledAt, { zone: user.timezone }).toUTC()
+    const scheduledAt = DateTime.fromFormat(data.scheduledAt, 'yyyy-MM-dd HH:mm', {
+      zone: user.timezone,
+    }).toUTC()
 
     match.scheduledAt = scheduledAt
-    match.opponentName = data.opponentName
+    match.opponentName = data.opponentName || null
     match.map = data.map || null
     match.matchType = data.matchType
     match.notes = data.notes || null

@@ -78,6 +78,15 @@ pnpm typecheck
 4. **Validation**: Create validator in `app/validators/`, use `request.validateUsing()`
 5. **Views**: Full pages in `resources/views/pages/`, partials for htmx
 
+## Cross-Browser Compatibility
+
+**Do NOT use vendor-specific CSS** like `-webkit-*` prefixes or `::webkit-*` pseudo-elements. The primary user uses Firefox (Gecko engine), so webkit-specific solutions will not work.
+
+For styling native form inputs (date pickers, etc.):
+- Use standard CSS properties that work across browsers
+- Consider using a JavaScript-based picker library if native inputs need significant customization
+- Test in Firefox, not just Chrome/Safari
+
 ## Testing Changes
 
 No test suite currently. Verify manually:

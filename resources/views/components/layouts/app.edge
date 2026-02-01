@@ -6,19 +6,27 @@
     <title>
       {{ title ?? 'Operators' }} | Operators
     </title>
+    <meta name="csrf-token" content="{{ csrfToken }}">
 
     <script src="https://cdn.tailwindcss.com">
 
     </script>
-    <script src="https://unpkg.com/htmx.org@1.9.10">
-
-    </script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
       document.addEventListener('htmx:configRequest', function(evt) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (csrfToken) {
+          evt.detail.headers['x-csrf-token'] = csrfToken;
+        }
+
         const xsrfToken = document.cookie
           .split('; ')
-          .find(row => row.startsWith('XSRF-TOKEN='))
-          ?.split('=')[1];
+          .find(row => row.trim().startsWith('XSRF-TOKEN='))
+          ?.split('=')[1]
+          ?.replace(/^"|"$/g, '');
         if (xsrfToken) {
           evt.detail.headers['X-XSRF-TOKEN'] = decodeURIComponent(xsrfToken);
         }
@@ -120,6 +128,66 @@
       }
       .toast-enter { animation: toast-in 0.3s ease-out forwards; }
       .toast-exit { animation: toast-out 0.3s ease-in forwards; }
+
+      /* Flatpickr Valorant theme overrides */
+      .flatpickr-calendar {
+        background: #1f2326;
+        border: 1px solid rgba(255, 70, 85, 0.2);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      }
+      .flatpickr-calendar.arrowTop::before,
+      .flatpickr-calendar.arrowTop::after {
+        border-bottom-color: #1f2326;
+      }
+      .flatpickr-months .flatpickr-month,
+      .flatpickr-current-month .flatpickr-monthDropdown-months,
+      .flatpickr-weekdays,
+      span.flatpickr-weekday {
+        background: #1f2326;
+        color: #ece8e1;
+      }
+      .flatpickr-day {
+        color: #ece8e1;
+      }
+      .flatpickr-day:hover {
+        background: rgba(255, 70, 85, 0.2);
+        border-color: transparent;
+      }
+      .flatpickr-day.selected {
+        background: #ff4655;
+        border-color: #ff4655;
+      }
+      .flatpickr-day.today {
+        border-color: #ff4655;
+      }
+      .flatpickr-time {
+        border-top: 1px solid rgba(255, 70, 85, 0.2);
+      }
+      .flatpickr-time input,
+      .flatpickr-time .flatpickr-am-pm {
+        color: #ece8e1;
+      }
+      .flatpickr-time input:hover,
+      .flatpickr-time input:focus,
+      .flatpickr-time .flatpickr-am-pm:hover {
+        background: rgba(255, 70, 85, 0.2);
+      }
+      .numInputWrapper:hover {
+        background: rgba(255, 70, 85, 0.1);
+      }
+      .flatpickr-current-month input.cur-year {
+        color: #ece8e1;
+      }
+      .flatpickr-months .flatpickr-prev-month,
+      .flatpickr-months .flatpickr-next-month {
+        color: #ece8e1;
+        fill: #ece8e1;
+      }
+      .flatpickr-months .flatpickr-prev-month:hover,
+      .flatpickr-months .flatpickr-next-month:hover {
+        color: #ff4655;
+        fill: #ff4655;
+      }
     </style>
   </head>
   <body class="bg-valorant-dark text-valorant-light min-h-screen">

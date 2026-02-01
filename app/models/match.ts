@@ -11,7 +11,7 @@ export default class Match extends BaseModel {
   declare scheduledAt: DateTime
 
   @column()
-  declare opponentName: string
+  declare opponentName: string | null
 
   @column()
   declare map: string | null
