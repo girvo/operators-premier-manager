@@ -74,7 +74,7 @@
         <ul class="space-y-1">
           @each(availability in match.availabilities.filter(a => a.status === 'yes'))
             <li class="text-sm">{{ availability.user.fullName ?? availability.user.email }}</li>
-          @empty
+          @else
             <li class="text-sm text-valorant-light/50">No responses yet</li>
           @end
         </ul>
@@ -84,7 +84,7 @@
         <ul class="space-y-1">
           @each(availability in match.availabilities.filter(a => a.status === 'maybe'))
             <li class="text-sm">{{ availability.user.fullName ?? availability.user.email }}</li>
-          @empty
+          @else
             <li class="text-sm text-valorant-light/50">-</li>
           @end
         </ul>
@@ -94,7 +94,7 @@
         <ul class="space-y-1">
           @each(availability in match.availabilities.filter(a => a.status === 'no'))
             <li class="text-sm">{{ availability.user.fullName ?? availability.user.email }}</li>
-          @empty
+          @else
             <li class="text-sm text-valorant-light/50">-</li>
           @end
         </ul>
