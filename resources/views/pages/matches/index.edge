@@ -65,8 +65,11 @@
                       hx-target="#match-{{ match.id }}"
                       hx-swap="outerHTML"
                       hx-confirm="Are you sure you want to delete this match?"
-                      class="text-sm text-red-400 hover:text-red-300 transition"
-                    >Delete</button>
+                      class="text-sm text-red-400 hover:text-red-300 transition inline-flex items-center gap-1"
+                    >
+                      <span>Delete</span>
+                      <span class="htmx-indicator">@!partials.spinner({ size: 'xs' })</span>
+                    </button>
                   @endif
                 </div>
               </div>
@@ -126,22 +129,31 @@
                         hx-vals='{"result": "win"}'
                         hx-target="#result-{{ match.id }}"
                         hx-swap="innerHTML"
-                        class="px-2 py-1 text-xs bg-green-900/30 text-green-400 rounded hover:bg-green-900/50"
-                      >W</button>
+                        class="px-2 py-1 text-xs bg-green-900/30 text-green-400 rounded hover:bg-green-900/50 inline-flex items-center justify-center min-w-[24px]"
+                      >
+                        <span class="htmx-indicator">@!partials.spinner({ size: 'xs' })</span>
+                        <span class="htmx-hide-on-request">W</span>
+                      </button>
                       <button
                         hx-put="/matches/{{ match.id }}/result"
                         hx-vals='{"result": "loss"}'
                         hx-target="#result-{{ match.id }}"
                         hx-swap="innerHTML"
-                        class="px-2 py-1 text-xs bg-red-900/30 text-red-400 rounded hover:bg-red-900/50"
-                      >L</button>
+                        class="px-2 py-1 text-xs bg-red-900/30 text-red-400 rounded hover:bg-red-900/50 inline-flex items-center justify-center min-w-[24px]"
+                      >
+                        <span class="htmx-indicator">@!partials.spinner({ size: 'xs' })</span>
+                        <span class="htmx-hide-on-request">L</span>
+                      </button>
                       <button
                         hx-put="/matches/{{ match.id }}/result"
                         hx-vals='{"result": "draw"}'
                         hx-target="#result-{{ match.id }}"
                         hx-swap="innerHTML"
-                        class="px-2 py-1 text-xs bg-yellow-900/30 text-yellow-400 rounded hover:bg-yellow-900/50"
-                      >D</button>
+                        class="px-2 py-1 text-xs bg-yellow-900/30 text-yellow-400 rounded hover:bg-yellow-900/50 inline-flex items-center justify-center min-w-[24px]"
+                      >
+                        <span class="htmx-indicator">@!partials.spinner({ size: 'xs' })</span>
+                        <span class="htmx-hide-on-request">D</span>
+                      </button>
                     </div>
                   @endif
                   <a href="/matches/{{ match.id }}" class="text-sm hover:text-valorant-red transition">View</a>

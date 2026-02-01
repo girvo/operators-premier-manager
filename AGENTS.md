@@ -86,7 +86,3 @@ No test suite currently. Verify manually:
 - Test both admin and player roles
 - Test htmx interactions (check Network tab for partial responses)
 - Test timezone handling if touching availability
-
-## Remaining Work (from PLAN.md)
-
-Phase 8 incomplete: Loading states for htmx requests (spinners/indicators).

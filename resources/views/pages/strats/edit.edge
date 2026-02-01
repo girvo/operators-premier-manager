@@ -78,7 +78,10 @@
                 hx-swap="outerHTML"
                 hx-confirm="Delete this image?"
                 class="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-sm"
-              >&times;</button>
+              >
+                <span class="htmx-indicator">@!partials.spinner({ size: 'xs' })</span>
+                <span class="htmx-hide-on-request">&times;</span>
+              </button>
             </div>
           @end
         </div>

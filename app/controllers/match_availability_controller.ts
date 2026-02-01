@@ -1,5 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import MatchAvailability from '#models/match_availability'
+import { spinner } from '#utils/html_components'
 
 export default class MatchAvailabilityController {
   async update({ params, request, response, auth }: HttpContext) {
@@ -18,33 +19,37 @@ export default class MatchAvailabilityController {
     )
 
     // Return updated buttons for HTMx
+    const spinnerHtml = spinner('sm')
     return response.send(`
       <button
         hx-put="/matches/${matchId}/availability"
         hx-vals='{"status": "yes"}'
         hx-target="#my-availability"
         hx-swap="innerHTML"
-        class="w-full py-3 rounded font-medium transition ${status === 'yes' ? 'bg-green-600 text-white' : 'bg-valorant-dark hover:bg-green-900/30 text-green-400 border border-green-600/30'}"
+        class="w-full py-3 rounded font-medium transition inline-flex items-center justify-center gap-2 ${status === 'yes' ? 'bg-green-600 text-white' : 'bg-valorant-dark hover:bg-green-900/30 text-green-400 border border-green-600/30'}"
       >
-        Yes, I can play
+        <span class="htmx-indicator">${spinnerHtml}</span>
+        <span>Yes, I can play</span>
       </button>
       <button
         hx-put="/matches/${matchId}/availability"
         hx-vals='{"status": "maybe"}'
         hx-target="#my-availability"
         hx-swap="innerHTML"
-        class="w-full py-3 rounded font-medium transition ${status === 'maybe' ? 'bg-yellow-600 text-white' : 'bg-valorant-dark hover:bg-yellow-900/30 text-yellow-400 border border-yellow-600/30'}"
+        class="w-full py-3 rounded font-medium transition inline-flex items-center justify-center gap-2 ${status === 'maybe' ? 'bg-yellow-600 text-white' : 'bg-valorant-dark hover:bg-yellow-900/30 text-yellow-400 border border-yellow-600/30'}"
       >
-        Maybe
+        <span class="htmx-indicator">${spinnerHtml}</span>
+        <span>Maybe</span>
       </button>
       <button
         hx-put="/matches/${matchId}/availability"
         hx-vals='{"status": "no"}'
         hx-target="#my-availability"
         hx-swap="innerHTML"
-        class="w-full py-3 rounded font-medium transition ${status === 'no' ? 'bg-red-600 text-white' : 'bg-valorant-dark hover:bg-red-900/30 text-red-400 border border-red-600/30'}"
+        class="w-full py-3 rounded font-medium transition inline-flex items-center justify-center gap-2 ${status === 'no' ? 'bg-red-600 text-white' : 'bg-valorant-dark hover:bg-red-900/30 text-red-400 border border-red-600/30'}"
       >
-        No, I can't make it
+        <span class="htmx-indicator">${spinnerHtml}</span>
+        <span>No, I can't make it</span>
       </button>
     `)
   }
