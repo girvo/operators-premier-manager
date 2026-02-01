@@ -1,34 +1,40 @@
 @layouts.public({ title: 'Results' })
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-  <h1 class="text-4xl font-bold text-valorant-red mb-8 text-center">Match Results</h1>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <h1 class="text-4xl font-bold text-valorant-red mb-8 text-center">
+      Match Results
+    </h1>
 
-  @if(matches.length === 0)
-    <p class="text-center text-valorant-light/70">No match results to display yet.</p>
-  @else
-    <div class="space-y-4">
-      @each(match in matches)
-        <div class="bg-valorant-gray rounded-lg p-6 border border-valorant-red/20">
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="text-sm text-valorant-light/50">{{ match.scheduledAt.toFormat('dd LLL yyyy') }}</span>
-              <h3 class="text-lg font-semibold">vs {{ match.opponentName }}</h3>
-              @if(match.map)
-                <span class="text-sm text-valorant-light/70">{{ match.map }}</span>
-              @endif
-            </div>
-            <div class="text-right">
-              @if(match.result === 'win')
-                <span class="px-4 py-2 bg-green-900/50 text-green-400 rounded font-bold">WIN</span>
-              @elseif(match.result === 'loss')
-                <span class="px-4 py-2 bg-red-900/50 text-red-400 rounded font-bold">LOSS</span>
-              @elseif(match.result === 'draw')
-                <span class="px-4 py-2 bg-yellow-900/50 text-yellow-400 rounded font-bold">DRAW</span>
-              @endif
+    @if(matches.length === 0)
+      <p class="text-center text-valorant-light/70">
+        No match results to display yet.
+      </p>
+    @else
+      <div class="space-y-4">
+        @each(match in matches)
+          <div class="bg-valorant-gray rounded-lg p-6 border border-valorant-red/20">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-sm text-valorant-light/50">{{ match.scheduledAt.toFormat('dd LLL yyyy') }}</span>
+                <h3 class="text-lg font-semibold">
+                  vs {{ match.opponentName }}
+                </h3>
+                @if(match.map)
+                  <span class="text-sm text-valorant-light/70">{{ match.map }}</span>
+                @endif
+              </div>
+              <div class="text-right">
+                @if(match.result === 'win')
+                  <span class="px-4 py-2 bg-green-900/50 text-green-400 rounded font-bold">WIN</span>
+                @elseif(match.result === 'loss')
+                  <span class="px-4 py-2 bg-red-900/50 text-red-400 rounded font-bold">LOSS</span>
+                @elseif(match.result === 'draw')
+                  <span class="px-4 py-2 bg-yellow-900/50 text-yellow-400 rounded font-bold">DRAW</span>
+                @endif
+              </div>
             </div>
           </div>
-        </div>
-      @end
-    </div>
-  @endif
-</div>
+        @end
+      </div>
+    @endif
+  </div>
 @end

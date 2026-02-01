@@ -39,6 +39,7 @@ start/
 **Auth**: Two roles: `admin` and `player`. Admins can mutate; players read-only. Use `middleware.admin()` on routes.
 
 **htmx**: Used for delete buttons, availability toggles, result buttons. Patterns:
+
 - `hx-delete`, `hx-put` with `hx-target` and `hx-swap`
 - Return partial HTML for swaps
 - `hx-confirm` for destructive actions
@@ -56,7 +57,11 @@ start/
 
 ## Commands
 
+**IMPORTANT: Always use `pnpm`, never `npm` or `yarn`.**
+
 ```bash
+pnpm install      # Install dependencies
+pnpm add <pkg>    # Add a package
 pnpm dev          # Dev server with HMR
 pnpm build        # Production build
 node ace migration:run
@@ -76,6 +81,7 @@ pnpm typecheck
 ## Testing Changes
 
 No test suite currently. Verify manually:
+
 - Run `pnpm typecheck` and `pnpm lint` before committing
 - Test both admin and player roles
 - Test htmx interactions (check Network tab for partial responses)

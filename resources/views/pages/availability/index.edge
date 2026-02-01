@@ -1,58 +1,67 @@
 @layouts.app({ title: 'My Availability' })
-<div class="space-y-6">
-  <div>
-    <h1 class="text-3xl font-bold text-valorant-red">My Availability</h1>
-    <p class="text-valorant-light/70 mt-2">Set your weekly availability. Times shown in {{ timezone }}.</p>
-  </div>
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-3xl font-bold text-valorant-red">
+        My Availability
+      </h1>
+      <p class="text-valorant-light/70 mt-2">
+        Set your weekly availability. Times shown in {{ timezone }}.
+      </p>
+    </div>
 
-  <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 overflow-x-auto">
-    <div class="min-w-[800px]">
-      <div class="grid grid-cols-8 gap-1">
-        <div class="text-sm text-valorant-light/50 p-2"></div>
-        @each(day in grid)
-          <div class="text-sm text-valorant-light/70 p-2 text-center font-medium">{{ day.dayName.slice(0, 3) }}</div>
-        @end
-      </div>
-
-      @each(hour in hours)
+    <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 overflow-x-auto">
+      <div class="min-w-[800px]">
         <div class="grid grid-cols-8 gap-1">
-          <div class="text-xs text-valorant-light/50 p-1 text-right pr-2">
-            @if(hour === 0)
-              12 AM
-            @elseif(hour < 12)
-              {{ hour }} AM
-            @elseif(hour === 12)
-              12 PM
-            @else
-              {{ hour - 12 }} PM
-            @endif
+          <div class="text-sm text-valorant-light/50 p-2">
           </div>
           @each(day in grid)
-            @let(slot = day.hours.find(h => h.localHour === hour))
-            <div class="p-0.5">
-              <button
-                class="w-full h-8 rounded text-xs transition {{ slot.isAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-valorant-dark hover:bg-valorant-gray border border-valorant-light/10' }}"
-                hx-put="/availability"
-                hx-vals='{"dayOfWeek": "{{ slot.utcDayOfWeek }}", "hour": "{{ slot.utcHour }}", "isAvailable": "{{ !slot.isAvailable }}"}'
-                hx-swap="outerHTML"
-                title="{{ day.dayName }} {{ slot.displayHour }}"
-              >{{ slot.isAvailable ? '✓' : '' }}</button>
+            <div class="text-sm text-valorant-light/70 p-2 text-center font-medium">
+              {{ day.dayName.slice(0, 3) }}
             </div>
           @end
         </div>
-      @end
-    </div>
-  </div>
 
-  <div class="flex items-center space-x-4 text-sm text-valorant-light/50">
-    <div class="flex items-center space-x-2">
-      <div class="w-4 h-4 bg-green-600 rounded"></div>
-      <span>Available</span>
+        @each(hour in hours)
+          <div class="grid grid-cols-8 gap-1">
+            <div class="text-xs text-valorant-light/50 p-1 text-right pr-2">
+              @if(hour === 0)
+                12 AM
+              @elseif(hour < 12)
+                {{ hour }} AM
+              @elseif(hour === 12)
+                12 PM
+              @else
+                {{ hour - 12 }} PM
+              @endif
+            </div>
+            @each(day in grid)
+              @let(slot = day.hours.find(h => h.localHour === hour))
+              <div class="p-0.5">
+                <button
+                  class="w-full h-8 rounded text-xs transition {{ slot.isAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-valorant-dark hover:bg-valorant-gray border border-valorant-light/10' }}"
+                  hx-put="/availability"
+                  hx-vals='{"dayOfWeek": "{{ slot.utcDayOfWeek }}", "hour": "{{ slot.utcHour }}", "isAvailable": "{{ !slot.isAvailable }}"}'
+                  hx-swap="outerHTML"
+                  title="{{ day.dayName }} {{ slot.displayHour }}"
+                >{{ slot.isAvailable ? '✓' : '' }}</button>
+              </div>
+            @end
+          </div>
+        @end
+      </div>
     </div>
-    <div class="flex items-center space-x-2">
-      <div class="w-4 h-4 bg-valorant-dark border border-valorant-light/10 rounded"></div>
-      <span>Not Available</span>
+
+    <div class="flex items-center space-x-4 text-sm text-valorant-light/50">
+      <div class="flex items-center space-x-2">
+        <div class="w-4 h-4 bg-green-600 rounded">
+        </div>
+        <span>Available</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <div class="w-4 h-4 bg-valorant-dark border border-valorant-light/10 rounded">
+        </div>
+        <span>Not Available</span>
+      </div>
     </div>
   </div>
-</div>
 @end

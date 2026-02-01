@@ -37,6 +37,18 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare isOnRoster: boolean
 
+  @column()
+  declare discordId: string | null
+
+  @column()
+  declare discordUsername: string | null
+
+  @column()
+  declare discordAvatarUrl: string | null
+
+  @column()
+  declare approvalStatus: 'approved' | 'pending' | 'rejected'
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -45,6 +57,18 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   get isAdmin(): boolean {
     return this.role === 'admin'
+  }
+
+  get isPending(): boolean {
+    return this.approvalStatus === 'pending'
+  }
+
+  get isApproved(): boolean {
+    return this.approvalStatus === 'approved'
+  }
+
+  get isRejected(): boolean {
+    return this.approvalStatus === 'rejected'
   }
 
   get trackerggUrl(): string | null {

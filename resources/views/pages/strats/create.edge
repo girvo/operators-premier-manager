@@ -1,34 +1,65 @@
 @layouts.app({ title: 'Add Strat' })
-<div class="max-w-2xl">
-  <a href="/strats/{{ map.slug }}" class="text-sm text-valorant-light/50 hover:text-valorant-red transition">&larr; Back to {{ map.name }}</a>
-  <h1 class="text-3xl font-bold text-valorant-red mt-2 mb-6">Add Strat for {{ map.name }}</h1>
+  <div class="max-w-2xl">
+    <a
+      href="/strats/{{ map.slug }}"
+      class="text-sm text-valorant-light/50 hover:text-valorant-red transition"
+    >&larr; Back to {{ map.name }}</a>
+    <h1 class="text-3xl font-bold text-valorant-red mt-2 mb-6">
+      Add Strat for {{ map.name }}
+    </h1>
 
-  <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
-    <form action="/strats/{{ map.slug }}" method="POST" class="space-y-6">
-      {{ csrfField() }}
+    <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+      <form action="/strats/{{ map.slug }}" method="POST" class="space-y-6">
+        {{ csrfField() }}
+        <div>
+          <label for="title" class="block text-sm font-medium text-valorant-light mb-2">Title</label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            required
+            placeholder="e.g., A Site Default"
+            class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+          />
+        </div>
 
-      <div>
-        <label for="title" class="block text-sm font-medium text-valorant-light mb-2">Title</label>
-        <input type="text" id="title" name="title" required placeholder="e.g., A Site Default" class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
-      </div>
+        <div>
+          <label for="description" class="block text-sm font-medium text-valorant-light mb-2">Description (optional)</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="4"
+            placeholder="Describe the strat, roles, timing, etc."
+            class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+          ></textarea>
+        </div>
 
-      <div>
-        <label for="description" class="block text-sm font-medium text-valorant-light mb-2">Description (optional)</label>
-        <textarea id="description" name="description" rows="4" placeholder="Describe the strat, roles, timing, etc." class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"></textarea>
-      </div>
+        <div>
+          <label for="valoplantUrl" class="block text-sm font-medium text-valorant-light mb-2">Valoplant URL (optional)</label>
+          <input
+            type="url"
+            id="valoplantUrl"
+            name="valoplantUrl"
+            placeholder="https://valoplant.gg/..."
+            class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+          />
+        </div>
 
-      <div>
-        <label for="valoplantUrl" class="block text-sm font-medium text-valorant-light mb-2">Valoplant URL (optional)</label>
-        <input type="url" id="valoplantUrl" name="valoplantUrl" placeholder="https://valoplant.gg/..." class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
-      </div>
+        <div class="flex justify-end space-x-4">
+          <a
+            href="/strats/{{ map.slug }}"
+            class="px-4 py-2 text-valorant-light/70 hover:text-valorant-light transition"
+          >Cancel</a>
+          <button
+            type="submit"
+            class="px-6 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+          >Create Strat</button>
+        </div>
+      </form>
+    </div>
 
-      <div class="flex justify-end space-x-4">
-        <a href="/strats/{{ map.slug }}" class="px-4 py-2 text-valorant-light/70 hover:text-valorant-light transition">Cancel</a>
-        <button type="submit" class="px-6 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">Create Strat</button>
-      </div>
-    </form>
+    <p class="text-sm text-valorant-light/50 mt-4">
+      After creating the strat, you can add images by editing it.
+    </p>
   </div>
-
-  <p class="text-sm text-valorant-light/50 mt-4">After creating the strat, you can add images by editing it.</p>
-</div>
 @end

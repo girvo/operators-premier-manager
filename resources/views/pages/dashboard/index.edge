@@ -1,44 +1,84 @@
 @layouts.app({ title: 'Dashboard' })
-<div class="space-y-8">
-  <div>
-    <h1 class="text-3xl font-bold text-valorant-red">Dashboard</h1>
-    <p class="text-valorant-light/70 mt-2">Welcome back, {{ auth.user?.fullName ?? auth.user?.email }}!</p>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <a href="/matches" class="block p-6 bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red transition">
-      <h3 class="text-lg font-semibold mb-2">Matches</h3>
-      <p class="text-valorant-light/70 text-sm">View upcoming matches and results</p>
-    </a>
-
-    <a href="/availability" class="block p-6 bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red transition">
-      <h3 class="text-lg font-semibold mb-2">My Availability</h3>
-      <p class="text-valorant-light/70 text-sm">Set your weekly availability</p>
-    </a>
-
-    <a href="/players" class="block p-6 bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red transition">
-      <h3 class="text-lg font-semibold mb-2">Players</h3>
-      <p class="text-valorant-light/70 text-sm">View team roster</p>
-    </a>
-
-    <a href="/strats" class="block p-6 bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red transition">
-      <h3 class="text-lg font-semibold mb-2">Strat Books</h3>
-      <p class="text-valorant-light/70 text-sm">Team strategies by map</p>
-    </a>
-  </div>
-
-  @if(auth.user?.isAdmin)
-    <div class="mt-8 p-6 bg-valorant-gray rounded-lg border border-valorant-red/20">
-      <h2 class="text-xl font-semibold mb-4">Admin Quick Actions</h2>
-      <div class="flex flex-wrap gap-4">
-        <a href="/matches/new" class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">
-          Schedule Match
-        </a>
-        <a href="/players/new" class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">
-          Add Player
-        </a>
-      </div>
+  <div class="space-y-8">
+    <div>
+      <h1 class="text-3xl font-bold text-valorant-red">
+        Dashboard
+      </h1>
+      <p class="text-valorant-light/70 mt-2">
+        Welcome back, {{ auth.user?.fullName ?? auth.user?.email }}!
+      </p>
     </div>
-  @endif
-</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <a
+        href="/matches"
+        class="block p-6 bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red transition"
+      >
+        <h3 class="text-lg font-semibold mb-2">
+          Matches
+        </h3>
+        <p class="text-valorant-light/70 text-sm">
+          View upcoming matches and results
+        </p>
+      </a>
+
+      <a
+        href="/availability"
+        class="block p-6 bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red transition"
+      >
+        <h3 class="text-lg font-semibold mb-2">
+          My Availability
+        </h3>
+        <p class="text-valorant-light/70 text-sm">
+          Set your weekly availability
+        </p>
+      </a>
+
+      <a
+        href="/players"
+        class="block p-6 bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red transition"
+      >
+        <h3 class="text-lg font-semibold mb-2">
+          Players
+        </h3>
+        <p class="text-valorant-light/70 text-sm">
+          View team roster
+        </p>
+      </a>
+
+      <a
+        href="/strats"
+        class="block p-6 bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red transition"
+      >
+        <h3 class="text-lg font-semibold mb-2">
+          Strat Books
+        </h3>
+        <p class="text-valorant-light/70 text-sm">
+          Team strategies by map
+        </p>
+      </a>
+    </div>
+
+    @if(auth.user?.isAdmin)
+      <div class="mt-8 p-6 bg-valorant-gray rounded-lg border border-valorant-red/20">
+        <h2 class="text-xl font-semibold mb-4">
+          Admin Quick Actions
+        </h2>
+        <div class="flex flex-wrap gap-4">
+          <a
+            href="/matches/new"
+            class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+          >
+            Schedule Match
+        </a>
+          <a
+            href="/players/new"
+            class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+          >
+            Add Player
+        </a>
+        </div>
+      </div>
+    @endif
+  </div>
 @end

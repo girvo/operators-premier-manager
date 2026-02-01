@@ -1,6 +1,10 @@
 <div id="player-logo-display" class="flex items-center gap-4">
   @if(player.logoUrl)
-    <img src="{{ player.logoUrl }}" alt="{{ player.fullName }}" class="w-20 h-20 rounded-lg object-cover border border-valorant-red/20">
+    <img
+      src="{{ player.logoUrl }}"
+      alt="{{ player.fullName }}"
+      class="w-20 h-20 rounded-lg object-cover border border-valorant-red/20"
+    />
     @if(editable)
       <button
         hx-delete="/players/{{ player.id }}/logo"
@@ -11,7 +15,9 @@
       >Remove</button>
     @endif
   @else
-    <div class="w-20 h-20 rounded-lg bg-valorant-dark border border-valorant-light/20 flex items-center justify-center text-2xl font-bold text-valorant-light/30">
+    <div
+      class="w-20 h-20 rounded-lg bg-valorant-dark border border-valorant-light/20 flex items-center justify-center text-2xl font-bold text-valorant-light/30"
+    >
       {{ player.fullName ? player.fullName.charAt(0).toUpperCase() : '?' }}
     </div>
   @endif

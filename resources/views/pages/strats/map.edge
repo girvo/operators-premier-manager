@@ -1,63 +1,100 @@
 @layouts.app({ title: map.name + ' Strats' })
-<div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div>
-      <a href="/strats" class="text-sm text-valorant-light/50 hover:text-valorant-red transition">&larr; Back to Maps</a>
-      <h1 class="text-3xl font-bold text-valorant-red mt-2">{{ map.name }} Strats</h1>
-    </div>
-    @if(auth.user?.isAdmin)
-      <a href="/strats/{{ map.slug }}/new" class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">Add Strat</a>
-    @endif
-  </div>
-
-  @if(strats.length === 0)
-    <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-8 text-center text-valorant-light/50">
-      No strats added for {{ map.name }} yet.
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <a href="/strats" class="text-sm text-valorant-light/50 hover:text-valorant-red transition">&larr; Back to Maps</a>
+        <h1 class="text-3xl font-bold text-valorant-red mt-2">
+          {{ map.name }} Strats
+        </h1>
+      </div>
       @if(auth.user?.isAdmin)
-        <a href="/strats/{{ map.slug }}/new" class="block mt-4 text-valorant-red hover:underline">Add the first strat</a>
+        <a
+          href="/strats/{{ map.slug }}/new"
+          class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+        >Add Strat</a>
       @endif
     </div>
-  @else
-    <div class="space-y-6">
-      @each(strat in strats)
-        <div id="strat-{{ strat.id }}" class="bg-valorant-gray rounded-lg border border-valorant-red/20 overflow-hidden">
-          <div class="p-6">
-            <div class="flex items-start justify-between">
-              <div>
-                <h3 class="text-xl font-semibold">{{ strat.title }}</h3>
-                @if(strat.description)
-                  <p class="text-valorant-light/70 mt-2 whitespace-pre-wrap">{{ strat.description }}</p>
-                @endif
-                @if(strat.valoplantUrl)
-                  <a href="{{ strat.valoplantUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center mt-3 text-sm text-valorant-red hover:underline">
-                    View on Valoplant
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
+
+    @if(strats.length === 0)
+      <div
+        class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-8 text-center text-valorant-light/50"
+      >
+        No strats added for {{ map.name }} yet.
+        @if(auth.user?.isAdmin)
+          <a href="/strats/{{ map.slug }}/new" class="block mt-4 text-valorant-red hover:underline">Add the first strat</a>
+        @endif
+      </div>
+    @else
+      <div class="space-y-6">
+        @each(strat in strats)
+          <div
+            id="strat-{{ strat.id }}"
+            class="bg-valorant-gray rounded-lg border border-valorant-red/20 overflow-hidden"
+          >
+            <div class="p-6">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="text-xl font-semibold">
+                    {{ strat.title }}
+                  </h3>
+                  @if(strat.description)
+                    <p class="text-valorant-light/70 mt-2 whitespace-pre-wrap">
+                      {{ strat.description }}
+                    </p>
+                  @endif
+                  @if(strat.valoplantUrl)
+                    <a
+                      href="{{ strat.valoplantUrl }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center mt-3 text-sm text-valorant-red hover:underline"
+                    >
+                      View on Valoplant
+                      <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                    </a>
+                  @endif
+                </div>
+                @if(auth.user?.isAdmin)
+                  <div class="flex items-center space-x-2">
+                    <a
+                      href="/strats/{{ map.slug }}/{{ strat.id }}/edit"
+                      class="text-sm hover:text-valorant-red transition"
+                    >Edit</a>
+                    <button
+                      hx-delete="/strats/{{ map.slug }}/{{ strat.id }}"
+                      hx-target="#strat-{{ strat.id }}"
+                      hx-swap="outerHTML"
+                      hx-confirm="Are you sure you want to delete this strat?"
+                      class="text-sm text-red-400 hover:text-red-300 transition"
+                    >Delete</button>
+                  </div>
                 @endif
               </div>
-              @if(auth.user?.isAdmin)
-                <div class="flex items-center space-x-2">
-                  <a href="/strats/{{ map.slug }}/{{ strat.id }}/edit" class="text-sm hover:text-valorant-red transition">Edit</a>
-                  <button hx-delete="/strats/{{ map.slug }}/{{ strat.id }}" hx-target="#strat-{{ strat.id }}" hx-swap="outerHTML" hx-confirm="Are you sure you want to delete this strat?" class="text-sm text-red-400 hover:text-red-300 transition">Delete</button>
+
+              @if(strat.images.length > 0)
+                <div class="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  @each(image in strat.images)
+                    <a href="/uploads/strats/{{ image.filename }}" target="_blank" class="block">
+                      <img
+                        src="/uploads/strats/{{ image.filename }}"
+                        alt="{{ image.originalName }}"
+                        class="w-full h-32 object-cover rounded border border-valorant-light/10 hover:border-valorant-red transition"
+                      />
+                    </a>
+                  @end
                 </div>
               @endif
             </div>
-
-            @if(strat.images.length > 0)
-              <div class="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                @each(image in strat.images)
-                  <a href="/uploads/strats/{{ image.filename }}" target="_blank" class="block">
-                    <img src="/uploads/strats/{{ image.filename }}" alt="{{ image.originalName }}" class="w-full h-32 object-cover rounded border border-valorant-light/10 hover:border-valorant-red transition">
-                  </a>
-                @end
-              </div>
-            @endif
           </div>
-        </div>
-      @end
-    </div>
-  @endif
-</div>
+        @end
+      </div>
+    @endif
+  </div>
 @end

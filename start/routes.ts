@@ -19,6 +19,7 @@ const MatchesController = () => import('#controllers/matches_controller')
 const MatchAvailabilityController = () => import('#controllers/match_availability_controller')
 const StratsController = () => import('#controllers/strats_controller')
 const PublicController = () => import('#controllers/public_controller')
+const RegistrationsController = () => import('#controllers/admin/registrations_controller')
 
 // Serve uploaded files
 router.get('/uploads/*', async ({ request, response }) => {
@@ -36,7 +37,14 @@ router.get('/login', [AuthController, 'showLogin']).use(middleware.guest())
 router.post('/login', [AuthController, 'login']).use(middleware.guest())
 router.post('/logout', [AuthController, 'logout']).use(middleware.auth())
 
-// Authenticated routes
+// Discord OAuth routes
+router.get('/auth/discord', [AuthController, 'discordRedirect']).use(middleware.guest())
+router.get('/auth/discord/callback', [AuthController, 'discordCallback']).use(middleware.guest())
+
+// Pending approval (auth only, no approval check)
+router.get('/pending-approval', [AuthController, 'showPendingApproval']).use(middleware.auth())
+
+// Authenticated routes (requires approval)
 router
   .group(() => {
     // Dashboard
@@ -85,5 +93,14 @@ router
       .post('/strats/:mapSlug/:id/images', [StratsController, 'uploadImage'])
       .use(middleware.admin())
     router.delete('/strat-images/:id', [StratsController, 'deleteImage']).use(middleware.admin())
+
+    // Admin: Registrations
+    router.get('/admin/registrations', [RegistrationsController, 'index']).use(middleware.admin())
+    router
+      .post('/admin/registrations/:id/approve', [RegistrationsController, 'approve'])
+      .use(middleware.admin())
+    router
+      .post('/admin/registrations/:id/reject', [RegistrationsController, 'reject'])
+      .use(middleware.admin())
   })
-  .use(middleware.auth())
+  .use([middleware.auth(), middleware.approved()])
