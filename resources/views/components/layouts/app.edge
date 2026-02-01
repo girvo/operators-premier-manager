@@ -51,15 +51,17 @@
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center">
             <a href="/dashboard" class="text-xl font-bold text-valorant-red">OPERATORS</a>
-            <div class="ml-10 flex items-baseline space-x-4">
-              <a href="/dashboard" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Dashboard</a>
-              <a href="/matches" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Matches</a>
-              <a href="/availability" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Availability</a>
-              <a href="/players" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Players</a>
-              <a href="/strats" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Strats</a>
+            <div class="hidden md:block">
+              <div class="ml-10 flex items-baseline space-x-4">
+                <a href="/dashboard" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Dashboard</a>
+                <a href="/matches" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Matches</a>
+                <a href="/availability" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Availability</a>
+                <a href="/players" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Players</a>
+                <a href="/strats" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Strats</a>
+              </div>
             </div>
           </div>
-          <div class="flex items-center space-x-4">
+          <div class="hidden md:flex items-center space-x-4">
             <span class="text-sm text-valorant-light/70">{{ auth.user?.fullName ?? auth.user?.email }}</span>
             @if(auth.user?.isAdmin)
               <span class="px-2 py-1 text-xs bg-valorant-red/20 text-valorant-red rounded">Admin</span>
@@ -67,6 +69,40 @@
             <form action="/logout" method="POST" class="inline">
               {{ csrfField() }}
             <button type="submit" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Logout</button>
+            </form>
+          </div>
+          <div class="-mr-2 flex md:hidden">
+            <button type="button" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="inline-flex items-center justify-center p-2 rounded-md text-valorant-light hover:text-white hover:bg-valorant-red/20 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+              <span class="sr-only">Open main menu</span>
+              <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hidden md:hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          <a href="/dashboard" class="block px-3 py-2 rounded-md text-base font-medium text-valorant-light hover:text-white hover:bg-valorant-red/20">Dashboard</a>
+          <a href="/matches" class="block px-3 py-2 rounded-md text-base font-medium text-valorant-light hover:text-white hover:bg-valorant-red/20">Matches</a>
+          <a href="/availability" class="block px-3 py-2 rounded-md text-base font-medium text-valorant-light hover:text-white hover:bg-valorant-red/20">Availability</a>
+          <a href="/players" class="block px-3 py-2 rounded-md text-base font-medium text-valorant-light hover:text-white hover:bg-valorant-red/20">Players</a>
+          <a href="/strats" class="block px-3 py-2 rounded-md text-base font-medium text-valorant-light hover:text-white hover:bg-valorant-red/20">Strats</a>
+        </div>
+        <div class="pt-4 pb-3 border-t border-valorant-red/20">
+          <div class="flex items-center px-5">
+            <div class="ml-3">
+              <div class="text-base font-medium leading-none text-white">{{ auth.user?.fullName ?? auth.user?.email }}</div>
+              @if(auth.user?.isAdmin)
+                <div class="mt-1"><span class="px-2 py-1 text-xs bg-valorant-red/20 text-valorant-red rounded">Admin</span></div>
+              @endif
+            </div>
+          </div>
+          <div class="mt-3 px-2 space-y-1">
+            <form action="/logout" method="POST">
+              {{ csrfField() }}
+              <button type="submit" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-valorant-light hover:text-white hover:bg-valorant-red/20">Logout</button>
             </form>
           </div>
         </div>
