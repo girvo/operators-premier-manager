@@ -4,6 +4,28 @@ Team management app for Valorant Premier. Built with AdonisJS 6, HTMx, and Tailw
 
 ## Features
 
+<div align="center">
+  <table border="0">
+    <tr>
+      <td valign="middle">
+        <a href="./assets/home.png">
+          <img src="./assets/home.png" width="100%" alt="Home Page" />
+        </a>
+      </td>
+      <td valign="middle">
+        <a href="./assets/dashboard.png">
+          <img src="./assets/dashboard.png" width="100%" alt="Dashboard" />
+        </a>
+      </td>
+      <td valign="middle">
+        <a href="./assets/availability.png">
+          <img src="./assets/availability.png" width="100%" alt="Availability Tracking" />
+        </a>
+      </td>
+    </tr>
+  </table>
+</div>
+
 - **Player Management** - Roster with player profiles, logos, and tracker.gg links
 - **Availability Tracking** - Weekly availability grid with timezone support
 - **Match Calendar** - Schedule scrims and officials, track results
@@ -12,7 +34,7 @@ Team management app for Valorant Premier. Built with AdonisJS 6, HTMx, and Tailw
 
 ## Tech Stack
 
-AdonisJS 6 | SQLite | Edge.js | HTMx | Tailwind CSS
+AdonisJS 6, SQLite, HTMx, Tailwind
 
 ## Setup
 
@@ -24,6 +46,7 @@ pnpm install
 cp .env.example .env
 
 # Run migrations
+mkdir tmp
 node ace migration:run
 
 # Seed database (creates admin user)

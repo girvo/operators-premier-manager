@@ -16,8 +16,8 @@ export default class AvailabilityController {
     )
 
     // Build the grid data in user's local timezone
-    const days = [0, 1, 2, 3, 4, 5, 6] // Sun-Sat
-    const hours = Array.from({ length: 24 }, (_, i) => i)
+    const days = [1, 2, 3, 4, 5, 6, 0] // Mon-Sun
+    const hours = Array.from({ length: 12 }, (_, i) => i + 12)
 
     const grid = days.map((localDay) => {
       const hoursMapping = TimezoneService.getLocalHoursMapping(localDay, timezone)
