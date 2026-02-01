@@ -13,6 +13,17 @@
     <script src="https://unpkg.com/htmx.org@1.9.10">
 
     </script>
+    <script>
+      document.addEventListener('htmx:configRequest', function(evt) {
+        const xsrfToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('XSRF-TOKEN='))
+          ?.split('=')[1];
+        if (xsrfToken) {
+          evt.detail.headers['X-XSRF-TOKEN'] = decodeURIComponent(xsrfToken);
+        }
+      });
+    </script>
 
     <script>
       tailwind.config = {
