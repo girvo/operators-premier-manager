@@ -98,5 +98,62 @@
         @endif
       </dl>
     </div>
+
+    @if(auth.user?.isAdmin && availabilityGrid)
+      <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+        <h2 class="text-xl font-bold text-valorant-red mb-4">Weekly Availability</h2>
+        <p class="text-valorant-light/70 text-sm mb-4">
+          Times shown in {{ player.timezone }}.
+        </p>
+
+        <div class="overflow-x-auto">
+          <div class="min-w-[600px]">
+            <div class="grid grid-cols-8 gap-1">
+              <div class="text-sm text-valorant-light/50 p-2"></div>
+              @each(day in availabilityGrid)
+                <div class="text-sm text-valorant-light/70 p-2 text-center font-medium">
+                  {{ day.dayName.slice(0, 3) }}
+                </div>
+              @end
+            </div>
+
+            @each(hour in availabilityHours)
+              <div class="grid grid-cols-8 gap-1">
+                <div class="text-xs text-valorant-light/50 p-1 text-right pr-2">
+                  @if(hour === 0)
+                    12 AM
+                  @elseif(hour < 12)
+                    {{ hour }} AM
+                  @elseif(hour === 12)
+                    12 PM
+                  @else
+                    {{ hour - 12 }} PM
+                  @endif
+                </div>
+                @each(day in availabilityGrid)
+                  @let(slot = day.hours.find(h => h.localHour === hour))
+                  <div class="p-0.5">
+                    <div
+                      class="w-full h-6 rounded text-xs flex items-center justify-center {{ slot.isAvailable ? 'bg-green-600' : 'bg-valorant-dark border border-valorant-light/10' }}"
+                    >{{ slot.isAvailable ? '✓' : '' }}</div>
+                  </div>
+                @end
+              </div>
+            @end
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-4 text-sm text-valorant-light/50 mt-4">
+          <div class="flex items-center space-x-2">
+            <div class="w-4 h-4 bg-green-600 rounded"></div>
+            <span>Available</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <div class="w-4 h-4 bg-valorant-dark border border-valorant-light/10 rounded"></div>
+            <span>Not Available</span>
+          </div>
+        </div>
+      </div>
+    @endif
   </div>
 @end

@@ -1,5 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
+import WeeklyAvailability from '#models/weekly_availability'
+import TimezoneService from '#services/timezone_service'
 import { createPlayerValidator, updatePlayerValidator } from '#validators/player_validator'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
@@ -55,9 +57,43 @@ export default class PlayersController {
     return response.redirect('/players')
   }
 
-  async show({ params, view }: HttpContext) {
+  async show({ params, view, auth }: HttpContext) {
     const player = await User.findOrFail(params.id)
-    return view.render('pages/players/show', { player })
+
+    let availabilityGrid = null
+    let availabilityHours = null
+
+    // Load availability data for admins
+    if (auth.user?.isAdmin) {
+      const timezone = player.timezone
+      const availabilities = await WeeklyAvailability.query().where('userId', player.id)
+
+      const availableSlots = new Set(
+        availabilities.filter((a) => a.isAvailable).map((a) => `${a.dayOfWeek}-${a.hour}`)
+      )
+
+      const days = [1, 2, 3, 4, 5, 6, 0] // Mon-Sun
+      availabilityHours = Array.from({ length: 12 }, (_, i) => i + 12)
+
+      availabilityGrid = days.map((localDay) => {
+        const hoursMapping = TimezoneService.getLocalHoursMapping(localDay, timezone)
+
+        return {
+          dayOfWeek: localDay,
+          dayName: TimezoneService.getDayName(localDay),
+          hours: hoursMapping.map((mapping) => ({
+            localHour: mapping.localHour,
+            isAvailable: availableSlots.has(`${mapping.utcDayOfWeek}-${mapping.utcHour}`),
+          })),
+        }
+      })
+    }
+
+    return view.render('pages/players/show', {
+      player,
+      availabilityGrid,
+      availabilityHours,
+    })
   }
 
   async edit({ params, view }: HttpContext) {
