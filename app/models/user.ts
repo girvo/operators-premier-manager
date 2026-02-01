@@ -34,6 +34,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare trackerggUsername: string | null
 
+  @column()
+  declare isOnRoster: boolean
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

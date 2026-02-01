@@ -3,12 +3,15 @@ import User from '#models/user'
 import Match from '#models/match'
 
 export default class PublicController {
-  async home({ view }: HttpContext) {
+  async home({ view, auth, response }: HttpContext) {
+    if (await auth.check()) {
+      return response.redirect('/dashboard')
+    }
     return view.render('pages/public/home')
   }
 
   async roster({ view }: HttpContext) {
-    const players = await User.query().where('role', 'player').orderBy('fullName', 'asc')
+    const players = await User.query().where('isOnRoster', true).orderBy('fullName', 'asc')
     return view.render('pages/public/roster', { players })
   }
 

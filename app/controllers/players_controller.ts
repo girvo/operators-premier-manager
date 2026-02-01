@@ -48,6 +48,7 @@ export default class PlayersController {
       timezone: data.timezone,
       logoFilename,
       trackerggUsername: data.trackerggUsername || null,
+      isOnRoster: data.isOnRoster ?? false,
     })
 
     session.flash('success', 'Player created successfully')
@@ -73,6 +74,7 @@ export default class PlayersController {
     player.role = data.role
     player.timezone = data.timezone
     player.trackerggUsername = data.trackerggUsername || null
+    player.isOnRoster = data.isOnRoster ?? false
 
     if (data.password) {
       player.password = data.password

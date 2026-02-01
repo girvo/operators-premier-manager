@@ -2,12 +2,16 @@
 node_modules
 build
 tmp
+*.sqlite3
 
 # Secrets
 .env
 .env.local
 .env.production.local
 .env.development.local
+
+# User uploads
+storage/uploads
 
 # Frontend assets compiled code
 public/assets
