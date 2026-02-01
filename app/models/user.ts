@@ -28,6 +28,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare timezone: string
 
+  @column()
+  declare logoFilename: string | null
+
+  @column()
+  declare trackerggUsername: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -36,5 +42,15 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   get isAdmin(): boolean {
     return this.role === 'admin'
+  }
+
+  get trackerggUrl(): string | null {
+    if (!this.trackerggUsername) return null
+    return `https://tracker.gg/valorant/profile/riot/${encodeURIComponent(this.trackerggUsername)}`
+  }
+
+  get logoUrl(): string | null {
+    if (!this.logoFilename) return null
+    return `/uploads/players/${this.logoFilename}`
   }
 }

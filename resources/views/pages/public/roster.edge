@@ -8,12 +8,24 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       @each(player in players)
         <div class="bg-valorant-gray rounded-lg p-6 border border-valorant-red/20 text-center">
-          <div class="w-20 h-20 bg-valorant-red/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <span class="text-2xl font-bold text-valorant-red">
-              {{ player.fullName ? player.fullName.charAt(0).toUpperCase() : '?' }}
-            </span>
-          </div>
+          @if(player.logoUrl)
+            <img src="{{ player.logoUrl }}" alt="{{ player.fullName }}" class="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-2 border-valorant-red/30">
+          @else
+            <div class="w-20 h-20 bg-valorant-red/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <span class="text-2xl font-bold text-valorant-red">
+                {{ player.fullName ? player.fullName.charAt(0).toUpperCase() : '?' }}
+              </span>
+            </div>
+          @endif
           <h3 class="text-lg font-semibold">{{ player.fullName ?? 'Unknown' }}</h3>
+          @if(player.trackerggUrl)
+            <a href="{{ player.trackerggUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-2 text-sm text-valorant-red hover:text-valorant-red/80 transition">
+              Stats
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          @endif
         </div>
       @end
     </div>

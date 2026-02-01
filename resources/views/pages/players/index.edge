@@ -13,7 +13,7 @@
     <table class="w-full">
       <thead class="bg-valorant-dark">
         <tr>
-          <th class="px-6 py-3 text-left text-sm font-medium text-valorant-light/70">Name</th>
+          <th class="px-6 py-3 text-left text-sm font-medium text-valorant-light/70">Player</th>
           <th class="px-6 py-3 text-left text-sm font-medium text-valorant-light/70">Email</th>
           <th class="px-6 py-3 text-left text-sm font-medium text-valorant-light/70">Role</th>
           <th class="px-6 py-3 text-left text-sm font-medium text-valorant-light/70">Timezone</th>
@@ -24,8 +24,15 @@
         @each(player in players)
           <tr id="player-{{ player.id }}" class="hover:bg-valorant-dark/50">
             <td class="px-6 py-4">
-              <a href="/players/{{ player.id }}" class="hover:text-valorant-red transition">
-                {{ player.fullName ?? 'No name' }}
+              <a href="/players/{{ player.id }}" class="flex items-center gap-3 hover:text-valorant-red transition">
+                @if(player.logoUrl)
+                  <img src="{{ player.logoUrl }}" alt="{{ player.fullName }}" class="w-8 h-8 rounded object-cover border border-valorant-red/20">
+                @else
+                  <div class="w-8 h-8 rounded bg-valorant-dark border border-valorant-light/20 flex items-center justify-center text-xs font-bold text-valorant-light/30">
+                    {{ player.fullName ? player.fullName.charAt(0).toUpperCase() : '?' }}
+                  </div>
+                @endif
+                <span>{{ player.fullName ?? 'No name' }}</span>
               </a>
             </td>
             <td class="px-6 py-4 text-valorant-light/70">{{ player.email }}</td>

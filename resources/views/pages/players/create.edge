@@ -4,8 +4,22 @@
   <h1 class="text-3xl font-bold text-valorant-red mt-2 mb-6">Add New Player</h1>
 
   <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
-    <form action="/players" method="POST" class="space-y-6">
+    <form action="/players" method="POST" enctype="multipart/form-data" class="space-y-6">
       {{ csrfField() }}
+
+      <div>
+        <label for="logo" class="block text-sm font-medium text-valorant-light mb-2">Player Logo</label>
+        <div class="flex items-center gap-4">
+          <div id="logo-preview" class="w-20 h-20 rounded-lg bg-valorant-dark border border-valorant-light/20 flex items-center justify-center text-valorant-light/30 overflow-hidden">
+            <span id="logo-placeholder">?</span>
+            <img id="logo-image" src="" alt="Preview" class="hidden w-full h-full object-cover">
+          </div>
+          <div class="flex-1">
+            <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif,image/webp" class="w-full text-sm text-valorant-light file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-valorant-red file:text-white hover:file:bg-valorant-red/80 file:cursor-pointer">
+            <p class="mt-1 text-xs text-valorant-light/50">Max 2MB. JPG, PNG, GIF, or WebP.</p>
+          </div>
+        </div>
+      </div>
 
       <div>
         <label for="fullName" class="block text-sm font-medium text-valorant-light mb-2">Full Name</label>
@@ -41,6 +55,15 @@
         </select>
       </div>
 
+      <div>
+        <label for="trackerggUsername" class="block text-sm font-medium text-valorant-light mb-2">Tracker.gg Username</label>
+        <div class="flex items-center gap-2">
+          <span class="text-valorant-light/50 text-sm">tracker.gg/valorant/profile/riot/</span>
+          <input type="text" id="trackerggUsername" name="trackerggUsername" placeholder="Username#TAG" class="flex-1 px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
+        </div>
+        <p class="mt-1 text-xs text-valorant-light/50">Enter their Riot ID (e.g., PlayerName#OCE)</p>
+      </div>
+
       <div class="flex justify-end space-x-4">
         <a href="/players" class="px-4 py-2 text-valorant-light/70 hover:text-valorant-light transition">Cancel</a>
         <button type="submit" class="px-6 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition">Create Player</button>
@@ -48,4 +71,19 @@
     </form>
   </div>
 </div>
+
+<script>
+  document.getElementById('logo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('logo-image').src = e.target.result;
+        document.getElementById('logo-image').classList.remove('hidden');
+        document.getElementById('logo-placeholder').classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+</script>
 @end

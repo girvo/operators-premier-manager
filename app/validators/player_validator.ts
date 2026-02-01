@@ -7,6 +7,7 @@ export const createPlayerValidator = vine.compile(
     password: vine.string().minLength(8),
     role: vine.enum(['admin', 'player']),
     timezone: vine.string().minLength(1),
+    trackerggUsername: vine.string().maxLength(100).optional(),
   })
 )
 
@@ -17,5 +18,6 @@ export const updatePlayerValidator = vine.compile(
     password: vine.string().minLength(8).optional(),
     role: vine.enum(['admin', 'player']),
     timezone: vine.string().minLength(1),
+    trackerggUsername: vine.string().maxLength(100).optional(),
   })
 )

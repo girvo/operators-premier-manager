@@ -54,6 +54,7 @@ router
     router.get('/players/:id/edit', [PlayersController, 'edit']).use(middleware.admin())
     router.put('/players/:id', [PlayersController, 'update']).use(middleware.admin())
     router.delete('/players/:id', [PlayersController, 'destroy']).use(middleware.admin())
+    router.delete('/players/:id/logo', [PlayersController, 'destroyLogo']).use(middleware.admin())
 
     // Availability
     router.get('/availability', [AvailabilityController, 'index'])

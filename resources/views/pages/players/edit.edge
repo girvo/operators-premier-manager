@@ -4,8 +4,20 @@
   <h1 class="text-3xl font-bold text-valorant-red mt-2 mb-6">Edit Player</h1>
 
   <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
-    <form action="/players/{{ player.id }}?_method=PUT" method="POST" class="space-y-6">
+    <form action="/players/{{ player.id }}?_method=PUT" method="POST" enctype="multipart/form-data" class="space-y-6">
       {{ csrfField() }}
+
+      <div>
+        <label class="block text-sm font-medium text-valorant-light mb-2">Player Logo</label>
+        <div class="flex items-start gap-4">
+          @let(editable = true)
+          @include('partials/player_logo')
+          <div class="flex-1">
+            <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif,image/webp" class="w-full text-sm text-valorant-light file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-valorant-red file:text-white hover:file:bg-valorant-red/80 file:cursor-pointer">
+            <p class="mt-1 text-xs text-valorant-light/50">Max 2MB. JPG, PNG, GIF, or WebP. Upload a new image to replace.</p>
+          </div>
+        </div>
+      </div>
 
       <div>
         <label for="fullName" class="block text-sm font-medium text-valorant-light mb-2">Full Name</label>
@@ -39,6 +51,15 @@
           <option value="Australia/Perth" {{ player.timezone === 'Australia/Perth' ? 'selected' : '' }}>Australia/Perth (AWST)</option>
           <option value="Pacific/Auckland" {{ player.timezone === 'Pacific/Auckland' ? 'selected' : '' }}>New Zealand (NZST/NZDT)</option>
         </select>
+      </div>
+
+      <div>
+        <label for="trackerggUsername" class="block text-sm font-medium text-valorant-light mb-2">Tracker.gg Username</label>
+        <div class="flex items-center gap-2">
+          <span class="text-valorant-light/50 text-sm">tracker.gg/valorant/profile/riot/</span>
+          <input type="text" id="trackerggUsername" name="trackerggUsername" value="{{ player.trackerggUsername ?? '' }}" placeholder="Username#TAG" class="flex-1 px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light">
+        </div>
+        <p class="mt-1 text-xs text-valorant-light/50">Enter their Riot ID (e.g., PlayerName#OCE)</p>
       </div>
 
       <div class="flex justify-end space-x-4">
