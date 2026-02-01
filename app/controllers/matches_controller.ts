@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Match from '#models/match'
 import Map from '#models/map'
 import User from '#models/user'
+import WeeklyAvailability from '#models/weekly_availability'
 import { createMatchValidator, updateMatchValidator } from '#validators/match_validator'
 import { DateTime } from 'luxon'
 
@@ -27,6 +28,81 @@ export default class MatchesController {
   async create({ view }: HttpContext) {
     const maps = await Map.query().where('isActive', true).orderBy('name', 'asc')
     return view.render('pages/matches/create', { maps })
+  }
+
+  async checkAvailability({ request, view, auth }: HttpContext) {
+    const user = auth.user!
+    const datetimeParam = request.input('datetime')
+
+    if (!datetimeParam) {
+      return view.render('partials/schedule_availability_check', { datetime: null })
+    }
+
+    // Parse the datetime in the admin's timezone
+    const datetime = DateTime.fromFormat(datetimeParam, 'yyyy-MM-dd HH:mm', {
+      zone: user.timezone,
+    })
+
+    if (!datetime.isValid) {
+      return view.render('partials/schedule_availability_check', { datetime: null })
+    }
+
+    // Convert to UTC for lookup
+    const utcDatetime = datetime.toUTC()
+    const utcDayOfWeek = utcDatetime.weekday === 7 ? 0 : utcDatetime.weekday
+    const utcHour = utcDatetime.hour
+
+    // Get all roster players
+    const rosterPlayers = await User.query()
+      .where('isOnRoster', true)
+      .where('approvalStatus', 'approved')
+      .orderBy('fullName', 'asc')
+
+    // Get all availability records for this day/hour
+    const availabilities = await WeeklyAvailability.query()
+      .where('dayOfWeek', utcDayOfWeek)
+      .where('hour', utcHour)
+
+    // Build availability lookup by userId
+    const availabilityByUserId: Record<number, boolean> = {}
+    for (const avail of availabilities) {
+      availabilityByUserId[avail.userId] = avail.isAvailable
+    }
+
+    // Build player list with availability status
+    const players = rosterPlayers.map((player) => {
+      const isAvailable = availabilityByUserId[player.id]
+      let availabilityStatus: 'available' | 'unavailable' | 'unknown'
+      if (isAvailable === true) {
+        availabilityStatus = 'available'
+      } else if (isAvailable === false) {
+        availabilityStatus = 'unavailable'
+      } else {
+        availabilityStatus = 'unknown'
+      }
+
+      return {
+        id: player.id,
+        fullName: player.fullName,
+        discordUsername: player.discordUsername,
+        email: player.email,
+        availabilityStatus,
+      }
+    })
+
+    const availableCount = players.filter((p) => p.availabilityStatus === 'available').length
+    const totalCount = players.length
+
+    // Format the datetime for display in admin's timezone
+    const formattedDatetime = datetime.toFormat('cccc, LLL d, yyyy \'at\' h:mm a')
+
+    return view.render('partials/schedule_availability_check', {
+      datetime: datetimeParam,
+      formattedDatetime,
+      players,
+      availableCount,
+      totalCount,
+    })
   }
 
   async store({ request, response, session, auth }: HttpContext) {

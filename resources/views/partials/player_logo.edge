@@ -14,7 +14,9 @@
         class="text-sm text-red-400 hover:text-red-300 transition inline-flex items-center gap-1"
       >
         <span>Remove</span>
-        <span class="htmx-indicator">@!partials.spinner({ size: 'xs' })</span>
+        <span class="htmx-indicator">
+          @!component('components/spinner', { size: 'xs' })
+        </span>
       </button>
     @endif
   @else

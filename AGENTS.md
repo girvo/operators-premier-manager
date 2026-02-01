@@ -34,6 +34,8 @@ start/
 
 **Edge.js v6**: Uses the new component syntax with `@!` for self-closing and `@` for block components. Layouts use `@layout()` / `@end`. Slots use `@slot()` / `@end`. Do NOT use Edge v5 syntax (`@component()`, `@section()`).
 
+**IMPORTANT**: All Edge `@` tags MUST be on their own line to be parsed correctly. Never put `@tag()` inline with HTML on the same line - Edge will output it as literal text.
+
 **Controllers**: Return `view.render('pages/...')` for full pages, or partials for htmx requests. Check `request.header('HX-Request')` to detect htmx.
 
 **Auth**: Two roles: `admin` and `player`. Admins can mutate; players read-only. Use `middleware.admin()` on routes.
@@ -86,6 +88,10 @@ For styling native form inputs (date pickers, etc.):
 - Use standard CSS properties that work across browsers
 - Consider using a JavaScript-based picker library if native inputs need significant customization
 - Test in Firefox, not just Chrome/Safari
+
+## Do NOT Inline SVGs
+
+Never inline SVG code directly into templates. Always use a reusable approach - either a component, partial, or utility function. Inlining SVGs creates duplication and maintenance problems.
 
 ## Testing Changes
 

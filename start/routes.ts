@@ -71,6 +71,7 @@ router
     // Matches
     router.get('/matches', [MatchesController, 'index'])
     router.get('/matches/new', [MatchesController, 'create']).use(middleware.admin())
+    router.get('/matches/check-availability', [MatchesController, 'checkAvailability']).use(middleware.admin())
     router.post('/matches', [MatchesController, 'store']).use(middleware.admin())
     router.get('/matches/:id', [MatchesController, 'show'])
     router.get('/matches/:id/edit', [MatchesController, 'edit']).use(middleware.admin())
