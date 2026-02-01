@@ -106,6 +106,8 @@ Unique constraint: (match_id, user_id)
 GET  /login                -> AuthController.showLogin
 POST /login                -> AuthController.login
 POST /logout               -> AuthController.logout
+GET  /settings/password    -> AuthController.showChangePassword
+PUT  /settings/password    -> AuthController.changePassword
 ```
 
 ### Dashboard
@@ -178,71 +180,73 @@ GET /results               -> PublicController.results
 
 ## Implementation Phases
 
-### Phase 1: Foundation & Auth
+### Phase 1: Foundation & Auth ✅
 
 **Files to modify/create:**
 
-- `database/migrations/..._add_role_timezone_to_users.ts`
-- `app/models/user.ts` - add role, timezone fields
-- `app/middleware/admin_middleware.ts` - new
-- `app/controllers/auth_controller.ts` - new
-- `app/validators/auth_validator.ts` - new
-- `resources/views/layouts/app.edge` - authenticated layout
-- `resources/views/layouts/public.edge` - public layout
-- `resources/views/pages/auth/login.edge`
-- `start/routes.ts` - add auth routes
-- `start/kernel.ts` - register admin middleware
-- `database/seeders/admin_seeder.ts` - create initial admin user
+- [x] `database/migrations/..._add_role_timezone_to_users.ts`
+- [x] `app/models/user.ts` - add role, timezone fields
+- [x] `app/middleware/admin_middleware.ts` - new
+- [x] `app/controllers/auth_controller.ts` - new
+- [x] `app/validators/auth_validator.ts` - new
+- [x] `resources/views/layouts/app.edge` - authenticated layout
+- [x] `resources/views/layouts/public.edge` - public layout
+- [x] `resources/views/pages/auth/login.edge`
+- [x] `start/routes.ts` - add auth routes
+- [x] `start/kernel.ts` - register admin middleware
+- [x] `database/seeders/admin_seeder.ts` - create initial admin user
+- [x] `resources/views/pages/auth/change_password.edge` - change password view
 
 **Tasks:**
 
-1. Create migration to add `role` and `timezone` to users table
-2. Update User model with new fields
-3. Create admin middleware
-4. Create auth controller and login view
-5. Create base layouts with HTMx + Tailwind
-6. Create admin seeder
-7. Run migrations and seed
+1. [x] Create migration to add `role` and `timezone` to users table
+2. [x] Update User model with new fields
+3. [x] Create admin middleware
+4. [x] Create auth controller and login view
+5. [x] Create base layouts with HTMx + Tailwind
+6. [x] Create admin seeder
+7. [x] Run migrations and seed
+8. [x] Add change password functionality
 
-### Phase 2: Player Management
+### Phase 2: Player Management ✅
 
 **Files to create:**
 
-- `app/controllers/players_controller.ts`
-- `app/validators/player_validator.ts`
-- `resources/views/pages/players/index.edge`
-- `resources/views/pages/players/show.edge`
-- `resources/views/pages/players/create.edge`
-- `resources/views/pages/players/edit.edge`
+- [x] `app/controllers/players_controller.ts`
+- [x] `app/validators/player_validator.ts`
+- [x] `resources/views/pages/players/index.edge`
+- [x] `resources/views/pages/players/show.edge`
+- [x] `resources/views/pages/players/create.edge`
+- [x] `resources/views/pages/players/edit.edge`
 
 **Tasks:**
 
-1. Create PlayersController with CRUD operations
-2. Create validators for player data
-3. Create all player views
-4. Add routes with appropriate middleware
-5. HTMx for inline deletion
+1. [x] Create PlayersController with CRUD operations
+2. [x] Create validators for player data
+3. [x] Create all player views
+4. [x] Add routes with appropriate middleware
+5. [x] HTMx for inline deletion
 
-### Phase 3: Availability System
+### Phase 3: Availability System ✅
 
 **Files to create:**
 
-- `database/migrations/..._create_weekly_availabilities_table.ts`
-- `app/models/weekly_availability.ts`
-- `app/services/timezone_service.ts`
-- `app/controllers/availability_controller.ts`
-- `app/validators/availability_validator.ts`
-- `resources/views/pages/availability/index.edge`
-- `resources/views/partials/availability/grid.edge`
-- `resources/views/partials/availability/slot.edge`
+- [x] `database/migrations/..._create_weekly_availabilities_table.ts`
+- [x] `app/models/weekly_availability.ts`
+- [x] `app/services/timezone_service.ts`
+- [x] `app/controllers/availability_controller.ts`
+- [x] `app/validators/availability_validator.ts`
+- [x] `resources/views/pages/availability/index.edge`
+- [x] `resources/views/partials/availability/grid.edge`
+- [x] `resources/views/partials/availability/slot.edge`
 
 **Tasks:**
 
-1. Create weekly_availabilities migration and model
-2. Create timezone service for UTC <-> user timezone conversion
-3. Build availability grid UI (days x hours)
-4. HTMx toggle for each slot
-5. Display hours in user's timezone, store in UTC
+1. [x] Create weekly_availabilities migration and model
+2. [x] Create timezone service for UTC <-> user timezone conversion
+3. [x] Build availability grid UI (days x hours)
+4. [x] HTMx toggle for each slot
+5. [x] Display hours in user's timezone, store in UTC
 
 **Timezone handling:**
 
@@ -250,97 +254,97 @@ GET /results               -> PublicController.results
 - Display in user's configured timezone (Sydney/Brisbane)
 - Handle DST differences between Sydney and Brisbane
 
-### Phase 4: Match Calendar
+### Phase 4: Match Calendar ✅
 
 **Files to create:**
 
-- `database/migrations/..._create_maps_table.ts`
-- `database/migrations/..._create_matches_table.ts`
-- `app/models/map.ts`
-- `app/models/match.ts`
-- `app/controllers/matches_controller.ts`
-- `app/validators/match_validator.ts`
-- `database/seeders/maps_seeder.ts`
-- `resources/views/pages/matches/index.edge`
-- `resources/views/pages/matches/show.edge`
-- `resources/views/pages/matches/create.edge`
-- `resources/views/pages/matches/edit.edge`
+- [x] `database/migrations/..._create_maps_table.ts`
+- [x] `database/migrations/..._create_matches_table.ts`
+- [x] `app/models/map.ts`
+- [x] `app/models/match.ts`
+- [x] `app/controllers/matches_controller.ts`
+- [x] `app/validators/match_validator.ts`
+- [x] `database/seeders/maps_seeder.ts`
+- [x] `resources/views/pages/matches/index.edge`
+- [x] `resources/views/pages/matches/show.edge`
+- [x] `resources/views/pages/matches/create.edge`
+- [x] `resources/views/pages/matches/edit.edge`
 
 **Tasks:**
 
-1. Create maps and matches migrations/models
-2. Seed all Valorant maps
-3. Create MatchesController with CRUD
-4. Create match views (list/calendar view)
-5. Quick result update buttons (Win/Loss) via HTMx
+1. [x] Create maps and matches migrations/models
+2. [x] Seed all Valorant maps
+3. [x] Create MatchesController with CRUD
+4. [x] Create match views (list/calendar view)
+5. [x] Quick result update buttons (Win/Loss) via HTMx
 
-### Phase 5: Match Availability
+### Phase 5: Match Availability ✅
 
 **Files to create:**
 
-- `database/migrations/..._create_match_availabilities_table.ts`
-- `app/models/match_availability.ts`
-- `app/services/availability_service.ts`
-- `app/controllers/match_availability_controller.ts`
-- `resources/views/partials/matches/player-availability.edge`
-- `resources/views/partials/matches/availability-summary.edge`
+- [x] `database/migrations/..._create_match_availabilities_table.ts`
+- [x] `app/models/match_availability.ts`
+- [x] `app/services/availability_service.ts`
+- [x] `app/controllers/match_availability_controller.ts`
+- [x] `resources/views/partials/matches/player-availability.edge`
+- [x] `resources/views/partials/matches/availability-summary.edge`
 
 **Tasks:**
 
-1. Create match_availabilities migration/model
-2. Create service to calculate default availability from weekly schedule
-3. Show Yes/No/Maybe buttons on match page
-4. Display availability summary (who's in/out)
-5. HTMx updates without page reload
+1. [x] Create match_availabilities migration/model
+2. [x] Create service to calculate default availability from weekly schedule
+3. [x] Show Yes/No/Maybe buttons on match page
+4. [x] Display availability summary (who's in/out)
+5. [x] HTMx updates without page reload
 
-### Phase 6: Strat Books
+### Phase 6: Strat Books ✅
 
 **Files to create:**
 
-- `database/migrations/..._create_strat_books_table.ts`
-- `database/migrations/..._create_strat_images_table.ts`
-- `app/models/strat_book.ts`
-- `app/models/strat_image.ts`
-- `app/controllers/strats_controller.ts`
-- `app/validators/strat_validator.ts`
-- `resources/views/pages/strats/index.edge`
-- `resources/views/pages/strats/map.edge`
-- `resources/views/pages/strats/create.edge`
-- `resources/views/pages/strats/edit.edge`
+- [x] `database/migrations/..._create_strat_books_table.ts`
+- [x] `database/migrations/..._create_strat_images_table.ts`
+- [x] `app/models/strat_book.ts`
+- [x] `app/models/strat_image.ts`
+- [x] `app/controllers/strats_controller.ts`
+- [x] `app/validators/strat_validator.ts`
+- [x] `resources/views/pages/strats/index.edge`
+- [x] `resources/views/pages/strats/map.edge`
+- [x] `resources/views/pages/strats/create.edge`
+- [x] `resources/views/pages/strats/edit.edge`
 
 **Tasks:**
 
-1. Create strat_books and strat_images migrations/models
-2. Create StratsController
-3. Map selection grid (click map -> see strats)
-4. Image upload with AdonisJS Drive (local storage)
-5. Link to Valoplant.gg for each strat
+1. [x] Create strat_books and strat_images migrations/models
+2. [x] Create StratsController
+3. [x] Map selection grid (click map -> see strats)
+4. [x] Image upload with AdonisJS Drive (local storage)
+5. [x] Link to Valoplant.gg for each strat
 
-### Phase 7: Public Views
+### Phase 7: Public Views ✅
 
 **Files to create:**
 
-- `app/controllers/public_controller.ts`
-- `resources/views/pages/public/home.edge`
-- `resources/views/pages/public/roster.edge`
-- `resources/views/pages/public/results.edge`
+- [x] `app/controllers/public_controller.ts`
+- [x] `resources/views/pages/public/home.edge`
+- [x] `resources/views/pages/public/roster.edge`
+- [x] `resources/views/pages/public/results.edge`
 
 **Tasks:**
 
-1. Create PublicController
-2. Public home page with team branding
-3. Roster page (player names only)
-4. Results page (completed matches with outcomes)
+1. [x] Create PublicController
+2. [x] Public home page with team branding
+3. [x] Roster page (player names only)
+4. [x] Results page (completed matches with outcomes)
 
-### Phase 8: Polish
+### Phase 8: Polish (In Progress)
 
 **Tasks:**
 
-1. Consistent styling across all pages
-2. Loading states for HTMx requests
-3. Flash messages for success/error feedback
-4. Responsive design
-5. Error handling
+1. [x] Consistent styling across all pages
+2. [ ] Loading states for HTMx requests
+3. [x] Flash messages for success/error feedback
+4. [x] Responsive design
+5. [x] Error handling
 
 ---
 

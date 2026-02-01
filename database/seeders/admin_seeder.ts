@@ -4,13 +4,13 @@ import User from '#models/user'
 export default class AdminSeeder extends BaseSeeder {
   async run() {
     await User.updateOrCreate(
-      { email: 'admin@operators.gg' },
+      { email: 'admin@example.com' },
       {
-        fullName: 'Admin',
-        email: 'admin@operators.gg',
-        password: 'password',
+        fullName: 'Girvo',
+        email: 'admin@example.com',
+        password: 'NOTAREALPASSWORD',
         role: 'admin',
-        timezone: 'Australia/Sydney',
+        timezone: 'Australia/Brisbane',
       }
     )
   }

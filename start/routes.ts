@@ -42,6 +42,10 @@ router
     // Dashboard
     router.get('/dashboard', [DashboardController, 'index'])
 
+    // Settings
+    router.get('/settings/password', [AuthController, 'showChangePassword'])
+    router.put('/settings/password', [AuthController, 'changePassword'])
+
     // Players
     router.get('/players', [PlayersController, 'index'])
     router.get('/players/new', [PlayersController, 'create']).use(middleware.admin())
