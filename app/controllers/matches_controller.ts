@@ -65,26 +65,18 @@ export default class MatchesController {
     }
 
     const players = rosterPlayers.map((player) => {
-      const isAvailable = availabilityByUserId[player.id]
-      let availabilityStatus: 'available' | 'unavailable' | 'unknown'
-      if (isAvailable === true) {
-        availabilityStatus = 'available'
-      } else if (isAvailable === false) {
-        availabilityStatus = 'unavailable'
-      } else {
-        availabilityStatus = 'unknown'
-      }
+      const isAvailable = availabilityByUserId[player.id] === true
 
       return {
         id: player.id,
         fullName: player.fullName,
         discordUsername: player.discordUsername,
         email: player.email,
-        availabilityStatus,
+        isAvailable,
       }
     })
 
-    const availableCount = players.filter((p) => p.availabilityStatus === 'available').length
+    const availableCount = players.filter((p) => p.isAvailable).length
     const totalCount = players.length
 
     const formattedDatetime = datetime.toFormat("cccc, LLL d, yyyy 'at' h:mm a")
