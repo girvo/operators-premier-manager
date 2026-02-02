@@ -15,6 +15,7 @@ export default class MapsSeeder extends BaseSeeder {
       { name: 'Split', slug: 'split', isActive: true },
       { name: 'Sunset', slug: 'sunset', isActive: true },
       { name: 'Abyss', slug: 'abyss', isActive: true },
+      { name: 'Corrode', slug: 'corrode', isActive: true },
     ]
 
     for (const map of maps) {

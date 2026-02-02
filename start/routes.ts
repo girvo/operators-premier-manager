@@ -12,6 +12,7 @@ const MatchAvailabilityController = () => import('#controllers/match_availabilit
 const StratsController = () => import('#controllers/strats_controller')
 const PublicController = () => import('#controllers/public_controller')
 const RegistrationsController = () => import('#controllers/admin/registrations_controller')
+const AdminMapsController = () => import('#controllers/admin/maps_controller')
 
 router.get('/uploads/*', async ({ request, response }) => {
   const filePath = app.makePath('storage', request.url())
@@ -88,5 +89,8 @@ router
     router
       .post('/admin/registrations/:id/reject', [RegistrationsController, 'reject'])
       .use(middleware.admin())
+
+    router.get('/admin/maps', [AdminMapsController, 'index']).use(middleware.admin())
+    router.post('/admin/maps/:id/toggle', [AdminMapsController, 'toggleActive']).use(middleware.admin())
   })
   .use([middleware.auth(), middleware.onboarding(), middleware.approved()])

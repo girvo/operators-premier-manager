@@ -11,32 +11,21 @@
       @each(map in maps)
         <a
           href="/strats/{{ map.slug }}"
-          class="block bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red p-6 text-center transition"
+          class="block bg-valorant-gray rounded-lg border border-valorant-red/20 hover:border-valorant-red overflow-hidden transition group transform-gpu"
         >
-          <div class="text-4xl mb-2">
-            @if(map.slug === 'ascent')
-              &#127963;
-            @elseif(map.slug === 'bind')
-              &#127961;
-            @elseif(map.slug === 'haven')
-              &#127981;
-            @elseif(map.slug === 'split')
-              &#127983;
-            @elseif(map.slug === 'icebox')
-              &#10052;
-            @elseif(map.slug === 'lotus')
-              &#127800;
-            @elseif(map.slug === 'sunset')
-              &#127773;
-            @elseif(map.slug === 'abyss')
-              &#127754;
-            @else
-              &#127758;
-            @endif
+          <div class="aspect-video relative overflow-hidden isolate">
+            <img
+              src="/images/maps/{{ map.slug }}.png"
+              alt="{{ map.name }}"
+              class="block w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-valorant-gray via-valorant-gray/20 to-transparent pointer-events-none"></div>
           </div>
-          <h3 class="text-lg font-semibold">
-            {{ map.name }}
-          </h3>
+          <div class="p-4 -mt-8 relative z-10">
+            <h3 class="text-lg font-semibold">
+              {{ map.name }}
+            </h3>
+          </div>
         </a>
       @else
         <div class="col-span-full text-center text-valorant-light/50 py-8">
