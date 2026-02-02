@@ -8,11 +8,19 @@ RUN corepack enable
 WORKDIR /app
 
 # Dependencies stage
+
 FROM base AS deps
 
 # Install build dependencies for native modules (better-sqlite3)
+
 RUN apk add --no-cache python3 make g++
+
 COPY package.json pnpm-lock.yaml ./
+
+# Allow better-sqlite3 and esbuild to run their build scripts
+
+RUN pnpm config set only-built-dependencies better-sqlite3 esbuild
+
 RUN pnpm install --frozen-lockfile
 
 # Build stage
