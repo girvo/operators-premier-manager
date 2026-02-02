@@ -77,14 +77,16 @@
         </div>
       </form>
 
-      <div class="mt-6 pt-6 border-t border-valorant-light/10">
-        <a
-          href="/settings/password"
-          class="text-valorant-light/70 hover:text-valorant-red transition text-sm"
-        >
-          Change password &rarr;
-        </a>
-      </div>
+      @if(!auth.user?.discordId)
+        <div class="mt-6 pt-6 border-t border-valorant-light/10">
+          <a
+            href="/settings/password"
+            class="text-valorant-light/70 hover:text-valorant-red transition text-sm"
+          >
+            Change password &rarr;
+          </a>
+        </div>
+      @endif
     </div>
   </div>
 @end

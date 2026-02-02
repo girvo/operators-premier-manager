@@ -27,11 +27,17 @@ export default class AuthController {
     return response.redirect('/login')
   }
 
-  async showChangePassword({ view }: HttpContext) {
+  async showChangePassword({ view, auth, response }: HttpContext) {
+    if (auth.user?.discordId) {
+      return response.redirect('/settings/profile')
+    }
     return view.render('pages/auth/change_password')
   }
 
   async changePassword({ request, auth, session, response }: HttpContext) {
+    if (auth.user?.discordId) {
+      return response.status(403).send('Discord users cannot change password')
+    }
     const data = await request.validateUsing(changePasswordValidator)
 
     if (data.new_password !== data.new_password_confirmation) {
