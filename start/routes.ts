@@ -3,6 +3,7 @@ import { middleware } from '#start/kernel'
 import app from '@adonisjs/core/services/app'
 
 const AuthController = () => import('#controllers/auth_controller')
+const SettingsController = () => import('#controllers/settings_controller')
 const DashboardController = () => import('#controllers/dashboard_controller')
 const PlayersController = () => import('#controllers/players_controller')
 const AvailabilityController = () => import('#controllers/availability_controller')
@@ -30,10 +31,15 @@ router.get('/auth/discord/callback', [AuthController, 'discordCallback']).use(mi
 
 router.get('/pending-approval', [AuthController, 'showPendingApproval']).use(middleware.auth())
 
+router.get('/onboarding', [AuthController, 'showOnboarding']).use(middleware.auth())
+router.post('/onboarding', [AuthController, 'completeOnboarding']).use(middleware.auth())
+
 router
   .group(() => {
     router.get('/dashboard', [DashboardController, 'index'])
 
+    router.get('/settings/profile', [SettingsController, 'showProfile'])
+    router.put('/settings/profile', [SettingsController, 'updateProfile'])
     router.get('/settings/password', [AuthController, 'showChangePassword'])
     router.put('/settings/password', [AuthController, 'changePassword'])
 
@@ -83,4 +89,4 @@ router
       .post('/admin/registrations/:id/reject', [RegistrationsController, 'reject'])
       .use(middleware.admin())
   })
-  .use([middleware.auth(), middleware.approved()])
+  .use([middleware.auth(), middleware.onboarding(), middleware.approved()])

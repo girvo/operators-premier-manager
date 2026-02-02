@@ -49,6 +49,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare approvalStatus: 'approved' | 'pending' | 'rejected'
 
+  @column()
+  declare needsOnboarding: boolean
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

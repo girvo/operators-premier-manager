@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import hash from '@adonisjs/core/services/hash'
 import { cuid } from '@adonisjs/core/helpers'
 import User from '#models/user'
-import { loginValidator, changePasswordValidator } from '#validators/auth_validator'
+import { loginValidator, changePasswordValidator, onboardingValidator } from '#validators/auth_validator'
 
 export default class AuthController {
   async showLogin({ view }: HttpContext) {
@@ -112,15 +112,40 @@ export default class AuthController {
       fullName: discordUser.nickName || discordUser.name,
       password: cuid(), // Random password (they can't use it)
       role: 'player',
-      timezone: 'America/Chicago',
+      timezone: 'Australia/Sydney',
       isOnRoster: false,
       discordId: discordUser.id,
       discordUsername: discordUser.nickName,
       discordAvatarUrl: discordUser.avatarUrl,
       approvalStatus: 'pending',
+      needsOnboarding: true,
     })
 
     await auth.use('web').login(user)
+    return response.redirect('/onboarding')
+  }
+
+  async showOnboarding({ view, auth, response }: HttpContext) {
+    const user = auth.user!
+
+    if (!user.needsOnboarding) {
+      if (user.isPending) {
+        return response.redirect('/pending-approval')
+      }
+      return response.redirect('/dashboard')
+    }
+
+    return view.render('pages/auth/onboarding')
+  }
+
+  async completeOnboarding({ request, auth, response }: HttpContext) {
+    const { timezone } = await request.validateUsing(onboardingValidator)
+    const user = auth.user!
+
+    user.timezone = timezone
+    user.needsOnboarding = false
+    await user.save()
+
     return response.redirect('/pending-approval')
   }
 
