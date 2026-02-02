@@ -61,11 +61,11 @@ export default class MatchesController {
 
     const availabilityByUserId: Record<number, boolean> = {}
     for (const avail of availabilities) {
-      availabilityByUserId[avail.userId] = avail.isAvailable
+      availabilityByUserId[avail.userId] = Boolean(avail.isAvailable)
     }
 
     const players = rosterPlayers.map((player) => {
-      const isAvailable = availabilityByUserId[player.id] === true
+      const isAvailable = !!availabilityByUserId[player.id]
 
       return {
         id: player.id,

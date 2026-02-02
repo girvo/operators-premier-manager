@@ -96,76 +96,76 @@
 
     <style>
       /* HTMX Loading Indicators */
-      
+
       .htmx-indicator {
         display: none;
       }
-      
+
       .htmx-request .htmx-indicator,
       .htmx-request.htmx-indicator {
         display: inline-flex;
       }
-      
+
       /* Disabled state during request */
-      
+
       .htmx-request {
         pointer-events: none;
         opacity: 0.7;
       }
-      
+
       /* Hide content during request (for swapping text with spinner) */
-      
+
       .htmx-request .htmx-hide-on-request {
         display: none;
       }
-      
+
       /* Toast animations */
-      
+
       @keyframes toast-in {
         from {
           transform: translateX(100%);
           opacity: 0;
         }
-      
+
         to {
           transform: translateX(0);
           opacity: 1;
         }
       }
-      
+
       @keyframes toast-out {
         from {
           transform: translateX(0);
           opacity: 1;
         }
-      
+
         to {
           transform: translateX(100%);
           opacity: 0;
         }
       }
-      
+
       .toast-enter {
         animation: toast-in 0.3s ease-out forwards;
       }
-      
+
       .toast-exit {
         animation: toast-out 0.3s ease-in forwards;
       }
-      
+
       /* Flatpickr Valorant theme overrides */
-      
+
       .flatpickr-calendar {
         background: #1f2326;
         border: 1px solid rgba(255, 70, 85, 0.2);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
       }
-      
+
       .flatpickr-calendar.arrowTop::before,
       .flatpickr-calendar.arrowTop::after {
         border-bottom-color: #1f2326;
       }
-      
+
       .flatpickr-months .flatpickr-month,
       .flatpickr-current-month .flatpickr-monthDropdown-months,
       .flatpickr-weekdays,
@@ -173,54 +173,54 @@
         background: #1f2326;
         color: #ece8e1;
       }
-      
+
       .flatpickr-day {
         color: #ece8e1;
       }
-      
+
       .flatpickr-day:hover {
         background: rgba(255, 70, 85, 0.2);
         border-color: transparent;
       }
-      
+
       .flatpickr-day.selected {
         background: #ff4655;
         border-color: #ff4655;
       }
-      
+
       .flatpickr-day.today {
         border-color: #ff4655;
       }
-      
+
       .flatpickr-time {
         border-top: 1px solid rgba(255, 70, 85, 0.2);
       }
-      
+
       .flatpickr-time input,
       .flatpickr-time .flatpickr-am-pm {
         color: #ece8e1;
       }
-      
+
       .flatpickr-time input:hover,
       .flatpickr-time input:focus,
       .flatpickr-time .flatpickr-am-pm:hover {
         background: rgba(255, 70, 85, 0.2);
       }
-      
+
       .numInputWrapper:hover {
         background: rgba(255, 70, 85, 0.1);
       }
-      
+
       .flatpickr-current-month input.cur-year {
         color: #ece8e1;
       }
-      
+
       .flatpickr-months .flatpickr-prev-month,
       .flatpickr-months .flatpickr-next-month {
         color: #ece8e1;
         fill: #ece8e1;
       }
-      
+
       .flatpickr-months .flatpickr-prev-month:hover,
       .flatpickr-months .flatpickr-next-month:hover {
         color: #ff4655;
@@ -228,7 +228,7 @@
       }
     </style>
   </head>
-  <body class="bg-valorant-dark text-valorant-light min-h-screen">
+  <body hx-boost="true" class="bg-valorant-dark text-valorant-light min-h-screen">
     <nav class="bg-valorant-gray border-b border-valorant-red/20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
@@ -266,7 +266,7 @@
               href="/settings/profile"
               class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition"
             >Settings</a>
-            <form action="/logout" method="POST" class="inline">
+            <form hx-boost="false"action="/logout" method="POST" class="inline">
               {{ csrfField() }}
             <button type="submit" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Logout</button>
             </form>
@@ -346,7 +346,7 @@
               href="/settings/profile"
               class="block px-3 py-2 rounded-md text-base font-medium text-valorant-light hover:text-white hover:bg-valorant-red/20"
             >Settings</a>
-            <form action="/logout" method="POST">
+            <form hx-boost="false" action="/logout" method="POST">
               {{ csrfField() }}
               <button
                 type="submit"
@@ -364,13 +364,13 @@
           {{ flashMessages.get('success') }}
         </div>
       @endif
-      
+
       @if(flashMessages.has('error'))
         <div class="mb-4 p-4 bg-red-900/50 border border-red-500 rounded text-red-200">
           {{ flashMessages.get('error') }}
         </div>
       @endif
-      
+
       {{{ await $slots.main() }}}
     </main>
 

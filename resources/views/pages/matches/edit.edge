@@ -1,94 +1,116 @@
 @layouts.app({ title: 'Edit Match' })
-  <div class="max-w-2xl">
+  <div class="max-w-5xl">
     <a href="/matches" class="text-sm text-valorant-light/50 hover:text-valorant-red transition">&larr; Back to Matches</a>
     <h1 class="text-3xl font-bold text-valorant-red mt-2 mb-6">
       Edit Match
     </h1>
 
-    <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
-      <form action="/matches/{{ match.id }}?_method=PUT" method="POST" class="space-y-6">
-        {{ csrfField() }}
-        <div>
-          <label for="matchType" class="block text-sm font-medium text-valorant-light mb-2">Match Type</label>
-          <select
-            id="matchType"
-            name="matchType"
-            required
-            class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
-            onchange="toggleOpponentField()"
-          >
-            <option value="official" {{ match.matchType === 'official' ? 'selected' : '' }}>
-              Official
-            </option>
-            <option value="scrim" {{ match.matchType === 'scrim' ? 'selected' : '' }}>
-              Scrim
-            </option>
-          </select>
-        </div>
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div class="lg:col-span-3">
+        <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+          <form action="/matches/{{ match.id }}?_method=PUT" method="POST" class="space-y-6">
+            {{ csrfField() }}
+            <div>
+              <label for="matchType" class="block text-sm font-medium text-valorant-light mb-2">Match Type</label>
+              <select
+                id="matchType"
+                name="matchType"
+                required
+                class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+                onchange="toggleOpponentField()"
+              >
+                <option value="official" {{ match.matchType === 'official' ? 'selected' : '' }}>
+                  Official
+                </option>
+                <option value="scrim" {{ match.matchType === 'scrim' ? 'selected' : '' }}>
+                  Scrim
+                </option>
+              </select>
+            </div>
 
-        <div id="opponentField" class="{{ match.matchType === 'official' ? 'hidden' : '' }}">
-          <label for="opponentName" class="block text-sm font-medium text-valorant-light mb-2">Opponent</label>
-          <input
-            type="text"
-            id="opponentName"
-            name="opponentName"
-            value="{{ match.opponentName ?? '' }}"
-            class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
-            {{ match.matchType === 'scrim' ? 'required' : '' }}
-          />
-        </div>
+            <div id="opponentField" class="{{ match.matchType === 'official' ? 'hidden' : '' }}">
+              <label for="opponentName" class="block text-sm font-medium text-valorant-light mb-2">Opponent</label>
+              <input
+                type="text"
+                id="opponentName"
+                name="opponentName"
+                value="{{ match.opponentName ?? '' }}"
+                class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+                {{ match.matchType === 'scrim' ? 'required' : '' }}
+              />
+            </div>
 
-        <div>
-          <label for="scheduledAt" class="block text-sm font-medium text-valorant-light mb-2">Date & Time</label>
-          <input
-            type="text"
-            id="scheduledAt"
-            name="scheduledAt"
-            value="{{ match.scheduledAt.setZone(auth.user?.timezone).toFormat('yyyy-LL-dd HH:mm') }}"
-            required
-            class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
-          />
-          <p class="text-xs text-valorant-light/50 mt-1">
-            Time in your timezone ({{ auth.user?.timezone }})
-          </p>
-        </div>
+            <div>
+              <label for="scheduledAt" class="block text-sm font-medium text-valorant-light mb-2">Date & Time</label>
+              <input
+                type="text"
+                id="scheduledAt"
+                name="scheduledAt"
+                value="{{ match.scheduledAt.setZone(auth.user?.timezone).toFormat('yyyy-LL-dd HH:mm') }}"
+                required
+                class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+              />
+              <p class="text-xs text-valorant-light/50 mt-1">
+                Time in your timezone ({{ auth.user?.timezone }})
+              </p>
+            </div>
 
-        <div>
-          <label for="map" class="block text-sm font-medium text-valorant-light mb-2">Map (optional)</label>
-          <select
-            id="map"
-            name="map"
-            class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
-          >
-            <option value="">
-              TBD
-            </option>
-            @each(map in maps)
-              <option value="{{ map.name }}" {{ match.map === map.name ? 'selected' : '' }}>
-                {{ map.name }}
-              </option>
-            @end
-          </select>
-        </div>
+            <div>
+              <label for="map" class="block text-sm font-medium text-valorant-light mb-2">Map (optional)</label>
+              <select
+                id="map"
+                name="map"
+                class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+              >
+                <option value="">
+                  TBD
+                </option>
+                @each(map in maps)
+                  <option value="{{ map.name }}" {{ match.map === map.name ? 'selected' : '' }}>
+                    {{ map.name }}
+                  </option>
+                @end
+              </select>
+            </div>
 
-        <div>
-          <label for="notes" class="block text-sm font-medium text-valorant-light mb-2">Notes (optional)</label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows="3"
-            class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
-          >{{ match.notes }}</textarea>
-        </div>
+            <div>
+              <label for="notes" class="block text-sm font-medium text-valorant-light mb-2">Notes (optional)</label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows="3"
+                class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+              >{{ match.notes }}</textarea>
+            </div>
 
-        <div class="flex justify-end space-x-4">
-          <a href="/matches" class="px-4 py-2 text-valorant-light/70 hover:text-valorant-light transition">Cancel</a>
-          <button
-            type="submit"
-            class="px-6 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
-          >Update Match</button>
+            <div class="flex justify-end space-x-4">
+              <a href="/matches" class="px-4 py-2 text-valorant-light/70 hover:text-valorant-light transition">Cancel</a>
+              <button
+                type="submit"
+                class="px-6 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+              >Update Match</button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
+
+      <div class="lg:col-span-2">
+        <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 sticky top-6">
+          <h2 class="text-lg font-semibold text-valorant-light mb-4">
+            Player Availability
+          </h2>
+          <div id="availability-panel">
+            @let(datetime = null)
+            @include('partials/schedule_availability_check')
+          </div>
+          <div id="availability-loading" class="hidden text-center py-8">
+            @!component('components/spinner', { size: 'md', className: 'mx-auto text-valorant-red' })
+            <p class="text-sm text-valorant-light/50 mt-2">
+              Checking availability...
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -108,12 +130,39 @@
     }
     // Initialize Flatpickr
 
-    flatpickr("#scheduledAt", {
+    const fp = flatpickr("#scheduledAt", {
       enableTime: true,
       dateFormat: "Y-m-d H:i",
       altInput: true,
       altFormat: "F j, Y at h:i K",
-      time_24hr: false
+      time_24hr: false,
+      onChange: function(selectedDates, dateStr) {
+        if (dateStr) {
+          checkAvailability(dateStr);
+        }
+      }
     });
+
+    function checkAvailability(datetime) {
+      const panel = document.getElementById("availability-panel");
+      const loading = document.getElementById("availability-loading");
+      // Show loading state
+      panel.classList.add("hidden");
+      loading.classList.remove("hidden");
+      // Fetch availability
+      htmx.ajax("GET", "/matches/check-availability?datetime=" + encodeURIComponent(datetime), {
+        target: "#availability-panel",
+        swap: "innerHTML"
+      }).then(function() {
+        panel.classList.remove("hidden");
+        loading.classList.add("hidden");
+      });
+    }
+
+    // Initial check
+    const initialDate = document.getElementById("scheduledAt").value;
+    if (initialDate) {
+      checkAvailability(initialDate);
+    }
   </script>
 @end
