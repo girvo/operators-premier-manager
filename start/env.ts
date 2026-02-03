@@ -35,4 +35,11 @@ export default await Env.create(new URL('../', import.meta.url), {
   DISCORD_CLIENT_ID: Env.schema.string(),
   DISCORD_CLIENT_SECRET: Env.schema.string(),
   DISCORD_CALLBACK_URL: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for Henrik Valorant API
+  |----------------------------------------------------------
+  */
+  HENRIK_API_KEY: Env.schema.string.optional(),
 })

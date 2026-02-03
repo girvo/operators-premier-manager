@@ -1,0 +1,59 @@
+<div class="p-4">
+  <h3 class="text-lg font-semibold mb-2">Select a Match</h3>
+  <p class="text-valorant-light/70 text-sm mb-4">
+    Recent matches for <span class="text-white">{{ player.fullName }}</span>
+  </p>
+
+  @if(recentMatches.length === 0)
+    <p class="text-valorant-light/50 text-sm">
+      No recent Premier or Custom matches found for this player.
+    </p>
+  @else
+    <div class="space-y-2 max-h-80 overflow-y-auto">
+      @each(recentMatch in recentMatches)
+        <button
+          type="button"
+          hx-post="/matches/{{ match.id }}/fetch-valorant/save"
+          hx-vals='{"scoreUs": {{ recentMatch.scoreUs }}, "scoreThem": {{ recentMatch.scoreThem }}, "result": "{{ recentMatch.result }}"}'
+          hx-swap="none"
+          class="w-full text-left px-4 py-3 bg-valorant-dark/50 hover:bg-valorant-red/20 rounded transition"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-medium">{{ recentMatch.map }}</span>
+              <span class="text-valorant-light/50 text-sm ml-2">{{ recentMatch.mode }}</span>
+              @if(recentMatch.matchTypeLabel)
+                <span class="text-xs px-2 py-0.5 ml-2 rounded bg-valorant-dark border border-valorant-light/10 text-valorant-light/70">
+                  {{ recentMatch.matchTypeLabel }}
+                </span>
+              @endif
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-lg font-bold {{ recentMatch.result === 'win' ? 'text-green-400' : recentMatch.result === 'loss' ? 'text-red-400' : 'text-yellow-400' }}">
+                {{ recentMatch.scoreUs }}-{{ recentMatch.scoreThem }}
+              </span>
+            </div>
+          </div>
+          <div class="text-valorant-light/50 text-xs mt-1">
+            {{ recentMatch.date }}
+          </div>
+        </button>
+      @end
+    </div>
+  @endif
+
+  <div class="mt-4 pt-4 border-t border-valorant-red/10 flex gap-2">
+    <button
+      type="button"
+      hx-get="/matches/{{ match.id }}/fetch-valorant/step1"
+      hx-target="#valorant-modal-content"
+      hx-swap="innerHTML"
+      class="px-4 py-2 text-valorant-light/70 hover:text-white transition"
+    >&larr; Back</button>
+    <button
+      type="button"
+      onclick="document.getElementById('valorant-modal').classList.add('hidden')"
+      class="px-4 py-2 text-valorant-light/70 hover:text-white transition"
+    >Cancel</button>
+  </div>
+</div>

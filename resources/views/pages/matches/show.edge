@@ -14,10 +14,20 @@
         </h1>
       </div>
       @if(auth.user?.isAdmin)
-        <a
-          href="/matches/{{ match.id }}/edit"
-          class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
-        >Edit Match</a>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            hx-get="/matches/{{ match.id }}/fetch-valorant/step1"
+            hx-target="#valorant-modal-content"
+            hx-swap="innerHTML"
+            onclick="document.getElementById('valorant-modal').classList.remove('hidden')"
+            class="px-4 py-2 bg-valorant-dark border border-valorant-red/30 text-valorant-light rounded hover:bg-valorant-red/20 transition"
+          >Fetch from Valorant</button>
+          <a
+            href="/matches/{{ match.id }}/edit"
+            class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+          >Edit Match</a>
+        </div>
       @endif
     </div>
 
@@ -59,7 +69,7 @@
             <dt class="text-sm text-valorant-light/50">
               Result
             </dt>
-            <dd class="mt-1">
+            <dd class="mt-1" id="match-result">
               @if(match.result === 'win')
                 <span class="px-3 py-1 bg-green-900/50 text-green-400 rounded font-bold">WIN</span>
               @elseif(match.result === 'loss')
@@ -68,6 +78,20 @@
                 <span class="px-3 py-1 bg-yellow-900/50 text-yellow-400 rounded font-bold">DRAW</span>
               @else
                 <span class="text-valorant-light/50">Pending</span>
+              @endif
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm text-valorant-light/50">
+              Score
+            </dt>
+            <dd class="mt-1" id="match-score">
+              @if(match.scoreUs !== null && match.scoreThem !== null)
+                <span class="text-lg font-bold {{ match.result === 'win' ? 'text-green-400' : match.result === 'loss' ? 'text-red-400' : 'text-yellow-400' }}">
+                  {{ match.scoreUs }}-{{ match.scoreThem }}
+                </span>
+              @else
+                <span class="text-valorant-light/50">-</span>
               @endif
             </dd>
           </div>
@@ -96,5 +120,22 @@
 
     @include('partials/team_match_availability')
 
+  </div>
+
+  {{-- Valorant Fetch Modal --}}
+  <div
+    id="valorant-modal"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center"
+    hx-on:valorantScoreSaved="this.classList.add('hidden'); window.location.reload()"
+  >
+    <div
+      class="absolute inset-0 bg-black/70"
+      onclick="document.getElementById('valorant-modal').classList.add('hidden')"
+    ></div>
+    <div class="relative bg-valorant-gray border border-valorant-red/30 rounded-lg shadow-xl max-w-md w-full mx-4">
+      <div id="valorant-modal-content">
+        {{-- Content loaded via HTMX --}}
+      </div>
+    </div>
   </div>
 @end

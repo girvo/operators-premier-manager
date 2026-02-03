@@ -68,6 +68,15 @@ router
     router.put('/matches/:id', [MatchesController, 'update']).use(middleware.admin())
     router.delete('/matches/:id', [MatchesController, 'destroy']).use(middleware.admin())
     router.put('/matches/:id/result', [MatchesController, 'updateResult']).use(middleware.admin())
+    router
+      .get('/matches/:id/fetch-valorant/step1', [MatchesController, 'fetchFromValorantStep1'])
+      .use(middleware.admin())
+    router
+      .post('/matches/:id/fetch-valorant/step2', [MatchesController, 'fetchFromValorantStep2'])
+      .use(middleware.admin())
+    router
+      .post('/matches/:id/fetch-valorant/save', [MatchesController, 'fetchFromValorantSave'])
+      .use(middleware.admin())
 
     router.put('/matches/:id/availability', [MatchAvailabilityController, 'update'])
 

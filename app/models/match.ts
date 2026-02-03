@@ -23,6 +23,12 @@ export default class Match extends BaseModel {
   declare result: 'win' | 'loss' | 'draw' | null
 
   @column()
+  declare scoreUs: number | null
+
+  @column()
+  declare scoreThem: number | null
+
+  @column()
   declare notes: string | null
 
   @column.dateTime({ autoCreate: true })

@@ -4,7 +4,9 @@ import Map from '#models/map'
 import User from '#models/user'
 import WeeklyAvailability from '#models/weekly_availability'
 import { createMatchValidator, updateMatchValidator } from '#validators/match_validator'
+import { valorantScoreValidator } from '#validators/valorant_validator'
 import { DateTime } from 'luxon'
+import ValorantApiService from '#services/valorant_api_service'
 
 export default class MatchesController {
   async index({ view, auth }: HttpContext) {
@@ -196,5 +198,89 @@ export default class MatchesController {
     }
 
     return response.redirect('/matches')
+  }
+
+  async fetchFromValorantStep1({ params, view }: HttpContext) {
+    const match = await Match.findOrFail(params.id)
+
+    const rosterPlayers = await User.query()
+      .where('isOnRoster', true)
+      .where('approvalStatus', 'approved')
+      .whereNotNull('trackerggUsername')
+      .orderBy('fullName', 'asc')
+
+    const playersWithRiotId = rosterPlayers.filter((player) => {
+      const parsed = ValorantApiService.parseRiotId(player.trackerggUsername || '')
+      return parsed !== null
+    })
+
+    return view.render('partials/valorant_fetch/step1_select_player', {
+      match,
+      players: playersWithRiotId,
+    })
+  }
+
+  async fetchFromValorantStep2({ params, request, view }: HttpContext) {
+    const match = await Match.findOrFail(params.id)
+    const playerId = request.input('playerId')
+    const showAll = request.input('showAll') === '1'
+
+    const player = await User.findOrFail(playerId)
+
+    const riotIdParts = ValorantApiService.parseRiotId(player.trackerggUsername || '')
+    if (!riotIdParts) {
+      return view.render('partials/valorant_fetch/error', {
+        match,
+        error: 'Invalid Riot ID format. Expected "Name#TAG".',
+      })
+    }
+
+    try {
+      const matches = await ValorantApiService.getRecentMatches(
+        riotIdParts.name,
+        riotIdParts.tag,
+        undefined,
+        showAll
+      )
+
+      return view.render('partials/valorant_fetch/step2_select_match', {
+        match,
+        player,
+        recentMatches: matches,
+      })
+    } catch (error) {
+      return view.render('partials/valorant_fetch/error', {
+        match,
+        error: error instanceof Error ? error.message : 'Failed to fetch matches from Valorant API',
+      })
+    }
+  }
+
+  async fetchFromValorantSave({ params, request, response, view }: HttpContext) {
+    const match = await Match.findOrFail(params.id)
+
+    let payload: { scoreUs: number; scoreThem: number; result: 'win' | 'loss' | 'draw' }
+    try {
+      payload = await request.validateUsing(valorantScoreValidator)
+    } catch (error) {
+      let message = 'Invalid score data.'
+      if (error && typeof error === 'object' && 'messages' in error) {
+        const messages = (error as { messages?: Array<{ message?: string }> }).messages
+        if (messages && messages.length > 0 && messages[0].message) {
+          message = messages[0].message
+        }
+      }
+      response.status(422)
+      return view.render('partials/valorant_fetch/error', { match, error: message })
+    }
+
+    match.scoreUs = payload.scoreUs
+    match.scoreThem = payload.scoreThem
+    match.result = payload.result
+
+    await match.save()
+
+    response.header('HX-Trigger', 'valorantScoreSaved')
+    return response.send('')
   }
 }

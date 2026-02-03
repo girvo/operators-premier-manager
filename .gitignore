@@ -12,6 +12,7 @@ tmp
 
 # User uploads
 storage/uploads
+storage/logs
 
 # Frontend assets compiled code
 public/assets

@@ -1,0 +1,62 @@
+<div class="p-4">
+  <h3 class="text-lg font-semibold">Select a Player</h3>
+  <p class="text-valorant-light/70 text-sm mt-1 mb-4">
+    Choose a roster player to search their recent match history.
+  </p>
+
+  @if(players.length === 0)
+    <p class="text-valorant-light/50 text-sm">
+      No roster players have a Riot ID configured. Players can set their Riot ID in their tracker.gg username field (format: Name#TAG).
+    </p>
+  @else
+    <div class="space-y-2">
+      @each(player in players)
+        <button
+          type="button"
+          hx-post="/matches/{{ match.id }}/fetch-valorant/step2"
+          hx-vals='{"playerId": {{ player.id }}}'
+          hx-include="#valorant-matchtype-toggle"
+          hx-indicator="#valorant-step2-spinner-{{ player.id }}"
+          hx-target="#valorant-modal-content"
+          hx-swap="innerHTML"
+          class="w-full text-left px-4 py-3 bg-valorant-dark/50 hover:bg-valorant-red/20 rounded transition flex items-center justify-between group"
+        >
+          <div>
+            <span class="font-medium">{{ player.fullName }}</span>
+            <span class="text-valorant-light/50 text-sm ml-2">{{ player.trackerggUsername }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-valorant-light/30 group-hover:text-valorant-red transition htmx-hide-on-request">&rarr;</span>
+            <span
+              id="valorant-step2-spinner-{{ player.id }}"
+              class="htmx-indicator text-valorant-red"
+            >
+              @!component('components/spinner', { size: 'xs' })
+            </span>
+          </div>
+        </button>
+      @end
+    </div>
+  @endif
+
+  <div class="mt-4 flex items-center justify-between">
+    <label class="flex items-center gap-2 text-xs text-valorant-light/70">
+      <input
+        id="valorant-matchtype-toggle"
+        name="showAll"
+        value="1"
+        type="checkbox"
+        class="rounded border-valorant-light/20 bg-valorant-dark text-valorant-red focus:ring-valorant-red"
+      />
+      Show all match types
+    </label>
+  </div>
+
+  <div class="mt-4 pt-4 border-t border-valorant-red/10">
+    <button
+      type="button"
+      onclick="document.getElementById('valorant-modal').classList.add('hidden')"
+      class="px-4 py-2 text-valorant-light/70 hover:text-white transition"
+    >Cancel</button>
+  </div>
+</div>
