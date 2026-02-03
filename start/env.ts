@@ -42,4 +42,11 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   */
   HENRIK_API_KEY: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for Discord Webhook Notifications
+  |----------------------------------------------------------
+  */
+  DISCORD_WEBHOOK_URL: Env.schema.string.optional(),
 })

@@ -3,6 +3,7 @@ import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import MatchAvailability from '#models/match_availability'
 import MatchPlayerAgent from '#models/match_player_agent'
+import MatchNotification from '#models/match_notification'
 
 export default class Match extends BaseModel {
   @column({ isPrimary: true })
@@ -43,4 +44,7 @@ export default class Match extends BaseModel {
 
   @hasMany(() => MatchPlayerAgent)
   declare playerAgents: HasMany<typeof MatchPlayerAgent>
+
+  @hasMany(() => MatchNotification)
+  declare notifications: HasMany<typeof MatchNotification>
 }
