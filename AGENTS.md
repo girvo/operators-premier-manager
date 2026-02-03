@@ -46,6 +46,18 @@ start/
 - Return partial HTML for swaps
 - `hx-confirm` for destructive actions
 
+**hx-boost**: The app layout has `hx-boost="true"` on the body, which makes all links use AJAX navigation. This improves performance but requires attention:
+
+1. **File upload forms**: Must have `hx-boost="false"` - boost sends data as urlencoded, breaking multipart/form-data uploads
+2. **Logout/login forms**: Must have `hx-boost="false"` - session changes need full page reload
+3. **Out-of-band swaps**: Partials with `hx-swap-oob="true"` are stripped during boosted navigation if no matching element exists. Make OOB conditional:
+   ```edge
+   <div id="my-element" @if(isOobSwap) hx-swap-oob="true" @endif>
+   ```
+   Pass `isOobSwap: true` only from HTMX response handlers, not full page renders.
+4. **External links**: Use `target="_blank"` to bypass boost
+5. **Inline scripts**: Scripts in page templates do execute on boosted navigation (HTMX 1.9+), but be aware of this behavior
+
 **Timezones**: All DB times are UTC. User has `timezone` field. Use `TimezoneService` for conversions.
 
 **File Uploads**: Store in `storage/uploads/`. Served via `/uploads/*` route. Delete old files when replacing.
@@ -102,3 +114,4 @@ No test suite currently. Verify manually:
 - Test both admin and player roles
 - Test htmx interactions (check Network tab for partial responses)
 - Test timezone handling if touching availability
+- Test navigation via clicking links (hx-boost) not just direct URL access - elements may render differently

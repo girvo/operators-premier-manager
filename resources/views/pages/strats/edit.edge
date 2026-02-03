@@ -97,6 +97,7 @@
         action="/strats/{{ map.slug }}/{{ strat.id }}/images"
         method="POST"
         enctype="multipart/form-data"
+        hx-boost="false"
         class="space-y-4"
       >
         {{ csrfField() }}

@@ -1,7 +1,9 @@
 <div
   id="team-availability"
   class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6"
-  hx-swap-oob="true"
+  @if(isOobSwap)
+    hx-swap-oob="true"
+  @endif
 >
   <h2 class="text-xl font-semibold mb-4">
     Team Availability

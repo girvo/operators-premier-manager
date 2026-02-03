@@ -6,7 +6,7 @@
     </h1>
 
     <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
-      <form action="/players" method="POST" enctype="multipart/form-data" class="space-y-6">
+      <form action="/players" method="POST" enctype="multipart/form-data" hx-boost="false" class="space-y-6">
         {{ csrfField() }}
         <div>
           <label for="logo" class="block text-sm font-medium text-valorant-light mb-2">Player Logo</label>

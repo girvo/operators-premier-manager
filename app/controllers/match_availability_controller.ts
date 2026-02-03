@@ -38,6 +38,7 @@ export default class MatchAvailabilityController {
     const teamAvailabilityHtml = await view.render('partials/team_match_availability', {
       match,
       players,
+      isOobSwap: true,
     })
 
     return response.send(buttonsHtml + teamAvailabilityHtml)
