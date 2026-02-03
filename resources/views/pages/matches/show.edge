@@ -132,9 +132,15 @@
             <table class="min-w-full text-sm">
               <thead class="text-valorant-light/60 border-b border-valorant-red/10">
                 <tr class="text-left">
-                  <th class="py-2 pr-4 font-medium">Player</th>
-                  <th class="py-2 pr-4 font-medium">Agent</th>
-                  <th class="py-2 font-medium">K / D / A</th>
+                  <th class="py-2 pr-4 font-medium">
+                    Player
+                  </th>
+                  <th class="py-2 pr-4 font-medium">
+                    Agent
+                  </th>
+                  <th class="py-2 font-medium">
+                    K / D / A
+                  </th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-valorant-red/10">
@@ -147,11 +153,7 @@
                     <td class="py-2 pr-4">
                       <div class="flex items-center gap-2">
                         @if(agent)
-                          <img
-                            src="/images/agent-icons/{{ agent.key }}.png"
-                            alt="{{ agent.name }}"
-                            class="w-6 h-6 rounded"
-                          />
+                          <img src="/images/agent-icons/{{ agent.key }}.png" alt="{{ agent.name }}" class="w-6 h-6 rounded" />
                           <span>{{ agent.name }}</span>
                         @else
                           <span class="text-valorant-light/50">Unknown</span>
@@ -177,7 +179,7 @@
         @endif
       </div>
     @endif
-
+    
     @include('partials/team_match_availability')
 
   </div>

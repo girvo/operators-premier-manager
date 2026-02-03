@@ -31,7 +31,9 @@
               <!-- Column 2: Score (Centered & Styled) -->
               <div class="flex-1 flex justify-center">
                 @if(match.scoreUs !== null && match.scoreThem !== null)
-                  <span class="text-3xl font-black italic tracking-tighter {{ match.result === 'win' ? 'text-green-400' : match.result === 'loss' ? 'text-red-400' : 'text-yellow-400' }}">
+                  <span
+                    class="text-3xl font-black italic tracking-tighter {{ match.result === 'win' ? 'text-green-400' : match.result === 'loss' ? 'text-red-400' : 'text-yellow-400' }}"
+                  >
                     {{ match.scoreUs }} - {{ match.scoreThem }}
                   </span>
                 @endif
@@ -40,11 +42,17 @@
               <!-- Column 3: Result Badge (Right Aligned) -->
               <div class="flex-1 flex justify-end">
                 @if(match.result === 'win')
-                  <span class="px-5 py-2 bg-green-900/40 text-green-400 border border-green-500/30 rounded font-black italic text-sm">WIN</span>
+                  <span
+                    class="px-5 py-2 bg-green-900/40 text-green-400 border border-green-500/30 rounded font-black italic text-sm"
+                  >WIN</span>
                 @elseif(match.result === 'loss')
-                  <span class="px-5 py-2 bg-red-900/40 text-red-400 border border-red-500/30 rounded font-black italic text-sm">LOSS</span>
+                  <span
+                    class="px-5 py-2 bg-red-900/40 text-red-400 border border-red-500/30 rounded font-black italic text-sm"
+                  >LOSS</span>
                 @elseif(match.result === 'draw')
-                  <span class="px-5 py-2 bg-yellow-900/40 text-yellow-400 border border-yellow-500/30 rounded font-black italic text-sm">DRAW</span>
+                  <span
+                    class="px-5 py-2 bg-yellow-900/40 text-yellow-400 border border-yellow-500/30 rounded font-black italic text-sm"
+                  >DRAW</span>
                 @endif
               </div>
             </div>

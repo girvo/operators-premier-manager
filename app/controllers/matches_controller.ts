@@ -148,7 +148,9 @@ export default class MatchesController {
         }
       })
       .filter(
-        (entry): entry is {
+        (
+          entry
+        ): entry is {
           id: number
           name: string
           agentKey: string
@@ -295,7 +297,12 @@ export default class MatchesController {
   async fetchFromValorantSave({ params, request, response, view }: HttpContext) {
     const match = await Match.findOrFail(params.id)
 
-    let payload: { scoreUs: number; scoreThem: number; result: 'win' | 'loss' | 'draw'; matchId: string }
+    let payload: {
+      scoreUs: number
+      scoreThem: number
+      result: 'win' | 'loss' | 'draw'
+      matchId: string
+    }
     try {
       payload = await request.validateUsing(valorantScoreValidator)
     } catch (error) {
@@ -343,7 +350,9 @@ export default class MatchesController {
           }
         })
         .filter(
-          (record): record is {
+          (
+            record
+          ): record is {
             matchId: number
             userId: number
             agentKey: string
@@ -358,10 +367,7 @@ export default class MatchesController {
         await MatchPlayerAgent.createMany(records)
       }
     } catch (error) {
-      logger.warn(
-        { matchId: match.id, error },
-        'Failed to sync match agents from Valorant API'
-      )
+      logger.warn({ matchId: match.id, error }, 'Failed to sync match agents from Valorant API')
     }
 
     response.header('HX-Trigger', 'valorantScoreSaved')

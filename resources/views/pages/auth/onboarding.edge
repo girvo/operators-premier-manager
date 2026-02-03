@@ -31,82 +31,82 @@
   <body class="bg-valorant-dark min-h-screen">
     <div class="min-h-screen flex items-center justify-center">
       <div class="w-full max-w-md">
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-valorant-red">
-          OPERATORS
-        </h1>
-        <p class="text-valorant-light/70 mt-2">
-          Team Management Portal
-        </p>
-      </div>
-
-      <div class="bg-valorant-gray rounded-lg p-8 border border-valorant-red/20">
-        <div class="mb-6 text-center">
-          <svg
-            class="w-16 h-16 mx-auto text-valorant-red"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+        <div class="text-center mb-8">
+          <h1 class="text-4xl font-bold text-valorant-red">
+            OPERATORS
+          </h1>
+          <p class="text-valorant-light/70 mt-2">
+            Team Management Portal
+          </p>
         </div>
 
-        <h2 class="text-2xl font-bold text-valorant-light mb-2 text-center">
-          Select Your Timezone
-        </h2>
-
-        <p class="text-valorant-light/70 mb-6 text-center">
-          This helps us show match times and availability in your local time.
-        </p>
-
-        <form action="/onboarding" method="POST" class="space-y-6">
-          {{ csrfField() }}
-          <div>
-            <label for="timezone" class="block text-sm font-medium text-valorant-light mb-2">
-              Timezone
-            </label>
-            <select
-              id="timezone"
-              name="timezone"
-              required
-              class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+        <div class="bg-valorant-gray rounded-lg p-8 border border-valorant-red/20">
+          <div class="mb-6 text-center">
+            <svg
+              class="w-16 h-16 mx-auto text-valorant-red"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <option value="Australia/Sydney" selected>
-                Sydney (AEDT/AEST)
-              </option>
-              <option value="Australia/Melbourne">
-                Melbourne (AEDT/AEST)
-              </option>
-              <option value="Australia/Brisbane">
-                Brisbane (AEST)
-              </option>
-              <option value="Australia/Perth">
-                Perth (AWST)
-              </option>
-              <option value="Pacific/Auckland">
-                Auckland (NZDT/NZST)
-              </option>
-            </select>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
           </div>
 
-          <button
-            type="submit"
-            class="w-full py-3 bg-valorant-red text-white font-medium rounded hover:bg-valorant-red/80 transition"
-          >
-            Continue
-          </button>
-        </form>
-      </div>
+          <h2 class="text-2xl font-bold text-valorant-light mb-2 text-center">
+            Select Your Timezone
+          </h2>
 
-      <p class="text-center text-valorant-light/50 text-sm mt-6">
-        You can change this later in your profile settings.
-      </p>
+          <p class="text-valorant-light/70 mb-6 text-center">
+            This helps us show match times and availability in your local time.
+          </p>
+
+          <form action="/onboarding" method="POST" class="space-y-6">
+            {{ csrfField() }}
+            <div>
+              <label for="timezone" class="block text-sm font-medium text-valorant-light mb-2">
+                Timezone
+            </label>
+              <select
+                id="timezone"
+                name="timezone"
+                required
+                class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light"
+              >
+                <option value="Australia/Sydney" selected>
+                  Sydney (AEDT/AEST)
+                </option>
+                <option value="Australia/Melbourne">
+                  Melbourne (AEDT/AEST)
+                </option>
+                <option value="Australia/Brisbane">
+                  Brisbane (AEST)
+                </option>
+                <option value="Australia/Perth">
+                  Perth (AWST)
+                </option>
+                <option value="Pacific/Auckland">
+                  Auckland (NZDT/NZST)
+                </option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              class="w-full py-3 bg-valorant-red text-white font-medium rounded hover:bg-valorant-red/80 transition"
+            >
+              Continue
+          </button>
+          </form>
+        </div>
+
+        <p class="text-center text-valorant-light/50 text-sm mt-6">
+          You can change this later in your profile settings.
+        </p>
       </div>
     </div>
   </body>

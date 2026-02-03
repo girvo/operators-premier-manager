@@ -29,11 +29,7 @@
               class="rounded border border-valorant-light/20 bg-valorant-dark/60 p-2 text-center transition
                 peer-checked:border-valorant-red peer-checked:bg-valorant-red/10"
             >
-              <img
-                src="/images/agent-icons/{{ agent.key }}.png"
-                alt="{{ agent.name }}"
-                class="w-10 h-10 mx-auto"
-              />
+              <img src="/images/agent-icons/{{ agent.key }}.png" alt="{{ agent.name }}" class="w-10 h-10 mx-auto" />
               <div class="mt-1 text-[11px] text-valorant-light/80">
                 {{ agent.name }}
               </div>
@@ -46,10 +42,10 @@
 </div>
 
 <script>
-  (function () {
+  (function() {
     const grids = document.querySelectorAll("[data-agent-grid]");
-    grids.forEach((grid) => {
-      grid.addEventListener("click", (event) => {
+    grids.forEach(grid => {
+      grid.addEventListener("click", event => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) {
           return;
@@ -58,10 +54,8 @@
         if (!role) {
           return;
         }
-        const checkboxes = grid.querySelectorAll(
-          `input[type="checkbox"][data-agent-role="${role}"]`
-        );
-        checkboxes.forEach((checkbox) => {
+        const checkboxes = grid.querySelectorAll(`input[type="checkbox"][data-agent-role="${role}"]`);
+        checkboxes.forEach(checkbox => {
           checkbox.checked = true;
         });
       });

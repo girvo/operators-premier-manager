@@ -31,51 +31,51 @@
   <body class="bg-valorant-dark min-h-screen">
     <div class="min-h-screen flex items-center justify-center">
       <div class="w-full max-w-md">
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-valorant-red">
-          OPERATORS
-        </h1>
-        <p class="text-valorant-light/70 mt-2">
-          Team Management Portal
-        </p>
-      </div>
-
-      <div class="bg-valorant-gray rounded-lg p-8 border border-valorant-red/20 text-center">
-        <div class="mb-6">
-          <svg class="w-16 h-16 mx-auto text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-
-          </svg>
+        <div class="text-center mb-8">
+          <h1 class="text-4xl font-bold text-valorant-red">
+            OPERATORS
+          </h1>
+          <p class="text-valorant-light/70 mt-2">
+            Team Management Portal
+          </p>
         </div>
 
-        <h2 class="text-2xl font-bold text-valorant-light mb-4">
-          Awaiting Approval
-        </h2>
+        <div class="bg-valorant-gray rounded-lg p-8 border border-valorant-red/20 text-center">
+          <div class="mb-6">
+            <svg class="w-16 h-16 mx-auto text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
 
-        <p class="text-valorant-light/70 mb-6">
-          Your registration is pending approval from a team admin. You'll be able to access the team portal once approved.
-        </p>
+            </svg>
+          </div>
 
-        <p class="text-sm text-valorant-light/50 mb-6">
-          If you believe this is taking too long, please contact a team admin on Discord.
-        </p>
+          <h2 class="text-2xl font-bold text-valorant-light mb-4">
+            Awaiting Approval
+          </h2>
 
-        <form action="/logout" method="POST">
-          {{ csrfField() }}
+          <p class="text-valorant-light/70 mb-6">
+            Your registration is pending approval from a team admin. You'll be able to access the team portal once approved.
+          </p>
+
+          <p class="text-sm text-valorant-light/50 mb-6">
+            If you believe this is taking too long, please contact a team admin on Discord.
+          </p>
+
+          <form action="/logout" method="POST">
+            {{ csrfField() }}
           <button type="submit" class="px-6 py-2 text-valorant-light/70 hover:text-valorant-red transition">
-            Sign out
+              Sign out
           </button>
-        </form>
-      </div>
+          </form>
+        </div>
 
-      <p class="text-center text-valorant-light/50 text-sm mt-6">
-        <a href="/" class="hover:text-valorant-red transition">&larr; Back to home</a>
-      </p>
+        <p class="text-center text-valorant-light/50 text-sm mt-6">
+          <a href="/" class="hover:text-valorant-red transition">&larr; Back to home</a>
+        </p>
       </div>
     </div>
   </body>
