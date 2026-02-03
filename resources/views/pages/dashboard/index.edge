@@ -9,6 +9,55 @@
       </p>
     </div>
 
+    @if(nextMatch)
+      @let(mapSlug = nextMatch.map ? nextMatch.map.toLowerCase().replace(/\s+/g, '-') : null)
+      <div class="relative rounded-lg border border-valorant-red/20 overflow-hidden bg-valorant-gray">
+        @if(mapSlug)
+          <div class="absolute right-0 top-0 bottom-0 w-1/2 md:w-2/5">
+            <img
+              src="/images/maps/{{ mapSlug }}.png"
+              alt="{{ nextMatch.map }}"
+              class="w-full h-full object-cover"
+            />
+            <div class="absolute inset-0 bg-gradient-to-r from-valorant-gray to-transparent"></div>
+          </div>
+        @endif
+        <div class="relative p-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-semibold text-valorant-light/50 uppercase tracking-wide">
+                Next Match
+              </h2>
+              <a href="/matches/{{ nextMatch.id }}" class="block mt-2 hover:text-valorant-red transition">
+                <h3 class="text-2xl font-bold">
+                  @if(nextMatch.opponentName)
+                    vs {{ nextMatch.opponentName }}
+                  @else
+                    {{ nextMatch.matchType === 'official' ? 'Official Match' : 'Scrim' }}
+                  @endif
+                </h3>
+              </a>
+              <p class="text-valorant-light/70 mt-1">
+                {{ nextMatch.scheduledAt.setZone(timezone).toFormat('EEEE, dd LLLL yyyy \'at\' h:mm a') }}
+                @if(nextMatch.map)
+                  <span class="mx-2">•</span>
+                  <span>{{ nextMatch.map }}</span>
+                @endif
+              </p>
+            </div>
+            <div class="flex-shrink-0 bg-valorant-dark/80 backdrop-blur-sm rounded-lg p-3 -m-3">
+              <p class="text-sm text-valorant-light/70 mb-2">Can you play?</p>
+              <div id="my-availability" class="flex gap-2">
+                @let(match = nextMatch)
+                @let(compact = true)
+                @include('partials/match_availability_buttons')
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    @endif
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <a
         href="/matches"

@@ -7,7 +7,7 @@ export default class MatchAvailabilityController {
   async update({ params, request, response, auth, view }: HttpContext) {
     const user = auth.user!
     const matchId = params.id
-    const { status } = request.only(['status'])
+    const { status, compact } = request.only(['status', 'compact'])
 
     await MatchAvailability.updateOrCreate(
       {
@@ -33,6 +33,7 @@ export default class MatchAvailabilityController {
     const buttonsHtml = await view.render('partials/match_availability_buttons', {
       match,
       userAvailability,
+      compact: compact === true || compact === 'true',
     })
 
     const teamAvailabilityHtml = await view.render('partials/team_match_availability', {

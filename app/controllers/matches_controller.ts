@@ -13,7 +13,7 @@ export default class MatchesController {
       .preload('availabilities', (query) => {
         query.preload('user')
       })
-      .orderBy('scheduledAt', 'desc')
+      .orderBy('scheduledAt', 'asc')
 
     const upcomingMatches = matches.filter((m) => m.scheduledAt > DateTime.now() && !m.result)
     const pastMatches = matches.filter((m) => m.scheduledAt <= DateTime.now() || m.result)
