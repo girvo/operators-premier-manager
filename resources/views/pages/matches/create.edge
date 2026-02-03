@@ -116,7 +116,11 @@
 
   <script>
     function toggleOpponentField() {
-      const matchType = document.getElementById("matchType").value;
+      const matchTypeSelect = document.getElementById("matchType");
+      if (!matchTypeSelect) {
+        return;
+      }
+      const matchType = matchTypeSelect.value;
       const opponentField = document.getElementById("opponentField");
       const opponentInput = document.getElementById("opponentName");
       if (matchType === "scrim") {
@@ -128,39 +132,59 @@
         opponentInput.value = "";
       }
     }
-    // Run on page load to set initial state
-
-    toggleOpponentField();
-    // Initialize Flatpickr
-
-    const fp = flatpickr("#scheduledAt", {
-      enableTime: true,
-      dateFormat: "Y-m-d H:i",
-      altInput: true,
-      altFormat: "F j, Y at h:i K",
-      time_24hr: false,
-      minDate: "today",
-      onChange: function(selectedDates, dateStr) {
-        if (dateStr) {
-          checkAvailability(dateStr);
-        }
-      }
-    });
 
     function checkAvailability(datetime) {
       const panel = document.getElementById("availability-panel");
       const loading = document.getElementById("availability-loading");
+      if (!panel || !loading) {
+        return;
+      }
       // Show loading state
       panel.classList.add("hidden");
       loading.classList.remove("hidden");
       // Fetch availability
       htmx.ajax("GET", "/matches/check-availability?datetime=" + encodeURIComponent(datetime), {
         target: "#availability-panel",
-        swap: "innerHTML"
+        swap: "innerHTML",
+        source: panel
       }).then(function() {
+        panel.classList.remove("hidden");
+        loading.classList.add("hidden");
+      }).catch(function() {
         panel.classList.remove("hidden");
         loading.classList.add("hidden");
       });
     }
+
+    function initMatchForm() {
+      toggleOpponentField();
+      const scheduledInput = document.getElementById("scheduledAt");
+      if (!scheduledInput) {
+        return;
+      }
+      if (scheduledInput._flatpickr) {
+        scheduledInput._flatpickr.destroy();
+      }
+      flatpickr(scheduledInput, {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        altInput: true,
+        altFormat: "F j, Y at h:i K",
+        time_24hr: false,
+        minDate: "today",
+        onChange: function(selectedDates, dateStr) {
+          if (dateStr) {
+            checkAvailability(dateStr);
+          }
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", initMatchForm);
+    document.addEventListener("htmx:load", function(evt) {
+      if (evt.target && evt.target.querySelector && evt.target.querySelector("#scheduledAt")) {
+        initMatchForm();
+      }
+    });
   </script>
 @end
