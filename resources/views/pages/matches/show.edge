@@ -15,14 +15,16 @@
       </div>
       @if(auth.user?.isAdmin)
         <div class="flex gap-2">
-          <button
-            type="button"
-            hx-get="/matches/{{ match.id }}/fetch-valorant/step1"
-            hx-target="#valorant-modal-content"
-            hx-swap="innerHTML"
-            onclick="document.getElementById('valorant-modal').classList.remove('hidden')"
-            class="px-4 py-2 bg-valorant-dark border border-valorant-red/30 text-valorant-light rounded hover:bg-valorant-red/20 transition"
-          >Fetch from Valorant</button>
+          @if(match.result)
+            <button
+              type="button"
+              hx-get="/matches/{{ match.id }}/fetch-valorant/step1"
+              hx-target="#valorant-modal-content"
+              hx-swap="innerHTML"
+              onclick="document.getElementById('valorant-modal').classList.remove('hidden')"
+              class="px-4 py-2 bg-valorant-dark border border-valorant-red/30 text-valorant-light rounded hover:bg-valorant-red/20 transition"
+            >Fetch from Valorant</button>
+          @endif
           <a
             href="/matches/{{ match.id }}/edit"
             class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
@@ -119,6 +121,62 @@
         </div>
       </div>
     </div>
+
+    @if(match.result)
+      <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+        <h2 class="text-xl font-semibold mb-4">
+          Played Agents
+        </h2>
+        @if(playedAgents && playedAgents.length > 0)
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="text-valorant-light/60 border-b border-valorant-red/10">
+                <tr class="text-left">
+                  <th class="py-2 pr-4 font-medium">Player</th>
+                  <th class="py-2 pr-4 font-medium">Agent</th>
+                  <th class="py-2 font-medium">K / D / A</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-valorant-red/10">
+                @each(entry in playedAgents)
+                  @let(agent = agentLookup[entry.agentKey])
+                  <tr>
+                    <td class="py-2 pr-4">
+                      {{ entry.name }}
+                    </td>
+                    <td class="py-2 pr-4">
+                      <div class="flex items-center gap-2">
+                        @if(agent)
+                          <img
+                            src="/images/agent-icons/{{ agent.key }}.png"
+                            alt="{{ agent.name }}"
+                            class="w-6 h-6 rounded"
+                          />
+                          <span>{{ agent.name }}</span>
+                        @else
+                          <span class="text-valorant-light/50">Unknown</span>
+                        @endif
+                      </div>
+                    </td>
+                    <td class="py-2">
+                      @if(entry.kills !== null && entry.deaths !== null && entry.assists !== null)
+                        {{ entry.kills }} / {{ entry.deaths }} / {{ entry.assists }}
+                      @else
+                        <span class="text-valorant-light/50">-</span>
+                      @endif
+                    </td>
+                  </tr>
+                @end
+              </tbody>
+            </table>
+          </div>
+        @else
+          <p class="text-sm text-valorant-light/50">
+            No synced agent data yet.
+          </p>
+        @endif
+      </div>
+    @endif
 
     @include('partials/team_match_availability')
 

@@ -99,6 +99,16 @@
       </dl>
     </div>
 
+    <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+      <h2 class="text-xl font-bold text-valorant-red mb-4">
+        Agents
+      </h2>
+      @let(agentKeys = player.agentPrefs ?? [])
+      @let(maxIcons = 12)
+      @let(sizeClass = 'w-8 h-8 rounded')
+      @include('partials/agent_icons')
+    </div>
+
     @if(auth.user?.isAdmin && availabilityGrid)
       <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
         <h2 class="text-xl font-bold text-valorant-red mb-4">

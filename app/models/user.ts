@@ -52,6 +52,20 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare needsOnboarding: boolean
 
+  @column({
+    prepare: (value: string[] | null) => JSON.stringify(value ?? []),
+    consume: (value: string | null) => {
+      if (!value) return []
+      try {
+        const parsed = JSON.parse(value)
+        return Array.isArray(parsed) ? parsed : []
+      } catch {
+        return []
+      }
+    },
+  })
+  declare agentPrefs: string[]
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

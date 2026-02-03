@@ -6,6 +6,8 @@
     hx-swap-oob="true"
   @end
 >
+  @let(isCompleted = match.result !== null)
+  @let(agentMap = matchAgentByUserId || {})
   <h2 class="text-xl font-semibold mb-4">
     Team Availability
   </h2>
@@ -16,8 +18,30 @@
       </h3>
       <ul class="space-y-1">
         @each(availability in match.availabilities.filter(a => a.status === 'yes'))
-          <li class="text-sm">
-            {{ availability.user.fullName ?? availability.user.email }}
+          <li class="flex items-center justify-between gap-3 text-sm">
+            <span>
+              {{ availability.user.fullName ?? availability.user.email }}
+            </span>
+            @let(actualAgentKey = agentMap[availability.userId])
+            @if(isCompleted)
+              @if(actualAgentKey)
+                @let(agentKeys = [actualAgentKey])
+                @let(maxIcons = 1)
+                @let(sizeClass = 'w-5 h-5 rounded')
+                @let(enablePopover = false)
+                @include('partials/agent_icons')
+              @else
+                <span class="text-xs text-valorant-light/50">
+                  TBD
+                </span>
+              @endif
+            @else
+              @let(agentKeys = availability.user.agentPrefs ?? [])
+              @let(maxIcons = 5)
+              @let(sizeClass = 'w-5 h-5 rounded')
+              @let(enablePopover = true)
+              @include('partials/agent_icons')
+            @endif
           </li>
         @else
           <li class="text-sm text-valorant-light/50">
@@ -32,8 +56,30 @@
       </h3>
       <ul class="space-y-1">
         @each(availability in match.availabilities.filter(a => a.status === 'maybe'))
-          <li class="text-sm">
-            {{ availability.user.fullName ?? availability.user.email }}
+          <li class="flex items-center justify-between gap-3 text-sm">
+            <span>
+              {{ availability.user.fullName ?? availability.user.email }}
+            </span>
+            @let(actualAgentKey = agentMap[availability.userId])
+            @if(isCompleted)
+              @if(actualAgentKey)
+                @let(agentKeys = [actualAgentKey])
+                @let(maxIcons = 1)
+                @let(sizeClass = 'w-5 h-5 rounded')
+                @let(enablePopover = false)
+                @include('partials/agent_icons')
+              @else
+                <span class="text-xs text-valorant-light/50">
+                  TBD
+                </span>
+              @endif
+            @else
+              @let(agentKeys = availability.user.agentPrefs ?? [])
+              @let(maxIcons = 5)
+              @let(sizeClass = 'w-5 h-5 rounded')
+              @let(enablePopover = true)
+              @include('partials/agent_icons')
+            @endif
           </li>
         @else
           <li class="text-sm text-valorant-light/50">
@@ -48,8 +94,30 @@
       </h3>
       <ul class="space-y-1">
         @each(availability in match.availabilities.filter(a => a.status === 'no'))
-          <li class="text-sm">
-            {{ availability.user.fullName ?? availability.user.email }}
+          <li class="flex items-center justify-between gap-3 text-sm">
+            <span>
+              {{ availability.user.fullName ?? availability.user.email }}
+            </span>
+            @let(actualAgentKey = agentMap[availability.userId])
+            @if(isCompleted)
+              @if(actualAgentKey)
+                @let(agentKeys = [actualAgentKey])
+                @let(maxIcons = 1)
+                @let(sizeClass = 'w-5 h-5 rounded')
+                @let(enablePopover = false)
+                @include('partials/agent_icons')
+              @else
+                <span class="text-xs text-valorant-light/50">
+                  TBD
+                </span>
+              @endif
+            @else
+              @let(agentKeys = availability.user.agentPrefs ?? [])
+              @let(maxIcons = 5)
+              @let(sizeClass = 'w-5 h-5 rounded')
+              @let(enablePopover = true)
+              @include('partials/agent_icons')
+            @endif
           </li>
         @else
           <li class="text-sm text-valorant-light/50">
@@ -69,8 +137,30 @@
       </h3>
       <ul class="flex flex-wrap gap-2">
         @each(player in notResponded)
-          <li class="text-sm px-2 py-1 bg-valorant-dark rounded">
-            {{ player.fullName ?? player.email }}
+          <li class="flex items-center gap-2 text-sm px-2 py-1 bg-valorant-dark rounded">
+            <span>
+              {{ player.fullName ?? player.email }}
+            </span>
+            @let(actualAgentKey = agentMap[player.id])
+            @if(isCompleted)
+              @if(actualAgentKey)
+                @let(agentKeys = [actualAgentKey])
+                @let(maxIcons = 1)
+                @let(sizeClass = 'w-4 h-4 rounded')
+                @let(enablePopover = false)
+                @include('partials/agent_icons')
+              @else
+                <span class="text-[10px] text-valorant-light/50">
+                  TBD
+                </span>
+              @endif
+            @else
+              @let(agentKeys = player.agentPrefs ?? [])
+              @let(maxIcons = 4)
+              @let(sizeClass = 'w-4 h-4 rounded')
+              @let(enablePopover = true)
+              @include('partials/agent_icons')
+            @endif
           </li>
         @end
       </ul>

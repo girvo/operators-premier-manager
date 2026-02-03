@@ -3,10 +3,14 @@ import { updateProfileValidator } from '#validators/settings_validator'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import * as fs from 'node:fs'
+import { AGENTS_BY_ROLE, AGENT_LOOKUP } from '#constants/agents'
 
 export default class SettingsController {
   async showProfile({ view }: HttpContext) {
-    return view.render('pages/settings/profile')
+    return view.render('pages/settings/profile', {
+      agentGroups: AGENTS_BY_ROLE,
+      agentLookup: AGENT_LOOKUP,
+    })
   }
 
   async updateProfile({ request, auth, session, response }: HttpContext) {
@@ -20,6 +24,7 @@ export default class SettingsController {
     if (data.trackerggUsername !== undefined) {
       user.trackerggUsername = data.trackerggUsername || null
     }
+    user.agentPrefs = Array.from(new Set(data.agents))
 
     const logo = request.file('logo', {
       size: '2mb',

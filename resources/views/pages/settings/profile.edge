@@ -1,7 +1,7 @@
 @let(title = 'Profile Settings')
 
 @layouts.app({ title })
-  <div class="max-w-md mx-auto">
+  <div class="max-w-lg mx-auto">
     <h1 class="text-2xl font-bold text-valorant-red mb-6">
       Profile Settings
     </h1>
@@ -93,6 +93,20 @@
           <p class="mt-1 text-sm text-valorant-light/50">
             Your Riot ID (e.g., Player#1234)
           </p>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-medium text-valorant-light">
+              Agents
+            </label>
+            <span class="text-xs text-valorant-light/50">
+              Select at least one
+            </span>
+          </div>
+          @let(selectedAgents = auth.user?.agentPrefs ?? [])
+          @let(formFieldName = 'agents[]')
+          @include('partials/agent_select_grid')
         </div>
 
         <div class="flex gap-4">

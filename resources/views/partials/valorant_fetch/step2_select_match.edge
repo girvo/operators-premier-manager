@@ -16,8 +16,9 @@
         <button
           type="button"
           hx-post="/matches/{{ match.id }}/fetch-valorant/save"
-          hx-vals='{"scoreUs": {{ recentMatch.scoreUs }}, "scoreThem": {{ recentMatch.scoreThem }}, "result": "{{ recentMatch.result }}"}'
+          hx-vals='{"scoreUs": {{ recentMatch.scoreUs }}, "scoreThem": {{ recentMatch.scoreThem }}, "result": "{{ recentMatch.result }}", "matchId": "{{ recentMatch.matchId }}"}'
           hx-swap="none"
+          hx-on::after-request="if(event.detail.successful){ document.getElementById('valorant-modal').classList.add('hidden'); window.location.reload(); }"
           class="w-full text-left px-4 py-3 bg-valorant-dark/50 hover:bg-valorant-red/20 rounded transition"
         >
           <div class="flex items-center justify-between">

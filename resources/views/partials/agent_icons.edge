@@ -1,0 +1,45 @@
+@if(agentKeys.length > 0)
+  @let(displayAgents = agentKeys.slice(0, maxIcons))
+  @let(showOverflow = agentKeys.length > maxIcons)
+  <div class="relative flex items-center gap-1 {{ enablePopover && showOverflow ? 'group' : '' }}">
+    @each(agentKey in displayAgents)
+      @let(agent = agentLookup[agentKey])
+      @if(agent)
+        <img
+          src="/images/agent-icons/{{ agent.key }}.png"
+          alt="{{ agent.name }}"
+          class="{{ sizeClass }}"
+        />
+      @end
+    @end
+    @if(showOverflow)
+      <span class="text-xs text-valorant-light/50">
+        +{{ agentKeys.length - maxIcons }}
+      </span>
+    @endif
+
+    @if(enablePopover && showOverflow)
+      <div
+        class="hidden group-hover:block absolute right-0 top-full mt-2 z-10 rounded-lg border border-valorant-red/20 bg-valorant-gray p-3 shadow-lg min-w-[260px]"
+      >
+        <div class="grid grid-cols-4 gap-2">
+          @each(agentKey in agentKeys)
+            @let(agent = agentLookup[agentKey])
+            @if(agent)
+              <div class="flex flex-col items-center text-center">
+                <img
+                  src="/images/agent-icons/{{ agent.key }}.png"
+                  alt="{{ agent.name }}"
+                  class="w-7 h-7 rounded"
+                />
+                <span class="text-[10px] text-valorant-light/70 mt-1">
+                  {{ agent.name }}
+                </span>
+              </div>
+            @end
+          @end
+        </div>
+      </div>
+    @endif
+  </div>
+@endif

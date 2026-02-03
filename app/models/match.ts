@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import MatchAvailability from '#models/match_availability'
+import MatchPlayerAgent from '#models/match_player_agent'
 
 export default class Match extends BaseModel {
   @column({ isPrimary: true })
@@ -39,4 +40,7 @@ export default class Match extends BaseModel {
 
   @hasMany(() => MatchAvailability)
   declare availabilities: HasMany<typeof MatchAvailability>
+
+  @hasMany(() => MatchPlayerAgent)
+  declare playerAgents: HasMany<typeof MatchPlayerAgent>
 }

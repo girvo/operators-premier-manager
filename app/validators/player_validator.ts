@@ -1,4 +1,5 @@
 import vine from '@vinejs/vine'
+import { AGENT_KEYS } from '#constants/agents'
 
 export const createPlayerValidator = vine.compile(
   vine.object({
@@ -21,5 +22,6 @@ export const updatePlayerValidator = vine.compile(
     timezone: vine.string().minLength(1),
     trackerggUsername: vine.string().maxLength(100).optional(),
     isOnRoster: vine.boolean().optional(),
+    agents: vine.array(vine.enum(AGENT_KEYS)).minLength(1).maxLength(28),
   })
 )

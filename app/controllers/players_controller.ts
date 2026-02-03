@@ -6,6 +6,7 @@ import { createPlayerValidator, updatePlayerValidator } from '#validators/player
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import * as fs from 'node:fs'
+import { AGENTS_BY_ROLE, AGENT_LOOKUP } from '#constants/agents'
 
 export default class PlayersController {
   async index({ view }: HttpContext) {
@@ -93,12 +94,17 @@ export default class PlayersController {
       player,
       availabilityGrid,
       availabilityHours,
+      agentLookup: AGENT_LOOKUP,
     })
   }
 
   async edit({ params, view }: HttpContext) {
     const player = await User.findOrFail(params.id)
-    return view.render('pages/players/edit', { player })
+    return view.render('pages/players/edit', {
+      player,
+      agentGroups: AGENTS_BY_ROLE,
+      agentLookup: AGENT_LOOKUP,
+    })
   }
 
   async update({ params, request, response, session }: HttpContext) {
@@ -111,6 +117,7 @@ export default class PlayersController {
     player.timezone = data.timezone
     player.trackerggUsername = data.trackerggUsername || null
     player.isOnRoster = data.isOnRoster ?? false
+    player.agentPrefs = Array.from(new Set(data.agents))
 
     if (data.password) {
       player.password = data.password

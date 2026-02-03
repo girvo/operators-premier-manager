@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import MatchAvailability from '#models/match_availability'
 import Match from '#models/match'
 import User from '#models/user'
+import { AGENT_LOOKUP } from '#constants/agents'
 
 export default class MatchAvailabilityController {
   async update({ params, request, response, auth, view }: HttpContext) {
@@ -24,11 +25,18 @@ export default class MatchAvailabilityController {
       .preload('availabilities', (query) => {
         query.preload('user')
       })
+      .preload('playerAgents')
       .firstOrFail()
 
     const players = await User.query().orderBy('fullName', 'asc')
 
     const userAvailability = match.availabilities.find((a) => a.userId === user.id)
+
+    const matchAgentByUserId: Record<number, string> = {}
+    for (const entry of match.playerAgents || []) {
+      if (!entry.agentKey) continue
+      matchAgentByUserId[entry.userId] = entry.agentKey
+    }
 
     const buttonsHtml = await view.render('partials/match_availability_buttons', {
       match,
@@ -40,6 +48,8 @@ export default class MatchAvailabilityController {
       match,
       players,
       isOobSwap: true,
+      agentLookup: AGENT_LOOKUP,
+      matchAgentByUserId,
     })
 
     return response.send(buttonsHtml + teamAvailabilityHtml)

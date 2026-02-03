@@ -4,6 +4,7 @@ import type { Infer } from '@vinejs/vine/types'
 import logger from '@adonisjs/core/services/logger'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { AGENT_LOOKUP } from '#constants/agents'
 
 const henrikPlayerSchema = vine
   .object({
@@ -74,6 +75,14 @@ export interface ParsedMatch {
   result: 'win' | 'loss' | 'draw'
 }
 
+export interface MatchAgentEntry {
+  riotId: string
+  agentKey: string
+  kills: number | null
+  deaths: number | null
+  assists: number | null
+}
+
 export default class ValorantApiService {
   static parseRiotId(riotId: string): { name: string; tag: string } | null {
     const parts = riotId.split('#')
@@ -84,6 +93,79 @@ export default class ValorantApiService {
       name: parts[0].trim(),
       tag: parts[1].trim(),
     }
+  }
+
+  static async getMatchAgents(matchId: string): Promise<MatchAgentEntry[]> {
+    const apiKey = env.get('HENRIK_API_KEY')
+    if (!apiKey) {
+      throw new Error('HENRIK_API_KEY is not configured')
+    }
+
+    const url = `https://api.henrikdev.xyz/valorant/v2/match/${encodeURIComponent(matchId)}`
+    const response = await fetch(url, {
+      headers: {
+        Authorization: apiKey,
+      },
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Henrik API error: ${response.status} - ${text}`)
+    }
+
+    const json = (await response.json()) as {
+      data?: {
+        players?: { all_players?: Array<Record<string, unknown>> }
+      }
+    }
+
+    const players = json?.data?.players?.all_players ?? []
+    return players
+      .map((player) => {
+        const name = typeof player.name === 'string' ? player.name.trim() : null
+        const tag = typeof player.tag === 'string' ? player.tag.trim() : null
+        if (!name || !tag) return null
+
+        const rawAgent =
+          (typeof player.character === 'string' && player.character) ||
+          (typeof player.character_name === 'string' && player.character_name) ||
+          (typeof player.agent === 'string' && player.agent) ||
+          (typeof player.agent_name === 'string' && player.agent_name) ||
+          (typeof player.character_id === 'string' && player.character_id) ||
+          null
+
+        if (!rawAgent) return null
+
+        const agentKey = this.normalizeAgentKey(rawAgent)
+        if (!agentKey || !AGENT_LOOKUP[agentKey]) {
+          return null
+        }
+
+        const kills = typeof player.kills === 'number' ? player.kills : null
+        const deaths = typeof player.deaths === 'number' ? player.deaths : null
+        const assists = typeof player.assists === 'number' ? player.assists : null
+
+        const stats =
+          typeof player.stats === 'object' && player.stats
+            ? (player.stats as Record<string, unknown>)
+            : null
+
+        const resolvedKills =
+          kills ?? (typeof stats?.kills === 'number' ? (stats.kills as number) : null)
+        const resolvedDeaths =
+          deaths ?? (typeof stats?.deaths === 'number' ? (stats.deaths as number) : null)
+        const resolvedAssists =
+          assists ?? (typeof stats?.assists === 'number' ? (stats.assists as number) : null)
+
+        return {
+          riotId: `${name}#${tag}`.toLowerCase(),
+          agentKey,
+          kills: resolvedKills,
+          deaths: resolvedDeaths,
+          assists: resolvedAssists,
+        }
+      })
+      .filter((entry): entry is MatchAgentEntry => entry !== null)
   }
 
   static async getRecentMatches(
@@ -226,5 +308,15 @@ export default class ValorantApiService {
     if (scoreUs > scoreThem) return 'win'
     if (scoreUs < scoreThem) return 'loss'
     return 'draw'
+  }
+
+  private static normalizeAgentKey(rawAgent: string): string | null {
+    const cleaned = rawAgent.trim().toLowerCase()
+    if (!cleaned) return null
+    if (cleaned === 'kay/o' || cleaned === 'kayo') return 'kay-o'
+    return cleaned
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '')
   }
 }

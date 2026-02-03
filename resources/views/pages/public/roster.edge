@@ -28,6 +28,10 @@
             <h3 class="text-lg font-semibold">
               {{ player.fullName ?? 'Unknown' }}
             </h3>
+            @let(agentKeys = player.agentPrefs ?? [])
+            @let(maxIcons = 6)
+            @let(sizeClass = 'w-6 h-6 rounded')
+            @include('partials/agent_icons')
             @if(player.trackerggUrl)
               <a
                 href="{{ player.trackerggUrl }}"

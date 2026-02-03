@@ -1,12 +1,15 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Match from '#models/match'
-import Map from '#models/map'
+import GameMap from '#models/map'
 import User from '#models/user'
 import WeeklyAvailability from '#models/weekly_availability'
+import MatchPlayerAgent from '#models/match_player_agent'
 import { createMatchValidator, updateMatchValidator } from '#validators/match_validator'
 import { valorantScoreValidator } from '#validators/valorant_validator'
 import { DateTime } from 'luxon'
 import ValorantApiService from '#services/valorant_api_service'
+import { AGENT_LOOKUP } from '#constants/agents'
+import logger from '@adonisjs/core/services/logger'
 
 export default class MatchesController {
   async index({ view, auth }: HttpContext) {
@@ -28,7 +31,7 @@ export default class MatchesController {
   }
 
   async create({ view }: HttpContext) {
-    const maps = await Map.query().where('isActive', true).orderBy('name', 'asc')
+    const maps = await GameMap.query().where('isActive', true).orderBy('name', 'asc')
     return view.render('pages/matches/create', { maps })
   }
 
@@ -119,23 +122,56 @@ export default class MatchesController {
       .preload('availabilities', (query) => {
         query.preload('user')
       })
+      .preload('playerAgents')
       .firstOrFail()
 
     const players = await User.query().orderBy('fullName', 'asc')
 
     const userAvailability = match.availabilities.find((a) => a.userId === user.id)
 
+    const matchAgentByUserId: Record<number, string> = {}
+    for (const entry of match.playerAgents || []) {
+      matchAgentByUserId[entry.userId] = entry.agentKey
+    }
+
+    const playedAgents = (match.playerAgents || [])
+      .map((entry) => {
+        const player = players.find((p) => p.id === entry.userId)
+        if (!player) return null
+        return {
+          id: player.id,
+          name: player.fullName ?? player.email,
+          agentKey: entry.agentKey,
+          kills: entry.kills,
+          deaths: entry.deaths,
+          assists: entry.assists,
+        }
+      })
+      .filter(
+        (entry): entry is {
+          id: number
+          name: string
+          agentKey: string
+          kills: number | null
+          deaths: number | null
+          assists: number | null
+        } => Boolean(entry)
+      )
+
     return view.render('pages/matches/show', {
       match,
       players,
       userAvailability,
       timezone: user.timezone,
+      agentLookup: AGENT_LOOKUP,
+      matchAgentByUserId,
+      playedAgents,
     })
   }
 
   async edit({ params, view }: HttpContext) {
     const match = await Match.findOrFail(params.id)
-    const maps = await Map.query().where('isActive', true).orderBy('name', 'asc')
+    const maps = await GameMap.query().where('isActive', true).orderBy('name', 'asc')
     return view.render('pages/matches/edit', { match, maps })
   }
 
@@ -259,7 +295,7 @@ export default class MatchesController {
   async fetchFromValorantSave({ params, request, response, view }: HttpContext) {
     const match = await Match.findOrFail(params.id)
 
-    let payload: { scoreUs: number; scoreThem: number; result: 'win' | 'loss' | 'draw' }
+    let payload: { scoreUs: number; scoreThem: number; result: 'win' | 'loss' | 'draw'; matchId: string }
     try {
       payload = await request.validateUsing(valorantScoreValidator)
     } catch (error) {
@@ -279,6 +315,54 @@ export default class MatchesController {
     match.result = payload.result
 
     await match.save()
+
+    try {
+      const agents = await ValorantApiService.getMatchAgents(payload.matchId)
+      const rosterPlayers = await User.query().whereNotNull('trackerggUsername')
+      const riotIdToUserId = new Map<string, number>()
+
+      for (const player of rosterPlayers) {
+        const parsed = ValorantApiService.parseRiotId(player.trackerggUsername || '')
+        if (!parsed) continue
+        const riotIdKey = `${parsed.name}#${parsed.tag}`.toLowerCase()
+        riotIdToUserId.set(riotIdKey, player.id)
+      }
+
+      const records = agents
+        .map((entry) => {
+          const userId = riotIdToUserId.get(entry.riotId)
+          if (!userId) return null
+          if (!entry.agentKey) return null
+          return {
+            matchId: match.id,
+            userId,
+            agentKey: entry.agentKey,
+            kills: entry.kills,
+            deaths: entry.deaths,
+            assists: entry.assists,
+          }
+        })
+        .filter(
+          (record): record is {
+            matchId: number
+            userId: number
+            agentKey: string
+            kills: number | null
+            deaths: number | null
+            assists: number | null
+          } => Boolean(record && record.userId && record.agentKey)
+        )
+
+      await MatchPlayerAgent.query().where('matchId', match.id).delete()
+      if (records.length > 0) {
+        await MatchPlayerAgent.createMany(records)
+      }
+    } catch (error) {
+      logger.warn(
+        { matchId: match.id, error },
+        'Failed to sync match agents from Valorant API'
+      )
+    }
 
     response.header('HX-Trigger', 'valorantScoreSaved')
     return response.send('')

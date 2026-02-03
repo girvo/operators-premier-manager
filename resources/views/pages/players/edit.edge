@@ -102,6 +102,20 @@
         </div>
 
         <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-medium text-valorant-light">
+              Agents
+            </label>
+            <span class="text-xs text-valorant-light/50">
+              Select at least one
+            </span>
+          </div>
+          @let(selectedAgents = player.agentPrefs ?? [])
+          @let(formFieldName = 'agents[]')
+          @include('partials/agent_select_grid')
+        </div>
+
+        <div>
           <label for="timezone" class="block text-sm font-medium text-valorant-light mb-2">Timezone</label>
           <select
             id="timezone"
