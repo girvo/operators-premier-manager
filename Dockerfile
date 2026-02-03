@@ -4,24 +4,25 @@ FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
-
 WORKDIR /app
 
-# Dependencies stage
-
+# Dependencies stage (all deps for building)
 FROM base AS deps
 
 # Install build dependencies for native modules (better-sqlite3)
-
 RUN apk add --no-cache python3 make g++
-
 COPY package.json pnpm-lock.yaml ./
 
 # Allow better-sqlite3 and esbuild to run their build scripts
-
 RUN pnpm config set only-built-dependencies better-sqlite3 esbuild
-
 RUN pnpm install --frozen-lockfile
+
+# Production dependencies stage (prod deps only, built fresh)
+FROM base AS prod-deps
+RUN apk add --no-cache python3 make g++
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm config set only-built-dependencies better-sqlite3
+RUN pnpm install --frozen-lockfile --prod
 
 # Build stage
 FROM base AS build
@@ -33,15 +34,9 @@ RUN node ace build
 FROM base AS production
 ENV NODE_ENV=production
 WORKDIR /app
+
 COPY --from=build /app/build /app
-COPY --from=build /app/package.json /app/package.json
-COPY --from=build /app/pnpm-lock.yaml /app/pnpm-lock.yaml
-
-# Copy node_modules from deps to avoid rebuilding native extensions
-COPY --from=deps /app/node_modules /app/node_modules
-
-# Prune dev dependencies
-RUN pnpm prune --prod
+COPY --from=prod-deps /app/node_modules /app/node_modules
 
 # Create tmp directory for sqlite
 RUN mkdir -p tmp

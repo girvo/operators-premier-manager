@@ -8,10 +8,34 @@
 
     <div class="bg-valorant-gray rounded-lg p-6 border border-valorant-red/20">
       <form
-        hx-put="/settings/profile"
-        hx-headers='{"x-csrf-token": "{{ csrfToken }}"}'
+        action="/settings/profile?_method=PUT"
+        method="POST"
+        enctype="multipart/form-data"
+        hx-boost="false"
         class="space-y-6"
       >
+        {{ csrfField() }}
+        <div>
+          <label class="block text-sm font-medium text-valorant-light mb-2">Profile Picture</label>
+          <div class="flex items-start gap-4">
+            @let(user = auth.user)
+            @let(editable = true)
+            @include('partials/user_profile_pic')
+            <div class="flex-1">
+              <input
+                type="file"
+                id="logo"
+                name="logo"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                class="w-full text-sm text-valorant-light file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-valorant-red file:text-white hover:file:bg-valorant-red/80 file:cursor-pointer"
+              />
+              <p class="mt-1 text-xs text-valorant-light/50">
+                Max 2MB. JPG, PNG, GIF, or WebP.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div>
           <label for="fullName" class="block text-sm font-medium text-valorant-light mb-2">
             Display Name

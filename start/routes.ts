@@ -41,6 +41,7 @@ router
 
     router.get('/settings/profile', [SettingsController, 'showProfile'])
     router.put('/settings/profile', [SettingsController, 'updateProfile'])
+    router.delete('/settings/profile/logo', [SettingsController, 'destroyLogo'])
     router.get('/settings/password', [AuthController, 'showChangePassword'])
     router.put('/settings/password', [AuthController, 'changePassword'])
 
