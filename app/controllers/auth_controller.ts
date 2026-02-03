@@ -2,7 +2,11 @@ import type { HttpContext } from '@adonisjs/core/http'
 import hash from '@adonisjs/core/services/hash'
 import { cuid } from '@adonisjs/core/helpers'
 import User from '#models/user'
-import { loginValidator, changePasswordValidator, onboardingValidator } from '#validators/auth_validator'
+import {
+  loginValidator,
+  changePasswordValidator,
+  onboardingValidator,
+} from '#validators/auth_validator'
 
 export default class AuthController {
   async showLogin({ view }: HttpContext) {

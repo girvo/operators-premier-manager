@@ -165,10 +165,7 @@ export default class ValorantApiService {
   private static getMatchType(
     match: HenrikMatch
   ): { matchType: 'Premier' | 'Custom' | 'Other'; label: string | null } | null {
-    if (
-      match.metadata.premier_info?.tournament_id ||
-      match.metadata.premier_info?.matchup_id
-    ) {
+    if (match.metadata.premier_info?.tournament_id || match.metadata.premier_info?.matchup_id) {
       return { matchType: 'Premier', label: 'Premier' }
     }
 

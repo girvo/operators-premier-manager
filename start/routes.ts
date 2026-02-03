@@ -101,6 +101,8 @@ router
       .use(middleware.admin())
 
     router.get('/admin/maps', [AdminMapsController, 'index']).use(middleware.admin())
-    router.post('/admin/maps/:id/toggle', [AdminMapsController, 'toggleActive']).use(middleware.admin())
+    router
+      .post('/admin/maps/:id/toggle', [AdminMapsController, 'toggleActive'])
+      .use(middleware.admin())
   })
   .use([middleware.auth(), middleware.onboarding(), middleware.approved()])

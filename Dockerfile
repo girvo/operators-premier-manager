@@ -13,15 +13,15 @@ FROM base AS deps
 RUN apk add --no-cache python3 make g++
 COPY package.json pnpm-lock.yaml ./
 
-# Allow better-sqlite3 and esbuild to run their build scripts
-RUN pnpm config set only-built-dependencies better-sqlite3 esbuild
+# Approve native build scripts
+RUN pnpm approve-builds better-sqlite3 esbuild
 RUN pnpm install --frozen-lockfile
 
 # Production dependencies stage (prod deps only, built fresh)
 FROM base AS prod-deps
 RUN apk add --no-cache python3 make g++
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm config set only-built-dependencies better-sqlite3
+RUN pnpm approve-builds better-sqlite3
 RUN pnpm install --frozen-lockfile --prod
 
 # Build stage

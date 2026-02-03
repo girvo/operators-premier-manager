@@ -1,5 +1,7 @@
 <div class="p-4">
-  <h3 class="text-lg font-semibold">Select a Player</h3>
+  <h3 class="text-lg font-semibold">
+    Select a Player
+  </h3>
   <p class="text-valorant-light/70 text-sm mt-1 mb-4">
     Choose a roster player to search their recent match history.
   </p>
@@ -27,10 +29,7 @@
           </div>
           <div class="flex items-center gap-2">
             <span class="text-valorant-light/30 group-hover:text-valorant-red transition htmx-hide-on-request">&rarr;</span>
-            <span
-              id="valorant-step2-spinner-{{ player.id }}"
-              class="htmx-indicator text-valorant-red"
-            >
+            <span id="valorant-step2-spinner-{{ player.id }}" class="htmx-indicator text-valorant-red">
               @!component('components/spinner', { size: 'xs' })
             </span>
           </div>
@@ -38,7 +37,7 @@
       @end
     </div>
   @endif
-
+  
   <div class="mt-4 flex items-center justify-between">
     <label class="flex items-center gap-2 text-xs text-valorant-light/70">
       <input

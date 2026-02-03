@@ -52,7 +52,7 @@ start/
 2. **Logout/login forms**: Must have `hx-boost="false"` - session changes need full page reload
 3. **Out-of-band swaps**: Partials with `hx-swap-oob="true"` are stripped during boosted navigation if no matching element exists. Make OOB conditional:
    ```edge
-   <div id="my-element" @if(isOobSwap) hx-swap-oob="true" @endif>
+   <div id="my-element" if @if(isOobSwap) hx-swap-oob="true" @end>
    ```
    Pass `isOobSwap: true` only from HTMX response handlers, not full page renders.
 4. **External links**: Use `target="_blank"` to bypass boost

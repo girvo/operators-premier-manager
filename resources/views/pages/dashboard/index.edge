@@ -19,7 +19,8 @@
               alt="{{ nextMatch.map }}"
               class="w-full h-full object-cover"
             />
-            <div class="absolute inset-0 bg-gradient-to-r from-valorant-gray to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-valorant-gray to-transparent">
+            </div>
           </div>
         @endif
         <div class="relative p-6">
@@ -46,7 +47,9 @@
               </p>
             </div>
             <div class="flex-shrink-0 bg-valorant-dark/80 backdrop-blur-sm rounded-lg p-3 -m-3">
-              <p class="text-sm text-valorant-light/70 mb-2">Can you play?</p>
+              <p class="text-sm text-valorant-light/70 mb-2">
+                Can you play?
+              </p>
               <div id="my-availability" class="flex gap-2">
                 @let(match = nextMatch)
                 @let(compact = true)
@@ -57,7 +60,7 @@
         </div>
       </div>
     @endif
-
+    
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <a
         href="/matches"

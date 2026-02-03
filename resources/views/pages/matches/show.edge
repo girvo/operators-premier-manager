@@ -87,7 +87,9 @@
             </dt>
             <dd class="mt-1" id="match-score">
               @if(match.scoreUs !== null && match.scoreThem !== null)
-                <span class="text-lg font-bold {{ match.result === 'win' ? 'text-green-400' : match.result === 'loss' ? 'text-red-400' : 'text-yellow-400' }}">
+                <span
+                  class="text-lg font-bold {{ match.result === 'win' ? 'text-green-400' : match.result === 'loss' ? 'text-red-400' : 'text-yellow-400' }}"
+                >
                   {{ match.scoreUs }}-{{ match.scoreThem }}
                 </span>
               @else
@@ -131,8 +133,11 @@
     <div
       class="absolute inset-0 bg-black/70"
       onclick="document.getElementById('valorant-modal').classList.add('hidden')"
-    ></div>
-    <div class="relative bg-valorant-gray border border-valorant-red/30 rounded-lg shadow-xl max-w-md w-full mx-4">
+    >
+    </div>
+    <div
+      class="relative bg-valorant-gray border border-valorant-red/30 rounded-lg shadow-xl max-w-md w-full mx-4"
+    >
       <div id="valorant-modal-content">
         {{-- Content loaded via HTMX --}}
       </div>
