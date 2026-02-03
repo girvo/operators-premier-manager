@@ -20,6 +20,12 @@ export const http = defineConfig({
   allowMethodSpoofing: true,
 
   /**
+   * Trust proxy headers when behind a reverse proxy (Nginx, Cloudflare, etc.)
+   * This ensures cookies are set correctly for HTTPS
+   */
+  trustProxy: app.inProduction,
+
+  /**
    * Enabling async local storage will let you access HTTP context
    * from anywhere inside your application.
    */

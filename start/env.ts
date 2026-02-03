@@ -49,4 +49,11 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   */
   DISCORD_WEBHOOK_URL: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | App URL for external links (Discord notifications, etc.)
+  |----------------------------------------------------------
+  */
+  APP_URL: Env.schema.string.optional(),
 })

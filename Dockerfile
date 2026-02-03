@@ -1,9 +1,9 @@
 FROM node:22-alpine AS base
 
-# Install pnpm
+# Install pnpm via corepack
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 # Dependencies stage (all deps for building)
@@ -11,17 +11,13 @@ FROM base AS deps
 
 # Install build dependencies for native modules (better-sqlite3)
 RUN apk add --no-cache python3 make g++
-COPY package.json pnpm-lock.yaml ./
-
-# Approve native build scripts
-RUN pnpm approve-builds better-sqlite3 esbuild
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Production dependencies stage (prod deps only, built fresh)
 FROM base AS prod-deps
 RUN apk add --no-cache python3 make g++
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm approve-builds better-sqlite3
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile --prod
 
 # Build stage

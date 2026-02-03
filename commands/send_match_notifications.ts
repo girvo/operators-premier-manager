@@ -16,11 +16,28 @@ export default class SendMatchNotifications extends BaseCommand {
   @flags.boolean({ description: 'Send a test notification to verify webhook works' })
   declare test: boolean
 
+  @flags.boolean({
+    description:
+      "Send notifications for any upcoming match (1-24h away) that hasn't been manually notified",
+  })
+  declare catchup: boolean
+
+  @flags.number({ description: 'Send notification for a specific match regardless of timing' })
+  declare matchId: number
+
   async run() {
     const discordService = new DiscordNotificationService()
 
     if (this.test) {
       return this.sendTestNotification(discordService)
+    }
+
+    if (this.matchId) {
+      return this.sendMatchNotification(discordService, this.matchId)
+    }
+
+    if (this.catchup) {
+      return this.sendCatchupNotifications(discordService)
     }
 
     const now = DateTime.now()
@@ -120,5 +137,85 @@ export default class SendMatchNotifications extends BaseCommand {
     } else {
       this.logger.error('Failed to send test notification. Check DISCORD_WEBHOOK_URL in .env')
     }
+  }
+
+  private async sendMatchNotification(discordService: DiscordNotificationService, matchId: number) {
+    const match = await Match.find(matchId)
+
+    if (!match) {
+      this.logger.error(`Match #${matchId} not found`)
+      return
+    }
+
+    if (match.scheduledAt <= DateTime.now()) {
+      this.logger.error(`Cannot send notification for past match #${matchId}`)
+      return
+    }
+
+    const existing = await MatchNotification.query()
+      .where('matchId', match.id)
+      .where('notificationType', 'manual')
+      .first()
+
+    if (existing) {
+      this.logger.info(`Skipping manual notification for match #${match.id} (already sent)`)
+      return
+    }
+
+    const success = await discordService.sendMatchReminder(match, 'manual')
+    if (success) {
+      await MatchNotification.create({
+        matchId: match.id,
+        notificationType: 'manual',
+        sentAt: DateTime.now(),
+      })
+      this.logger.success(`Sent manual notification for match #${match.id}`)
+    } else {
+      this.logger.error(`Failed to send manual notification for match #${match.id}`)
+    }
+  }
+
+  private async sendCatchupNotifications(discordService: DiscordNotificationService) {
+    const now = DateTime.now()
+    const oneHourAway = now.plus({ hours: 1 })
+    const twentyFourHoursAway = now.plus({ hours: 24 })
+
+    // Find upcoming matches in the 1-24h window
+    const upcomingMatches = await Match.query()
+      .where('scheduledAt', '>', oneHourAway.toSQL()!)
+      .where('scheduledAt', '<=', twentyFourHoursAway.toSQL()!)
+
+    let sent = 0
+    let skipped = 0
+
+    for (const match of upcomingMatches) {
+      const existing = await MatchNotification.query()
+        .where('matchId', match.id)
+        .where('notificationType', 'manual')
+        .first()
+
+      if (existing) {
+        this.logger.info(
+          `Skipping catchup notification for match #${match.id} (already manually notified)`
+        )
+        skipped++
+        continue
+      }
+
+      const success = await discordService.sendMatchReminder(match, 'manual')
+      if (success) {
+        await MatchNotification.create({
+          matchId: match.id,
+          notificationType: 'manual',
+          sentAt: DateTime.now(),
+        })
+        this.logger.success(`Sent catchup notification for match #${match.id}`)
+        sent++
+      } else {
+        this.logger.error(`Failed to send catchup notification for match #${match.id}`)
+      }
+    }
+
+    this.logger.info(`Catchup done. Sent: ${sent}, Skipped: ${skipped}`)
   }
 }

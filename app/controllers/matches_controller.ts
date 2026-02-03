@@ -10,6 +10,8 @@ import { DateTime } from 'luxon'
 import ValorantApiService from '#services/valorant_api_service'
 import { AGENT_LOOKUP } from '#constants/agents'
 import logger from '@adonisjs/core/services/logger'
+import MatchNotification from '#models/match_notification'
+import DiscordNotificationService from '#services/discord_notification_service'
 
 export default class MatchesController {
   async index({ view, auth }: HttpContext) {
@@ -372,5 +374,43 @@ export default class MatchesController {
 
     response.header('HX-Trigger', 'valorantScoreSaved')
     return response.send('')
+  }
+
+  async sendNotification({ params, response }: HttpContext) {
+    const match = await Match.find(params.id)
+
+    if (!match) {
+      response.status(404)
+      return response.send('Match not found')
+    }
+
+    if (match.scheduledAt <= DateTime.now()) {
+      response.status(400)
+      return response.send('Cannot notify for past match')
+    }
+
+    const existing = await MatchNotification.query()
+      .where('matchId', match.id)
+      .where('notificationType', 'manual')
+      .first()
+
+    if (existing) {
+      return response.send('Already notified')
+    }
+
+    const discordService = new DiscordNotificationService()
+    const success = await discordService.sendMatchReminder(match, 'manual')
+
+    if (success) {
+      await MatchNotification.create({
+        matchId: match.id,
+        notificationType: 'manual',
+        sentAt: DateTime.now(),
+      })
+      return response.send('Notified!')
+    } else {
+      response.status(500)
+      return response.send('Failed to send')
+    }
   }
 }

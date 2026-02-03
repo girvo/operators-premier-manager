@@ -11,7 +11,7 @@ export default class MatchNotification extends BaseModel {
   declare matchId: number
 
   @column()
-  declare notificationType: '24h' | '1h'
+  declare notificationType: '24h' | '1h' | 'manual'
 
   @column.dateTime()
   declare sentAt: DateTime

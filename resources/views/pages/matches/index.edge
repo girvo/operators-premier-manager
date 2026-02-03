@@ -65,6 +65,18 @@
                   @if(auth.user?.isAdmin)
                     <a href="/matches/{{ match.id }}/edit" class="text-sm hover:text-valorant-red transition">Edit</a>
                     <button
+                      id="notify-btn-{{ match.id }}"
+                      hx-post="/matches/{{ match.id }}/notify"
+                      hx-swap="innerHTML"
+                      hx-target="#notify-btn-{{ match.id }}"
+                      class="text-sm text-orange-400 hover:text-orange-300 transition inline-flex items-center gap-1"
+                    >
+                      <span class="htmx-indicator">
+                        @!component('components/spinner', { size: 'xs' })
+                      </span>
+                      <span class="htmx-hide-on-request">Notify</span>
+                    </button>
+                    <button
                       hx-delete="/matches/{{ match.id }}"
                       hx-target="#match-{{ match.id }}"
                       hx-swap="delete"

@@ -77,6 +77,9 @@ router
     router
       .post('/matches/:id/fetch-valorant/save', [MatchesController, 'fetchFromValorantSave'])
       .use(middleware.admin())
+    router
+      .post('/matches/:id/notify', [MatchesController, 'sendNotification'])
+      .use(middleware.admin())
 
     router.put('/matches/:id/availability', [MatchAvailabilityController, 'update'])
 

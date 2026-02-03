@@ -1,6 +1,7 @@
 import env from '#start/env'
 import Match from '#models/match'
 import User from '#models/user'
+import { DateTime } from 'luxon'
 
 interface DiscordEmbed {
   title: string
@@ -8,6 +9,7 @@ interface DiscordEmbed {
   color: number
   fields: { name: string; value: string; inline?: boolean }[]
   timestamp?: string
+  url?: string
 }
 
 interface DiscordWebhookPayload {
@@ -17,12 +19,35 @@ interface DiscordWebhookPayload {
 
 export default class DiscordNotificationService {
   private webhookUrl: string | undefined
+  private appUrl: string | undefined
 
   constructor() {
     this.webhookUrl = env.get('DISCORD_WEBHOOK_URL')
+    this.appUrl = env.get('APP_URL')
   }
 
-  async sendMatchReminder(match: Match, type: '24h' | '1h'): Promise<boolean> {
+  formatTimeRemaining(scheduledAt: DateTime): string {
+    const now = DateTime.now()
+    const diff = scheduledAt.diff(now, ['hours', 'minutes'])
+    const hours = Math.floor(diff.hours)
+    const minutes = Math.round(diff.minutes)
+
+    if (hours <= 0 && minutes <= 0) {
+      return 'now'
+    }
+
+    const parts: string[] = []
+    if (hours > 0) {
+      parts.push(`${hours} hour${hours === 1 ? '' : 's'}`)
+    }
+    if (minutes > 0) {
+      parts.push(`${minutes} minute${minutes === 1 ? '' : 's'}`)
+    }
+
+    return parts.join(' and ')
+  }
+
+  async sendMatchReminder(match: Match, type: '24h' | '1h' | 'manual'): Promise<boolean> {
     if (!this.webhookUrl) {
       console.log('DISCORD_WEBHOOK_URL not configured, skipping notification')
       return false
@@ -32,9 +57,20 @@ export default class DiscordNotificationService {
 
     const mentions = rosterMembers.map((user) => `<@${user.discordId}>`).join(' ')
 
-    const title = type === '24h' ? 'Match in 24 hours!' : 'Match in 1 hour!'
+    let title: string
+    let color: number
 
-    const color = type === '24h' ? 0x3498db : 0xe74c3c // Blue for 24h, Red for 1h
+    if (type === 'manual') {
+      const timeRemaining = this.formatTimeRemaining(match.scheduledAt)
+      title = `Match in ${timeRemaining}!`
+      color = 0xf39c12 // Orange for manual
+    } else if (type === '24h') {
+      title = 'Match in 24 hours!'
+      color = 0x3498db // Blue for 24h
+    } else {
+      title = 'Match in 1 hour!'
+      color = 0xe74c3c // Red for 1h
+    }
 
     const discordTimestamp = `<t:${Math.floor(match.scheduledAt.toSeconds())}:F>`
 
@@ -67,6 +103,8 @@ export default class DiscordNotificationService {
       })
     }
 
+    const matchUrl = this.appUrl && match.id ? `${this.appUrl}/matches/${match.id}` : undefined
+
     const payload: DiscordWebhookPayload = {
       content: mentions || undefined,
       embeds: [
@@ -76,6 +114,7 @@ export default class DiscordNotificationService {
           color,
           fields,
           timestamp: match.scheduledAt.toISO() ?? undefined,
+          url: matchUrl,
         },
       ],
     }
