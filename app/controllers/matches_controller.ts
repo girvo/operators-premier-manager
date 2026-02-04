@@ -399,15 +399,29 @@ export default class MatchesController {
     }
 
     const discordService = new DiscordNotificationService()
-    const success = await discordService.sendMatchReminder(match, 'manual')
+
+    // Check for a paired match (official/prac matches come in pairs)
+    const pairedMatch = await discordService.findPairedMatch(match)
+
+    const success = await discordService.sendMatchReminder(match, 'manual', pairedMatch ?? undefined)
 
     if (success) {
+      // Mark both matches as notified
       await MatchNotification.create({
         matchId: match.id,
         notificationType: 'manual',
         sentAt: DateTime.now(),
       })
-      return response.send('Notified!')
+
+      if (pairedMatch) {
+        await MatchNotification.create({
+          matchId: pairedMatch.id,
+          notificationType: 'manual',
+          sentAt: DateTime.now(),
+        })
+      }
+
+      return response.send(pairedMatch ? 'Both notified!' : 'Notified!')
     } else {
       response.status(500)
       return response.send('Failed to send')

@@ -76,14 +76,27 @@ export default class SendMatchNotifications extends BaseCommand {
         continue
       }
 
-      const success = await discordService.sendMatchReminder(match, '24h')
+      // Check for a paired match (official/prac matches come in pairs)
+      const pairedMatch = await discordService.findPairedMatch(match)
+
+      const success = await discordService.sendMatchReminder(match, '24h', pairedMatch ?? undefined)
       if (success) {
         await MatchNotification.create({
           matchId: match.id,
           notificationType: '24h',
           sentAt: DateTime.now(),
         })
-        this.logger.success(`Sent 24h notification for match #${match.id}`)
+
+        if (pairedMatch) {
+          await MatchNotification.create({
+            matchId: pairedMatch.id,
+            notificationType: '24h',
+            sentAt: DateTime.now(),
+          })
+          this.logger.success(`Sent 24h notification for paired matches #${match.id} and #${pairedMatch.id}`)
+        } else {
+          this.logger.success(`Sent 24h notification for match #${match.id}`)
+        }
         sent++
       } else {
         this.logger.error(`Failed to send 24h notification for match #${match.id}`)
@@ -103,14 +116,27 @@ export default class SendMatchNotifications extends BaseCommand {
         continue
       }
 
-      const success = await discordService.sendMatchReminder(match, '1h')
+      // Check for a paired match (official/prac matches come in pairs)
+      const pairedMatch = await discordService.findPairedMatch(match)
+
+      const success = await discordService.sendMatchReminder(match, '1h', pairedMatch ?? undefined)
       if (success) {
         await MatchNotification.create({
           matchId: match.id,
           notificationType: '1h',
           sentAt: DateTime.now(),
         })
-        this.logger.success(`Sent 1h notification for match #${match.id}`)
+
+        if (pairedMatch) {
+          await MatchNotification.create({
+            matchId: pairedMatch.id,
+            notificationType: '1h',
+            sentAt: DateTime.now(),
+          })
+          this.logger.success(`Sent 1h notification for paired matches #${match.id} and #${pairedMatch.id}`)
+        } else {
+          this.logger.success(`Sent 1h notification for match #${match.id}`)
+        }
         sent++
       } else {
         this.logger.error(`Failed to send 1h notification for match #${match.id}`)
@@ -162,14 +188,27 @@ export default class SendMatchNotifications extends BaseCommand {
       return
     }
 
-    const success = await discordService.sendMatchReminder(match, 'manual')
+    // Check for a paired match (official/prac matches come in pairs)
+    const pairedMatch = await discordService.findPairedMatch(match)
+
+    const success = await discordService.sendMatchReminder(match, 'manual', pairedMatch ?? undefined)
     if (success) {
       await MatchNotification.create({
         matchId: match.id,
         notificationType: 'manual',
         sentAt: DateTime.now(),
       })
-      this.logger.success(`Sent manual notification for match #${match.id}`)
+
+      if (pairedMatch) {
+        await MatchNotification.create({
+          matchId: pairedMatch.id,
+          notificationType: 'manual',
+          sentAt: DateTime.now(),
+        })
+        this.logger.success(`Sent manual notification for paired matches #${match.id} and #${pairedMatch.id}`)
+      } else {
+        this.logger.success(`Sent manual notification for match #${match.id}`)
+      }
     } else {
       this.logger.error(`Failed to send manual notification for match #${match.id}`)
     }
@@ -202,14 +241,27 @@ export default class SendMatchNotifications extends BaseCommand {
         continue
       }
 
-      const success = await discordService.sendMatchReminder(match, 'manual')
+      // Check for a paired match (official/prac matches come in pairs)
+      const pairedMatch = await discordService.findPairedMatch(match)
+
+      const success = await discordService.sendMatchReminder(match, 'manual', pairedMatch ?? undefined)
       if (success) {
         await MatchNotification.create({
           matchId: match.id,
           notificationType: 'manual',
           sentAt: DateTime.now(),
         })
-        this.logger.success(`Sent catchup notification for match #${match.id}`)
+
+        if (pairedMatch) {
+          await MatchNotification.create({
+            matchId: pairedMatch.id,
+            notificationType: 'manual',
+            sentAt: DateTime.now(),
+          })
+          this.logger.success(`Sent catchup notification for paired matches #${match.id} and #${pairedMatch.id}`)
+        } else {
+          this.logger.success(`Sent catchup notification for match #${match.id}`)
+        }
         sent++
       } else {
         this.logger.error(`Failed to send catchup notification for match #${match.id}`)

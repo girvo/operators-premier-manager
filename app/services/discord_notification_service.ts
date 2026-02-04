@@ -26,6 +26,30 @@ export default class DiscordNotificationService {
     this.appUrl = env.get('APP_URL')
   }
 
+  /**
+   * Find a paired match for official/prac matches (they come in pairs, 1 hour apart)
+   * Returns the second match if this is the first of a pair, or null otherwise
+   */
+  async findPairedMatch(match: Match): Promise<Match | null> {
+    // Only official and prac matches come in pairs
+    if (match.matchType !== 'official' && match.matchType !== 'prac') {
+      return null
+    }
+
+    // Look for a match of the same type, 45-75 minutes later (to account for ~1 hour gap)
+    const windowStart = match.scheduledAt.plus({ minutes: 45 })
+    const windowEnd = match.scheduledAt.plus({ minutes: 75 })
+
+    const pairedMatch = await Match.query()
+      .where('id', '!=', match.id)
+      .where('matchType', match.matchType)
+      .where('scheduledAt', '>=', windowStart.toSQL()!)
+      .where('scheduledAt', '<=', windowEnd.toSQL()!)
+      .first()
+
+    return pairedMatch
+  }
+
   formatTimeRemaining(scheduledAt: DateTime): string {
     const now = DateTime.now()
     const diff = scheduledAt.diff(now, ['hours', 'minutes'])
@@ -47,7 +71,11 @@ export default class DiscordNotificationService {
     return parts.join(' and ')
   }
 
-  async sendMatchReminder(match: Match, type: '24h' | '1h' | 'manual'): Promise<boolean> {
+  async sendMatchReminder(
+    match: Match,
+    type: '24h' | '1h' | 'manual',
+    pairedMatch?: Match
+  ): Promise<boolean> {
     if (!this.webhookUrl) {
       console.log('DISCORD_WEBHOOK_URL not configured, skipping notification')
       return false
@@ -57,35 +85,51 @@ export default class DiscordNotificationService {
 
     const mentions = rosterMembers.map((user) => `<@${user.discordId}>`).join(' ')
 
+    const isPaired = !!pairedMatch
+    const matchWord = isPaired ? 'Matches' : 'Match'
+
     let title: string
     let color: number
 
     if (type === 'manual') {
       const timeRemaining = this.formatTimeRemaining(match.scheduledAt)
-      title = `Match in ${timeRemaining}!`
+      title = `${matchWord} in ${timeRemaining}!`
       color = 0xf39c12 // Orange for manual
     } else if (type === '24h') {
-      title = 'Match in 24 hours!'
+      title = `${matchWord} in 24 hours!`
       color = 0x3498db // Blue for 24h
     } else {
-      title = 'Match in 1 hour!'
+      title = `${matchWord} in 1 hour!`
       color = 0xe74c3c // Red for 1h
     }
 
     const discordTimestamp = `<t:${Math.floor(match.scheduledAt.toSeconds())}:F>`
 
+    // Determine type label
+    const typeLabel = match.matchType === 'official' ? 'Official' : match.matchType === 'prac' ? 'Prac' : 'Scrim'
+    const typeLabelLower = typeLabel.toLowerCase()
+
     const fields: { name: string; value: string; inline?: boolean }[] = [
       {
-        name: 'Time',
+        name: isPaired ? 'First Match' : 'Time',
         value: discordTimestamp,
         inline: true,
       },
       {
         name: 'Type',
-        value: match.matchType === 'official' ? 'Official' : match.matchType === 'prac' ? 'Prac' : 'Scrim',
+        value: typeLabel,
         inline: true,
       },
     ]
+
+    if (isPaired) {
+      const secondTimestamp = `<t:${Math.floor(pairedMatch.scheduledAt.toSeconds())}:F>`
+      fields.push({
+        name: 'Second Match',
+        value: secondTimestamp,
+        inline: true,
+      })
+    }
 
     if (match.opponentName) {
       fields.unshift({
@@ -97,20 +141,32 @@ export default class DiscordNotificationService {
 
     if (match.map) {
       fields.push({
-        name: 'Map',
+        name: isPaired ? 'Map 1' : 'Map',
         value: match.map,
+        inline: true,
+      })
+    }
+
+    if (isPaired && pairedMatch.map) {
+      fields.push({
+        name: 'Map 2',
+        value: pairedMatch.map,
         inline: true,
       })
     }
 
     const matchUrl = this.appUrl && match.id ? `${this.appUrl}/matches/${match.id}` : undefined
 
+    const description = isPaired
+      ? `Get ready for your two ${typeLabelLower} matches tonight!`
+      : `Get ready for your upcoming ${typeLabelLower} match!`
+
     const payload: DiscordWebhookPayload = {
       content: mentions || undefined,
       embeds: [
         {
           title,
-          description: `Get ready for your upcoming ${match.matchType === 'official' ? 'official' : match.matchType === 'prac' ? 'prac' : 'scrim'} match!`,
+          description,
           color,
           fields,
           timestamp: match.scheduledAt.toISO() ?? undefined,
