@@ -28,6 +28,11 @@ export default class SendMatchNotifications extends BaseCommand {
   @flags.boolean({ description: 'Force send notification even if already sent (use with --match-id)' })
   declare force: boolean
 
+  @flags.string({
+    description: 'Only send a specific window of notifications',
+  })
+  declare only: '24h' | '1h' | undefined
+
   async run() {
     const discordService = new DiscordNotificationService()
 
@@ -53,96 +58,105 @@ export default class SendMatchNotifications extends BaseCommand {
     const oneHourStart = now.plus({ minutes: 30 })
     const oneHourEnd = now.plus({ hours: 1, minutes: 30 })
 
-    // Find matches in 24h window
-    const matches24h = await Match.query()
-      .where('scheduledAt', '>=', twentyFourHourStart.toSQL()!)
-      .where('scheduledAt', '<=', twentyFourHourEnd.toSQL()!)
+    const run24h = this.only ? this.only === '24h' : true
+    const run1h = this.only ? this.only === '1h' : true
 
-    // Find matches in 1h window
-    const matches1h = await Match.query()
-      .where('scheduledAt', '>=', oneHourStart.toSQL()!)
-      .where('scheduledAt', '<=', oneHourEnd.toSQL()!)
+    const matches24h = run24h
+      ? await Match.query()
+          .where('scheduledAt', '>=', twentyFourHourStart.toSQL()!)
+          .where('scheduledAt', '<=', twentyFourHourEnd.toSQL()!)
+      : []
+
+    const matches1h = run1h
+      ? await Match.query()
+          .where('scheduledAt', '>=', oneHourStart.toSQL()!)
+          .where('scheduledAt', '<=', oneHourEnd.toSQL()!)
+      : []
 
     let sent = 0
     let skipped = 0
 
-    // Process 24h notifications
-    for (const match of matches24h) {
-      const existing = await MatchNotification.query()
-        .where('matchId', match.id)
-        .where('notificationType', '24h')
-        .first()
+    if (run24h) {
+      // Process 24h notifications
+      for (const match of matches24h) {
+        const existing = await MatchNotification.query()
+          .where('matchId', match.id)
+          .where('notificationType', '24h')
+          .first()
 
-      if (existing) {
-        this.logger.info(`Skipping 24h notification for match #${match.id} (already sent)`)
-        skipped++
-        continue
-      }
+        if (existing) {
+          this.logger.info(`Skipping 24h notification for match #${match.id} (already sent)`)
+          skipped++
+          continue
+        }
 
-      // Check for a paired match (official/prac matches come in pairs)
-      const pairedMatch = await discordService.findPairedMatch(match)
+        // Check for a paired match (official/prac matches come in pairs)
+        const pairedMatch = await discordService.findPairedMatch(match)
 
-      const success = await discordService.sendMatchReminder(match, '24h', pairedMatch ?? undefined)
-      if (success) {
-        await MatchNotification.create({
-          matchId: match.id,
-          notificationType: '24h',
-          sentAt: DateTime.now(),
-        })
-
-        if (pairedMatch) {
+        const success = await discordService.sendMatchReminder(match, '24h', pairedMatch ?? undefined)
+        if (success) {
           await MatchNotification.create({
-            matchId: pairedMatch.id,
+            matchId: match.id,
             notificationType: '24h',
             sentAt: DateTime.now(),
           })
-          this.logger.success(`Sent 24h notification for paired matches #${match.id} and #${pairedMatch.id}`)
+
+          if (pairedMatch) {
+            await MatchNotification.create({
+              matchId: pairedMatch.id,
+              notificationType: '24h',
+              sentAt: DateTime.now(),
+            })
+            this.logger.success(`Sent 24h notification for paired matches #${match.id} and #${pairedMatch.id}`)
+          } else {
+            this.logger.success(`Sent 24h notification for match #${match.id}`)
+          }
+          sent++
         } else {
-          this.logger.success(`Sent 24h notification for match #${match.id}`)
+          this.logger.error(`Failed to send 24h notification for match #${match.id}`)
         }
-        sent++
-      } else {
-        this.logger.error(`Failed to send 24h notification for match #${match.id}`)
       }
     }
 
-    // Process 1h notifications
-    for (const match of matches1h) {
-      const existing = await MatchNotification.query()
-        .where('matchId', match.id)
-        .where('notificationType', '1h')
-        .first()
+    if (run1h) {
+      // Process 1h notifications
+      for (const match of matches1h) {
+        const existing = await MatchNotification.query()
+          .where('matchId', match.id)
+          .where('notificationType', '1h')
+          .first()
 
-      if (existing) {
-        this.logger.info(`Skipping 1h notification for match #${match.id} (already sent)`)
-        skipped++
-        continue
-      }
+        if (existing) {
+          this.logger.info(`Skipping 1h notification for match #${match.id} (already sent)`)
+          skipped++
+          continue
+        }
 
-      // Check for a paired match (official/prac matches come in pairs)
-      const pairedMatch = await discordService.findPairedMatch(match)
+        // Check for a paired match (official/prac matches come in pairs)
+        const pairedMatch = await discordService.findPairedMatch(match)
 
-      const success = await discordService.sendMatchReminder(match, '1h', pairedMatch ?? undefined)
-      if (success) {
-        await MatchNotification.create({
-          matchId: match.id,
-          notificationType: '1h',
-          sentAt: DateTime.now(),
-        })
-
-        if (pairedMatch) {
+        const success = await discordService.sendMatchReminder(match, '1h', pairedMatch ?? undefined)
+        if (success) {
           await MatchNotification.create({
-            matchId: pairedMatch.id,
+            matchId: match.id,
             notificationType: '1h',
             sentAt: DateTime.now(),
           })
-          this.logger.success(`Sent 1h notification for paired matches #${match.id} and #${pairedMatch.id}`)
+
+          if (pairedMatch) {
+            await MatchNotification.create({
+              matchId: pairedMatch.id,
+              notificationType: '1h',
+              sentAt: DateTime.now(),
+            })
+            this.logger.success(`Sent 1h notification for paired matches #${match.id} and #${pairedMatch.id}`)
+          } else {
+            this.logger.success(`Sent 1h notification for match #${match.id}`)
+          }
+          sent++
         } else {
-          this.logger.success(`Sent 1h notification for match #${match.id}`)
+          this.logger.error(`Failed to send 1h notification for match #${match.id}`)
         }
-        sent++
-      } else {
-        this.logger.error(`Failed to send 1h notification for match #${match.id}`)
       }
     }
 

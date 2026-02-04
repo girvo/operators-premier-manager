@@ -157,9 +157,21 @@ export default class DiscordNotificationService {
 
     const matchUrl = this.appUrl && match.id ? `${this.appUrl}/matches/${match.id}` : undefined
 
-    const description = isPaired
-      ? `Get ready for your two ${typeLabelLower} matches tonight!`
-      : `Get ready for your upcoming ${typeLabelLower} match!`
+    let description: string
+    if (type === 'manual') {
+      const timeRemaining = this.formatTimeRemaining(match.scheduledAt)
+      description = isPaired
+        ? `Get ready for your two ${typeLabelLower} matches in ${timeRemaining}!`
+        : `Get ready for your upcoming ${typeLabelLower} match in ${timeRemaining}!`
+    } else if (type === '24h') {
+      description = isPaired
+        ? `Get ready for your two ${typeLabelLower} matches in about 24 hours!`
+        : `Get ready for your upcoming ${typeLabelLower} match in about 24 hours!`
+    } else {
+      description = isPaired
+        ? `Get ready for your two ${typeLabelLower} matches in about 1 hour!`
+        : `Get ready for your upcoming ${typeLabelLower} match in about 1 hour!`
+    }
 
     const payload: DiscordWebhookPayload = {
       content: mentions || undefined,
