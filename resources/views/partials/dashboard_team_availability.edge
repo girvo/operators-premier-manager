@@ -1,0 +1,139 @@
+<div
+  id="dashboard-team-availability"
+  class="mt-4 pt-4 border-t border-valorant-red/10 flex flex-wrap gap-x-6 gap-y-2 text-sm"
+  @if(isOobSwap)
+    hx-swap-oob="true"
+  @endif
+>
+  @let(yesPlayers = match.availabilities.filter(a => a.status === 'yes'))
+  @let(maybePlayers = match.availabilities.filter(a => a.status === 'maybe'))
+  @let(noPlayers = match.availabilities.filter(a => a.status === 'no'))
+  @let(respondedIds = match.availabilities.map(a => a.userId))
+  @let(notResponded = players.filter(p => !respondedIds.includes(p.id)))
+
+  <div class="flex items-center gap-2">
+    <span class="text-green-400">Yes ({{ yesPlayers.length }})</span>
+    <div class="flex -space-x-1">
+      @each(a in yesPlayers)
+        @let(avatarUrl = a.user.logoUrl ?? a.user.discordAvatarUrl)
+        <div class="relative group">
+          @if(avatarUrl)
+            <img src="{{ avatarUrl }}" alt="{{ a.user.fullName ?? a.user.email }}" class="w-6 h-6 rounded-full ring-2 ring-green-500 ring-offset-1 ring-offset-valorant-gray object-cover" />
+          @else
+            <div class="w-6 h-6 rounded-full bg-green-600 ring-2 ring-green-500 ring-offset-1 ring-offset-valorant-gray flex items-center justify-center text-[10px] font-bold">
+              {{ (a.user.fullName ?? a.user.email).charAt(0).toUpperCase() }}
+            </div>
+          @endif
+          <div class="hidden group-hover:block absolute top-full left-0 mt-2 z-50 bg-valorant-dark border border-valorant-red/20 rounded-lg px-3 py-2 shadow-xl min-w-[140px]">
+            <div class="font-medium text-valorant-light">{{ a.user.fullName ?? a.user.email }}</div>
+            @if(a.user.agentPrefs?.length)
+              <div class="flex flex-wrap gap-1 mt-1.5">
+                @each(agentKey in a.user.agentPrefs)
+                  @if(agentLookup[agentKey])
+                    <img src="/images/agent-icons/{{ agentKey }}.png" alt="{{ agentLookup[agentKey].name }}" class="w-5 h-5 rounded" />
+                  @endif
+                @end
+              </div>
+            @endif
+          </div>
+        </div>
+      @end
+    </div>
+  </div>
+
+  @if(maybePlayers.length)
+    <div class="flex items-center gap-2">
+      <span class="text-yellow-400">Maybe ({{ maybePlayers.length }})</span>
+      <div class="flex -space-x-1">
+        @each(a in maybePlayers)
+          @let(avatarUrl = a.user.logoUrl ?? a.user.discordAvatarUrl)
+          <div class="relative group">
+            @if(avatarUrl)
+              <img src="{{ avatarUrl }}" alt="{{ a.user.fullName ?? a.user.email }}" class="w-6 h-6 rounded-full ring-2 ring-yellow-500 ring-offset-1 ring-offset-valorant-gray object-cover" />
+            @else
+              <div class="w-6 h-6 rounded-full bg-yellow-600 ring-2 ring-yellow-500 ring-offset-1 ring-offset-valorant-gray flex items-center justify-center text-[10px] font-bold">
+                {{ (a.user.fullName ?? a.user.email).charAt(0).toUpperCase() }}
+              </div>
+            @endif
+            <div class="hidden group-hover:block absolute top-full left-0 mt-2 z-50 bg-valorant-dark border border-valorant-red/20 rounded-lg px-3 py-2 shadow-xl min-w-[140px]">
+              <div class="font-medium text-valorant-light">{{ a.user.fullName ?? a.user.email }}</div>
+              @if(a.user.agentPrefs?.length)
+                <div class="flex flex-wrap gap-1 mt-1.5">
+                  @each(agentKey in a.user.agentPrefs)
+                    @if(agentLookup[agentKey])
+                      <img src="/images/agent-icons/{{ agentKey }}.png" alt="{{ agentLookup[agentKey].name }}" class="w-5 h-5 rounded" />
+                    @endif
+                  @end
+                </div>
+              @endif
+            </div>
+          </div>
+        @end
+      </div>
+    </div>
+  @endif
+
+  @if(noPlayers.length)
+    <div class="flex items-center gap-2">
+      <span class="text-red-400">No ({{ noPlayers.length }})</span>
+      <div class="flex -space-x-1">
+        @each(a in noPlayers)
+          @let(avatarUrl = a.user.logoUrl ?? a.user.discordAvatarUrl)
+          <div class="relative group">
+            @if(avatarUrl)
+              <img src="{{ avatarUrl }}" alt="{{ a.user.fullName ?? a.user.email }}" class="w-6 h-6 rounded-full ring-2 ring-red-500 ring-offset-1 ring-offset-valorant-gray object-cover grayscale" />
+            @else
+              <div class="w-6 h-6 rounded-full bg-red-600 ring-2 ring-red-500 ring-offset-1 ring-offset-valorant-gray flex items-center justify-center text-[10px] font-bold">
+                {{ (a.user.fullName ?? a.user.email).charAt(0).toUpperCase() }}
+              </div>
+            @endif
+            <div class="hidden group-hover:block absolute top-full left-0 mt-2 z-50 bg-valorant-dark border border-valorant-red/20 rounded-lg px-3 py-2 shadow-xl min-w-[140px]">
+              <div class="font-medium text-valorant-light">{{ a.user.fullName ?? a.user.email }}</div>
+              @if(a.user.agentPrefs?.length)
+                <div class="flex flex-wrap gap-1 mt-1.5">
+                  @each(agentKey in a.user.agentPrefs)
+                    @if(agentLookup[agentKey])
+                      <img src="/images/agent-icons/{{ agentKey }}.png" alt="{{ agentLookup[agentKey].name }}" class="w-5 h-5 rounded" />
+                    @endif
+                  @end
+                </div>
+              @endif
+            </div>
+          </div>
+        @end
+      </div>
+    </div>
+  @endif
+
+  @if(notResponded.length)
+    <div class="flex items-center gap-2">
+      <span class="text-valorant-light/50">No response ({{ notResponded.length }})</span>
+      <div class="flex -space-x-1">
+        @each(p in notResponded)
+          @let(avatarUrl = p.logoUrl ?? p.discordAvatarUrl)
+          <div class="relative group">
+            @if(avatarUrl)
+              <img src="{{ avatarUrl }}" alt="{{ p.fullName ?? p.email }}" class="w-6 h-6 rounded-full ring-2 ring-valorant-light/30 ring-offset-1 ring-offset-valorant-gray object-cover opacity-50" />
+            @else
+              <div class="w-6 h-6 rounded-full bg-valorant-light/20 ring-2 ring-valorant-light/30 ring-offset-1 ring-offset-valorant-gray flex items-center justify-center text-[10px] font-bold opacity-50">
+                {{ (p.fullName ?? p.email).charAt(0).toUpperCase() }}
+              </div>
+            @endif
+            <div class="hidden group-hover:block absolute top-full left-0 mt-2 z-50 bg-valorant-dark border border-valorant-red/20 rounded-lg px-3 py-2 shadow-xl min-w-[140px]">
+              <div class="font-medium text-valorant-light">{{ p.fullName ?? p.email }}</div>
+              @if(p.agentPrefs?.length)
+                <div class="flex flex-wrap gap-1 mt-1.5">
+                  @each(agentKey in p.agentPrefs)
+                    @if(agentLookup[agentKey])
+                      <img src="/images/agent-icons/{{ agentKey }}.png" alt="{{ agentLookup[agentKey].name }}" class="w-5 h-5 rounded" />
+                    @endif
+                  @end
+                </div>
+              @endif
+            </div>
+          </div>
+        @end
+      </div>
+    </div>
+  @endif
+</div>

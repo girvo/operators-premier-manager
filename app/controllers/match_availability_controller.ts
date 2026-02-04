@@ -52,6 +52,13 @@ export default class MatchAvailabilityController {
       matchAgentByUserId,
     })
 
-    return response.send(buttonsHtml + teamAvailabilityHtml)
+    const dashboardAvailabilityHtml = await view.render('partials/dashboard_team_availability', {
+      match,
+      players,
+      isOobSwap: true,
+      agentLookup: AGENT_LOOKUP,
+    })
+
+    return response.send(buttonsHtml + teamAvailabilityHtml + dashboardAvailabilityHtml)
   }
 }

@@ -11,9 +11,9 @@
 
     @if(nextMatch)
       @let(mapSlug = nextMatch.map ? nextMatch.map.toLowerCase().replace(/\s+/g, '-') : null)
-      <div class="relative rounded-lg border border-valorant-red/20 overflow-hidden bg-valorant-gray">
+      <div class="relative rounded-lg border border-valorant-red/20 bg-valorant-gray">
         @if(mapSlug)
-          <div class="absolute right-0 top-0 bottom-0 w-1/2 md:w-2/5">
+          <div class="absolute right-0 top-0 bottom-0 w-1/2 md:w-2/5 overflow-hidden rounded-r-lg">
             <img
               src="/images/maps/{{ mapSlug }}.png"
               alt="{{ nextMatch.map }}"
@@ -57,10 +57,13 @@
               </div>
             </div>
           </div>
+
+          @let(isOobSwap = false)
+          @include('partials/dashboard_team_availability')
         </div>
       </div>
     @endif
-    
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <a
         href="/matches"

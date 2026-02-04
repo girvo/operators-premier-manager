@@ -25,6 +25,9 @@ export default class SendMatchNotifications extends BaseCommand {
   @flags.number({ description: 'Send notification for a specific match regardless of timing' })
   declare matchId: number
 
+  @flags.boolean({ description: 'Force send notification even if already sent (use with --match-id)' })
+  declare force: boolean
+
   async run() {
     const discordService = new DiscordNotificationService()
 
@@ -33,7 +36,7 @@ export default class SendMatchNotifications extends BaseCommand {
     }
 
     if (this.matchId) {
-      return this.sendMatchNotification(discordService, this.matchId)
+      return this.sendMatchNotification(discordService, this.matchId, this.force)
     }
 
     if (this.catchup) {
@@ -165,7 +168,7 @@ export default class SendMatchNotifications extends BaseCommand {
     }
   }
 
-  private async sendMatchNotification(discordService: DiscordNotificationService, matchId: number) {
+  private async sendMatchNotification(discordService: DiscordNotificationService, matchId: number, force: boolean = false) {
     const match = await Match.find(matchId)
 
     if (!match) {
@@ -183,9 +186,13 @@ export default class SendMatchNotifications extends BaseCommand {
       .where('notificationType', 'manual')
       .first()
 
-    if (existing) {
+    if (existing && !force) {
       this.logger.info(`Skipping manual notification for match #${match.id} (already sent)`)
       return
+    }
+
+    if (existing && force) {
+      this.logger.info(`Force-sending notification for match #${match.id} (overriding previous send)`)
     }
 
     // Check for a paired match (official/prac matches come in pairs)
@@ -193,18 +200,16 @@ export default class SendMatchNotifications extends BaseCommand {
 
     const success = await discordService.sendMatchReminder(match, 'manual', pairedMatch ?? undefined)
     if (success) {
-      await MatchNotification.create({
-        matchId: match.id,
-        notificationType: 'manual',
-        sentAt: DateTime.now(),
-      })
+      await MatchNotification.updateOrCreate(
+        { matchId: match.id, notificationType: 'manual' },
+        { sentAt: DateTime.now() }
+      )
 
       if (pairedMatch) {
-        await MatchNotification.create({
-          matchId: pairedMatch.id,
-          notificationType: 'manual',
-          sentAt: DateTime.now(),
-        })
+        await MatchNotification.updateOrCreate(
+          { matchId: pairedMatch.id, notificationType: 'manual' },
+          { sentAt: DateTime.now() }
+        )
         this.logger.success(`Sent manual notification for paired matches #${match.id} and #${pairedMatch.id}`)
       } else {
         this.logger.success(`Sent manual notification for match #${match.id}`)
