@@ -5,7 +5,7 @@ export const createMatchValidator = vine.compile(
     scheduledAt: vine.string(),
     opponentName: vine.string().minLength(1).maxLength(255).optional(),
     map: vine.string().maxLength(255).optional(),
-    matchType: vine.enum(['scrim', 'official']),
+    matchType: vine.enum(['scrim', 'official', 'prac']),
     notes: vine.string().maxLength(1000).optional(),
   })
 )
@@ -15,7 +15,7 @@ export const updateMatchValidator = vine.compile(
     scheduledAt: vine.string(),
     opponentName: vine.string().minLength(1).maxLength(255).optional(),
     map: vine.string().maxLength(255).optional(),
-    matchType: vine.enum(['scrim', 'official']),
+    matchType: vine.enum(['scrim', 'official', 'prac']),
     notes: vine.string().maxLength(1000).optional(),
   })
 )

@@ -82,7 +82,7 @@ export default class DiscordNotificationService {
       },
       {
         name: 'Type',
-        value: match.matchType === 'official' ? 'Official' : 'Scrim',
+        value: match.matchType === 'official' ? 'Official' : match.matchType === 'prac' ? 'Prac' : 'Scrim',
         inline: true,
       },
     ]
@@ -110,7 +110,7 @@ export default class DiscordNotificationService {
       embeds: [
         {
           title,
-          description: `Get ready for your upcoming ${match.matchType} match!`,
+          description: `Get ready for your upcoming ${match.matchType === 'official' ? 'official' : match.matchType === 'prac' ? 'prac' : 'scrim'} match!`,
           color,
           fields,
           timestamp: match.scheduledAt.toISO() ?? undefined,

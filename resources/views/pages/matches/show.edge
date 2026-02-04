@@ -53,9 +53,9 @@
             </dt>
             <dd class="mt-1">
               <span
-                class="px-2 py-1 text-sm rounded {{ match.matchType === 'official' ? 'bg-valorant-red/20 text-valorant-red' : 'bg-valorant-light/10 text-valorant-light/70' }}"
+                class="px-2 py-1 text-sm rounded {{ match.matchType === 'official' ? 'bg-valorant-red/20 text-valorant-red' : match.matchType === 'prac' ? 'bg-purple-500/20 text-purple-400' : 'bg-valorant-light/10 text-valorant-light/70' }}"
               >
-                {{ match.matchType === 'official' ? 'Official' : 'Scrim' }}
+                {{ match.matchType === 'official' ? 'Official' : match.matchType === 'prac' ? 'Prac' : 'Scrim' }}
             </span>
             </dd>
           </div>

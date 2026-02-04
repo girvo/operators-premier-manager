@@ -34,7 +34,7 @@
                   @if(nextMatch.opponentName)
                     vs {{ nextMatch.opponentName }}
                   @else
-                    {{ nextMatch.matchType === 'official' ? 'Official Match' : 'Scrim' }}
+                    {{ nextMatch.matchType === 'official' ? 'Official Match' : nextMatch.matchType === 'prac' ? 'Prac Match' : 'Scrim' }}
                   @endif
                 </h3>
               </a>

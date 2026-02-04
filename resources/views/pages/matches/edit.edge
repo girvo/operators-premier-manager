@@ -22,13 +22,16 @@
                 <option value="official" {{ match.matchType === 'official' ? 'selected' : '' }}>
                   Official
                 </option>
+                <option value="prac" {{ match.matchType === 'prac' ? 'selected' : '' }}>
+                  Prac
+                </option>
                 <option value="scrim" {{ match.matchType === 'scrim' ? 'selected' : '' }}>
                   Scrim
                 </option>
               </select>
             </div>
 
-            <div id="opponentField" class="{{ match.matchType === 'official' ? 'hidden' : '' }}">
+            <div id="opponentField" class="{{ match.matchType !== 'scrim' ? 'hidden' : '' }}">
               <label for="opponentName" class="block text-sm font-medium text-valorant-light mb-2">Opponent</label>
               <input
                 type="text"
