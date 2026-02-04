@@ -55,6 +55,7 @@ router
     router.delete('/players/:id/logo', [PlayersController, 'destroyLogo']).use(middleware.admin())
 
     router.get('/availability', [AvailabilityController, 'index'])
+    router.get('/availability/compare', [AvailabilityController, 'compare']).use(middleware.admin())
     router.put('/availability', [AvailabilityController, 'update'])
 
     router.get('/matches', [MatchesController, 'index'])

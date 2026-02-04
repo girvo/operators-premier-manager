@@ -7,6 +7,13 @@
       <p class="text-valorant-light/70 mt-2">
         Set your weekly availability. Times shown in {{ timezone }}.
       </p>
+      @if(auth.user?.isAdmin)
+        <div class="mt-3">
+          <a href="/availability/compare" class="text-sm text-valorant-red hover:underline">
+            View Pair Availability
+          </a>
+        </div>
+      @end
     </div>
 
     <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 overflow-x-auto">

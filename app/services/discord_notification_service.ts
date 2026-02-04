@@ -106,7 +106,8 @@ export default class DiscordNotificationService {
     const discordTimestamp = `<t:${Math.floor(match.scheduledAt.toSeconds())}:F>`
 
     // Determine type label
-    const typeLabel = match.matchType === 'official' ? 'Official' : match.matchType === 'prac' ? 'Prac' : 'Scrim'
+    const typeLabel =
+      match.matchType === 'official' ? 'Official' : match.matchType === 'prac' ? 'Prac' : 'Scrim'
     const typeLabelLower = typeLabel.toLowerCase()
 
     const fields: { name: string; value: string; inline?: boolean }[] = [

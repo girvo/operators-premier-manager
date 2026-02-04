@@ -42,9 +42,9 @@
         };
         toast.className = `toast-enter p-4 rounded border ${colors[type] || colors.error} shadow-lg flex items-center gap-3 max-w-sm`;
         toast.innerHTML = `
-                            <span class="flex-1">${message}</span>
-                            <button onclick="this.parentElement.remove()" class="text-current opacity-70 hover:opacity-100">&times;</button>
-                          `;
+                                  <span class="flex-1">${message}</span>
+                                  <button onclick="this.parentElement.remove()" class="text-current opacity-70 hover:opacity-100">&times;</button>
+                                `;
         container.appendChild(toast);
         setTimeout(() => {
           toast.classList.replace("toast-enter", "toast-exit");

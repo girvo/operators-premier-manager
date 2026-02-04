@@ -1,0 +1,94 @@
+@layouts.app({ title: 'Pair Availability' })
+  <div class="space-y-8">
+    <div class="space-y-2">
+      <h1 class="text-3xl font-bold text-valorant-red">
+        Pair Availability
+      </h1>
+      <p class="text-valorant-light/70">
+        Weekly availability view for fixed match pairs. Times shown in {{ timezone }}.
+      </p>
+      <div>
+        <a href="/availability" class="text-sm text-valorant-red hover:underline">
+          Back to My Availability
+        </a>
+      </div>
+    </div>
+
+    @each(pair in pairs)
+      <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 space-y-4">
+        <div class="flex flex-col gap-2">
+          <div>
+            <h2 class="text-xl font-semibold text-valorant-light">
+              {{ pair.title }}
+            </h2>
+            <p class="text-sm text-valorant-light/60">
+              {{ pair.subtitle }}
+            </p>
+          </div>
+          <div class="text-sm text-valorant-light/70">
+            Lowest availability across the 4 matches: {{ pair.minAvailable }} / {{ totalPlayers }}
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-[760px] w-full text-sm">
+            <thead>
+              <tr class="text-left text-valorant-light/70 border-b border-valorant-light/10">
+                <th class="py-2 pr-3">
+                  Player
+                </th>
+                @each(slot in pair.slots)
+                  <th class="py-2 px-3 text-center">
+                    {{ slot.displayTime }}
+                  </th>
+                @end
+              </tr>
+              <tr class="text-left text-valorant-light/50 border-b border-valorant-light/10">
+                <th class="py-2 pr-3">
+                  Available
+                </th>
+                @each(slot in pair.slots)
+                  <th class="py-2 px-3 text-center">
+                    {{ slotCounts[slot.id] }} / {{ totalPlayers }}
+                  </th>
+                @end
+              </tr>
+            </thead>
+            <tbody>
+              @each(player in players)
+                <tr class="border-b border-valorant-light/5">
+                  <td class="py-2 pr-3 text-valorant-light">
+                    {{ player.name }}
+                  </td>
+                  @each(slot in pair.slots)
+                    @let(isAvailable = player.bySlot[slot.id])
+                    <td class="py-2 px-3 text-center">
+                      <span
+                        class="px-2 py-1 rounded text-xs font-medium {{ isAvailable ? 'bg-green-600 text-white' : 'bg-valorant-dark text-valorant-light/60 border border-valorant-light/10' }}"
+                      >
+                        {{ isAvailable ? 'Yes' : 'No' }}
+                      </span>
+                    </td>
+                  @end
+                </tr>
+              @end
+            </tbody>
+          </table>
+        </div>
+      </div>
+    @end
+    
+    <div class="flex items-center gap-4 text-sm text-valorant-light/50">
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 bg-green-600 rounded">
+        </div>
+        <span>Available</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 bg-valorant-dark border border-valorant-light/10 rounded">
+        </div>
+        <span>Not Available</span>
+      </div>
+    </div>
+  </div>
+@end

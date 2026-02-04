@@ -25,7 +25,9 @@ export default class SendMatchNotifications extends BaseCommand {
   @flags.number({ description: 'Send notification for a specific match regardless of timing' })
   declare matchId: number
 
-  @flags.boolean({ description: 'Force send notification even if already sent (use with --match-id)' })
+  @flags.boolean({
+    description: 'Force send notification even if already sent (use with --match-id)',
+  })
   declare force: boolean
 
   @flags.string({
@@ -93,7 +95,11 @@ export default class SendMatchNotifications extends BaseCommand {
         // Check for a paired match (official/prac matches come in pairs)
         const pairedMatch = await discordService.findPairedMatch(match)
 
-        const success = await discordService.sendMatchReminder(match, '24h', pairedMatch ?? undefined)
+        const success = await discordService.sendMatchReminder(
+          match,
+          '24h',
+          pairedMatch ?? undefined
+        )
         if (success) {
           await MatchNotification.create({
             matchId: match.id,
@@ -107,7 +113,9 @@ export default class SendMatchNotifications extends BaseCommand {
               notificationType: '24h',
               sentAt: DateTime.now(),
             })
-            this.logger.success(`Sent 24h notification for paired matches #${match.id} and #${pairedMatch.id}`)
+            this.logger.success(
+              `Sent 24h notification for paired matches #${match.id} and #${pairedMatch.id}`
+            )
           } else {
             this.logger.success(`Sent 24h notification for match #${match.id}`)
           }
@@ -135,7 +143,11 @@ export default class SendMatchNotifications extends BaseCommand {
         // Check for a paired match (official/prac matches come in pairs)
         const pairedMatch = await discordService.findPairedMatch(match)
 
-        const success = await discordService.sendMatchReminder(match, '1h', pairedMatch ?? undefined)
+        const success = await discordService.sendMatchReminder(
+          match,
+          '1h',
+          pairedMatch ?? undefined
+        )
         if (success) {
           await MatchNotification.create({
             matchId: match.id,
@@ -149,7 +161,9 @@ export default class SendMatchNotifications extends BaseCommand {
               notificationType: '1h',
               sentAt: DateTime.now(),
             })
-            this.logger.success(`Sent 1h notification for paired matches #${match.id} and #${pairedMatch.id}`)
+            this.logger.success(
+              `Sent 1h notification for paired matches #${match.id} and #${pairedMatch.id}`
+            )
           } else {
             this.logger.success(`Sent 1h notification for match #${match.id}`)
           }
@@ -182,7 +196,11 @@ export default class SendMatchNotifications extends BaseCommand {
     }
   }
 
-  private async sendMatchNotification(discordService: DiscordNotificationService, matchId: number, force: boolean = false) {
+  private async sendMatchNotification(
+    discordService: DiscordNotificationService,
+    matchId: number,
+    force: boolean = false
+  ) {
     const match = await Match.find(matchId)
 
     if (!match) {
@@ -206,13 +224,19 @@ export default class SendMatchNotifications extends BaseCommand {
     }
 
     if (existing && force) {
-      this.logger.info(`Force-sending notification for match #${match.id} (overriding previous send)`)
+      this.logger.info(
+        `Force-sending notification for match #${match.id} (overriding previous send)`
+      )
     }
 
     // Check for a paired match (official/prac matches come in pairs)
     const pairedMatch = await discordService.findPairedMatch(match)
 
-    const success = await discordService.sendMatchReminder(match, 'manual', pairedMatch ?? undefined)
+    const success = await discordService.sendMatchReminder(
+      match,
+      'manual',
+      pairedMatch ?? undefined
+    )
     if (success) {
       await MatchNotification.updateOrCreate(
         { matchId: match.id, notificationType: 'manual' },
@@ -224,7 +248,9 @@ export default class SendMatchNotifications extends BaseCommand {
           { matchId: pairedMatch.id, notificationType: 'manual' },
           { sentAt: DateTime.now() }
         )
-        this.logger.success(`Sent manual notification for paired matches #${match.id} and #${pairedMatch.id}`)
+        this.logger.success(
+          `Sent manual notification for paired matches #${match.id} and #${pairedMatch.id}`
+        )
       } else {
         this.logger.success(`Sent manual notification for match #${match.id}`)
       }
@@ -263,7 +289,11 @@ export default class SendMatchNotifications extends BaseCommand {
       // Check for a paired match (official/prac matches come in pairs)
       const pairedMatch = await discordService.findPairedMatch(match)
 
-      const success = await discordService.sendMatchReminder(match, 'manual', pairedMatch ?? undefined)
+      const success = await discordService.sendMatchReminder(
+        match,
+        'manual',
+        pairedMatch ?? undefined
+      )
       if (success) {
         await MatchNotification.create({
           matchId: match.id,
@@ -277,7 +307,9 @@ export default class SendMatchNotifications extends BaseCommand {
             notificationType: 'manual',
             sentAt: DateTime.now(),
           })
-          this.logger.success(`Sent catchup notification for paired matches #${match.id} and #${pairedMatch.id}`)
+          this.logger.success(
+            `Sent catchup notification for paired matches #${match.id} and #${pairedMatch.id}`
+          )
         } else {
           this.logger.success(`Sent catchup notification for match #${match.id}`)
         }

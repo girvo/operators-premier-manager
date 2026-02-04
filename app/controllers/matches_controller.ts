@@ -403,7 +403,11 @@ export default class MatchesController {
     // Check for a paired match (official/prac matches come in pairs)
     const pairedMatch = await discordService.findPairedMatch(match)
 
-    const success = await discordService.sendMatchReminder(match, 'manual', pairedMatch ?? undefined)
+    const success = await discordService.sendMatchReminder(
+      match,
+      'manual',
+      pairedMatch ?? undefined
+    )
 
     if (success) {
       // Mark both matches as notified
