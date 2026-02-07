@@ -2,6 +2,7 @@ import { assert } from '@japa/assert'
 import app from '@adonisjs/core/services/app'
 import type { Config } from '@japa/runner/types'
 import { pluginAdonisJS } from '@japa/plugin-adonisjs'
+import { apiClient } from '@japa/api-client'
 import testUtils from '@adonisjs/core/services/test_utils'
 
 /**
@@ -12,7 +13,10 @@ import testUtils from '@adonisjs/core/services/test_utils'
  * Configure Japa plugins in the plugins array.
  * Learn more - https://japa.dev/docs/runner-config#plugins-optional
  */
-export const plugins: Config['plugins'] = [assert(), pluginAdonisJS(app)]
+process.env.HOST ||= '127.0.0.1'
+process.env.PORT ||= '3334'
+
+export const plugins: Config['plugins'] = [assert(), apiClient(), pluginAdonisJS(app)]
 
 /**
  * Configure lifecycle function to run before and after all the

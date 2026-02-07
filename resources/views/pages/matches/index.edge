@@ -101,7 +101,7 @@
       <h2 class="text-xl font-semibold mb-4">
         Past Matches
       </h2>
-      @if(pastMatches.length === 0)
+      @if(pastMatches.total === 0)
         <div
           class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 text-center text-valorant-light/50"
         >
@@ -109,7 +109,7 @@
         </div>
       @else
         <div class="space-y-4">
-          @each(match in pastMatches)
+          @each(match in pastMatches.all())
             <div id="match-{{ match.id }}" class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
               <div class="flex items-center justify-between">
                 <div>
@@ -185,11 +185,52 @@
                     </div>
                   @endif
                   <a href="/matches/{{ match.id }}" class="text-sm hover:text-valorant-red transition">View</a>
+                  @if(auth.user?.isAdmin)
+                    <button
+                      hx-delete="/matches/{{ match.id }}"
+                      hx-target="#match-{{ match.id }}"
+                      hx-swap="delete"
+                      hx-confirm="Are you sure you want to delete this match?"
+                      class="text-sm text-red-400 hover:text-red-300 transition inline-flex items-center gap-1"
+                    >
+                      <span>Delete</span>
+                      <span class="htmx-indicator">
+                        @!component('components/spinner', { size: 'xs' })
+                      </span>
+                    </button>
+                  @endif
                 </div>
               </div>
             </div>
           @end
         </div>
+
+        @if(pastMatches.lastPage > 1)
+          <div class="flex items-center justify-center space-x-2 mt-6">
+            @if(pastMatches.currentPage > 1)
+              <a
+                href="?page={{ pastMatches.currentPage - 1 }}"
+                class="px-3 py-1 bg-valorant-gray border border-valorant-red/20 rounded hover:bg-valorant-red/20 transition text-sm"
+              >Previous</a>
+            @endif
+            @each(p in Array.from({ length: pastMatches.lastPage }, (_, i) => i + 1))
+              @if(p === pastMatches.currentPage)
+                <span class="px-3 py-1 bg-valorant-red text-white rounded text-sm">{{ p }}</span>
+              @else
+                <a
+                  href="?page={{ p }}"
+                  class="px-3 py-1 bg-valorant-gray border border-valorant-red/20 rounded hover:bg-valorant-red/20 transition text-sm"
+                >{{ p }}</a>
+              @endif
+            @end
+            @if(pastMatches.currentPage < pastMatches.lastPage)
+              <a
+                href="?page={{ pastMatches.currentPage + 1 }}"
+                class="px-3 py-1 bg-valorant-gray border border-valorant-red/20 rounded hover:bg-valorant-red/20 transition text-sm"
+              >Next</a>
+            @endif
+          </div>
+        @endif
       @endif
     </div>
   </div>

@@ -14,16 +14,28 @@ import MatchNotification from '#models/match_notification'
 import DiscordNotificationService from '#services/discord_notification_service'
 
 export default class MatchesController {
-  async index({ view, auth }: HttpContext) {
+  async index({ view, auth, request }: HttpContext) {
     const user = auth.user!
-    const matches = await Match.query()
+    const page = request.input('page', 1)
+
+    const upcomingMatches = await Match.query()
       .preload('availabilities', (query) => {
         query.preload('user')
       })
+      .where((query) => {
+        query.where('scheduledAt', '>', DateTime.now().toSQL()!).whereNull('result')
+      })
       .orderBy('scheduledAt', 'asc')
 
-    const upcomingMatches = matches.filter((m) => m.scheduledAt > DateTime.now() && !m.result)
-    const pastMatches = matches.filter((m) => m.scheduledAt <= DateTime.now() || m.result)
+    const pastMatches = await Match.query()
+      .preload('availabilities', (query) => {
+        query.preload('user')
+      })
+      .where((query) => {
+        query.where('scheduledAt', '<=', DateTime.now().toSQL()!).orWhereNotNull('result')
+      })
+      .orderBy('scheduledAt', 'desc')
+      .paginate(page, 10)
 
     return view.render('pages/matches/index', {
       upcomingMatches,

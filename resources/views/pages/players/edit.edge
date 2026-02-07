@@ -5,6 +5,19 @@
       Edit Player
     </h1>
 
+    @if(flashMessages.has('inputErrorsBag'))
+      <div class="mb-4 p-4 bg-red-900/50 border border-red-500 rounded text-red-200">
+        <p class="font-medium mb-2">Please fix the following errors:</p>
+        <ul class="list-disc list-inside space-y-1 text-sm">
+          @each((messages, field) in flashMessages.get('inputErrorsBag'))
+            @each(message in messages)
+              <li>{{ message }}</li>
+            @end
+          @end
+        </ul>
+      </div>
+    @endif
+
     <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
       <form
         action="/players/{{ player.id }}?_method=PUT"

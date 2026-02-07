@@ -15,7 +15,7 @@
       </div>
       @if(auth.user?.isAdmin)
         <div class="flex gap-2">
-          @if(match.result)
+          @if(match.result || match.scheduledAt.toMillis() <= Date.now())
             <button
               type="button"
               hx-get="/matches/{{ match.id }}/fetch-valorant/step1"
