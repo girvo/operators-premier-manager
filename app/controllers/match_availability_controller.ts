@@ -3,6 +3,7 @@ import MatchAvailability from '#models/match_availability'
 import Match from '#models/match'
 import User from '#models/user'
 import { AGENT_LOOKUP } from '#constants/agents'
+import { DateTime } from 'luxon'
 
 export default class MatchAvailabilityController {
   async update({ params, request, response, auth, view }: HttpContext) {
@@ -10,23 +11,35 @@ export default class MatchAvailabilityController {
     const matchId = params.id
     const { status, compact } = request.only(['status', 'compact'])
 
-    await MatchAvailability.updateOrCreate(
-      {
-        matchId: Number.parseInt(matchId),
-        userId: user.id,
-      },
-      {
-        status,
-      }
-    )
-
-    const match = await Match.query()
+    let match = await Match.query()
       .where('id', matchId)
       .preload('availabilities', (query) => {
         query.preload('user')
       })
       .preload('playerAgents')
       .firstOrFail()
+
+    const isPastMatch = match.scheduledAt <= DateTime.now()
+
+    if (!isPastMatch) {
+      await MatchAvailability.updateOrCreate(
+        {
+          matchId: Number.parseInt(matchId),
+          userId: user.id,
+        },
+        {
+          status,
+        }
+      )
+
+      match = await Match.query()
+        .where('id', matchId)
+        .preload('availabilities', (query) => {
+          query.preload('user')
+        })
+        .preload('playerAgents')
+        .firstOrFail()
+    }
 
     const players = await User.query().orderBy('fullName', 'asc')
 
@@ -42,6 +55,7 @@ export default class MatchAvailabilityController {
       match,
       userAvailability,
       compact: compact === true || compact === 'true',
+      isPastMatch,
     })
 
     const teamAvailabilityHtml = await view.render('partials/team_match_availability', {

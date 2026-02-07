@@ -178,6 +178,7 @@ export default class MatchesController {
       match,
       players,
       userAvailability,
+      isPastMatch: match.scheduledAt <= DateTime.now(),
       timezone: user.timezone,
       agentLookup: AGENT_LOOKUP,
       matchAgentByUserId,

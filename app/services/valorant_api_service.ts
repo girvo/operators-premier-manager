@@ -251,13 +251,14 @@ export default class ValorantApiService {
       return { matchType: 'Premier', label: 'Premier' }
     }
 
-    const queue = (match.metadata.queue || match.metadata.mode || '').toLowerCase()
+    const queue = (match.metadata.queue || '').toLowerCase()
+    const mode = (match.metadata.mode || '').toLowerCase()
     const modeId = (match.metadata.mode_id || '').toLowerCase()
 
-    if (queue.includes('premier')) {
+    if (queue.includes('premier') || mode.includes('premier') || modeId.includes('premier')) {
       return { matchType: 'Premier', label: 'Premier' }
     }
-    if (queue.includes('custom') || modeId === 'custom') {
+    if (queue.includes('custom') || mode.includes('custom') || modeId.includes('custom')) {
       return { matchType: 'Custom', label: 'Custom' }
     }
 
