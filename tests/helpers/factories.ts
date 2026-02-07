@@ -1,4 +1,3 @@
-import hash from '@adonisjs/core/services/hash'
 import { DateTime } from 'luxon'
 import Match from '#models/match'
 import Map from '#models/map'
@@ -7,7 +6,7 @@ import User from '#models/user'
 type UserOverrides = Partial<User>
 
 export const createUser = async (overrides: UserOverrides = {}) => {
-  const password = overrides.password ?? (await hash.make('password'))
+  const password = overrides.password ?? 'password'
 
   return User.create({
     fullName: 'Test User',

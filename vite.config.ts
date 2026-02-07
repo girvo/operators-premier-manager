@@ -1,7 +1,19 @@
 import { defineConfig } from 'vite'
 import adonisjs from '@adonisjs/vite/client'
 
+const isTest = process.env.NODE_ENV === 'test'
+const testHmrPort = 24700 + (process.pid % 500)
+
 export default defineConfig({
+  server: isTest
+    ? {
+        hmr: {
+          host: '127.0.0.1',
+          port: testHmrPort,
+          clientPort: testHmrPort,
+        },
+      }
+    : undefined,
   plugins: [
     adonisjs({
       /**

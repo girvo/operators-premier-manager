@@ -59,7 +59,7 @@ test.group('Matches', (group) => {
       },
     })
 
-    assert.equal(response.status(), 200)
+    assert.equal(response.status(), 204)
     assert.equal(response.text(), '')
 
     const deleted = await Match.find(match.id)

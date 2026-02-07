@@ -3,29 +3,50 @@ import type { ApiClient, ApiRequest, ApiResponse } from '@japa/api-client'
 type RequestOptions = {
   headers?: Record<string, string>
   form?: Record<string, string>
+  redirects?: number
 }
 
 type CookieJar = Record<string, string>
 
+const decodeHtmlEntities = (value: string) =>
+  value
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&#x27;/gi, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+
 const applyOptions = (request: ApiRequest, options: RequestOptions | undefined) => {
+  request.redirects(options?.redirects ?? 0)
+
   if (!options) return
+
   if (options.headers) {
     request.headers(options.headers)
   }
+
   if (options.form) {
     request.form(options.form)
   }
 }
 
 const applyCookies = (request: ApiRequest, jar: CookieJar) => {
-  if (Object.keys(jar).length === 0) return
-  request.cookies(jar)
+  const cookieValues = Object.values(jar)
+  if (cookieValues.length === 0) return
+  request.header('cookie', cookieValues.join('; '))
 }
 
 const updateCookies = (jar: CookieJar, response: ApiResponse) => {
-  const cookies = response.cookies()
-  for (const cookie of Object.values(cookies)) {
-    jar[cookie.name] = cookie.value
+  const setCookieHeader = response.header('set-cookie')
+  if (!setCookieHeader) return
+
+  const setCookies = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
+  for (const cookieString of setCookies) {
+    const rawCookie = cookieString.split(';', 1)[0]
+    const separatorIndex = rawCookie.indexOf('=')
+    if (separatorIndex === -1) continue
+    const cookieName = rawCookie.slice(0, separatorIndex)
+    jar[cookieName] = rawCookie
   }
 }
 
@@ -75,17 +96,19 @@ export class SessionClient {
 }
 
 export const extractCsrfTokenFromForm = (html: string): string => {
-  const match = html.match(/name=\"_csrf\" value=\"([^\"]+)\"/)
-  if (!match) {
+  const csrfInput = html.match(/<input[^>]*name=['"]_csrf['"][^>]*>/i)?.[0]
+  const token = csrfInput?.match(/value=['"]([^'"]+)['"]/i)?.[1]
+  if (!token) {
     throw new Error('Unable to find CSRF token in form')
   }
-  return match[1]
+  return decodeHtmlEntities(token)
 }
 
 export const extractCsrfTokenFromMeta = (html: string): string => {
-  const match = html.match(/name=\"csrf-token\" content=\"([^\"]+)\"/)
-  if (!match) {
+  const csrfMeta = html.match(/<meta[^>]*name=['"]csrf-token['"][^>]*>/i)?.[0]
+  const token = csrfMeta?.match(/content=['"]([^'"]+)['"]/i)?.[1]
+  if (!token) {
     throw new Error('Unable to find CSRF token meta tag')
   }
-  return match[1]
+  return decodeHtmlEntities(token)
 }
