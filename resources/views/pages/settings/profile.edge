@@ -7,6 +7,8 @@
     </h1>
 
     <div class="bg-valorant-gray rounded-lg p-6 border border-valorant-red/20">
+      @include('partials/form_errors')
+
       <form
         action="/settings/profile?_method=PUT"
         method="POST"

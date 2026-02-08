@@ -45,7 +45,7 @@ export const createMap = async (overrides: Partial<Map> = {}) => {
 
 export const createMatch = async (overrides: Partial<Match> = {}) => {
   return Match.create({
-    scheduledAt: DateTime.now().plus({ days: 1 }),
+    scheduledAt: DateTime.fromISO('2099-01-01T12:00:00.000Z', { zone: 'utc' }),
     opponentName: 'Test Opponent',
     map: 'Ascent',
     matchType: 'scrim',

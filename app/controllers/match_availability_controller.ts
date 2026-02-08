@@ -45,6 +45,10 @@ export default class MatchAvailabilityController {
 
     const userAvailability = match.availabilities.find((a) => a.userId === user.id)
 
+    if (!request.header('HX-Request')) {
+      return response.redirect(`/matches/${match.id}`)
+    }
+
     const matchAgentByUserId: Record<number, string> = {}
     for (const entry of match.playerAgents || []) {
       if (!entry.agentKey) continue

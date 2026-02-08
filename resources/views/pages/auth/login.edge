@@ -69,7 +69,12 @@
               Admin login with email
             </summary>
 
-            <form action="/login" method="POST" class="space-y-4 mt-4 pt-4 border-t border-valorant-light/10">
+            <form
+              action="/login"
+              method="POST"
+              hx-boost="false"
+              class="space-y-4 mt-4 pt-4 border-t border-valorant-light/10"
+            >
               {{ csrfField() }}
               <div>
                 <label for="email" class="block text-sm font-medium text-valorant-light/70 mb-2">Email</label>

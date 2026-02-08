@@ -1,8 +1,17 @@
 import type { ApiClient, ApiRequest, ApiResponse } from '@japa/api-client'
 
+type UploadFile = {
+  field: string
+  path: string
+  filename?: string
+  contentType?: string
+}
+
 type RequestOptions = {
   headers?: Record<string, string>
-  form?: Record<string, string>
+  form?: Record<string, any>
+  multipart?: Record<string, any>
+  files?: UploadFile[]
   redirects?: number
 }
 
@@ -25,8 +34,19 @@ const applyOptions = (request: ApiRequest, options: RequestOptions | undefined) 
     request.headers(options.headers)
   }
 
-  if (options.form) {
+  if (options.multipart) {
+    request.fields(options.multipart)
+  } else if (options.form) {
     request.form(options.form)
+  }
+
+  if (options.files) {
+    for (const file of options.files) {
+      request.file(file.field, file.path, {
+        filename: file.filename,
+        contentType: file.contentType,
+      })
+    }
   }
 }
 

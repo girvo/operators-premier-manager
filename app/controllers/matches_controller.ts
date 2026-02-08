@@ -218,7 +218,7 @@ export default class MatchesController {
 
     if (request.header('HX-Request')) {
       await match.delete()
-      return response.send('')
+      return response.status(200).send('')
     }
 
     await match.delete()

@@ -106,12 +106,55 @@ For styling native form inputs (date pickers, etc.):
 
 Never inline SVG code directly into templates. Always use a reusable approach - either a component, partial, or utility function. Inlining SVGs creates duplication and maintenance problems.
 
-## Testing Changes
+## Testing
 
-No test suite currently. Verify manually:
+### Commands
 
-- Run `pnpm typecheck` and `pnpm lint` before committing
-- Test both admin and player roles
-- Test htmx interactions (check Network tab for partial responses)
-- Test timezone handling if touching availability
-- Test navigation via clicking links (hx-boost) not just direct URL access - elements may render differently
+```bash
+pnpm test       # Functional HTTP tests (Japa + API client)
+pnpm test:e2e   # Browser E2E tests (Playwright)
+pnpm lint       # Static checks
+pnpm typecheck  # Type checks
+```
+
+Always run `pnpm typecheck` and `pnpm lint` before committing.
+
+### Strategy
+
+- **Black-box only**: test user-visible behavior via HTTP and browser APIs. No controller/model unit tests.
+- **Functional tests** (`tests/functional/`): hit real endpoints, assert status codes, redirects, HTML content, and data persistence. Both HTMX (`HX-Request: true`) and non-HTMX paths are tested for mutating endpoints.
+- **E2E tests** (`tests/e2e/`): Playwright against a real running server. Cover key user flows (auth, match CRUD, availability, file upload, role gating).
+
+### Coverage Areas
+
+- **Auth & session**: login, logout, invalid login, guest redirect, onboarding/approval middleware
+- **Role gating**: admin can CRUD matches; player is blocked from mutate endpoints
+- **HTMX contracts**: delete/result/availability endpoints return correct partials (or empty body) with OOB fragments when HX-Request is set, and redirect when it's not
+- **Validation**: invalid payloads are rejected, data is not mutated, error messages render
+- **File uploads**: profile logo upload/replace/delete, strat image upload/delete. Old files are removed on replace.
+- **Timezones**: same UTC match time renders differently for users in different timezones (fixed timestamp, deterministic)
+
+### Test Infrastructure
+
+- **`tests/helpers/api_client.ts`**: `SessionClient` wraps Japa's API client with a cookie jar to maintain session state across requests.
+- **`tests/helpers/session.ts`**: `loginAs()`, `submitLogin()`, `getCsrfTokenFromAppPage()` helpers. CSRF tokens are fetched from real rendered pages.
+- **`tests/helpers/factories.ts`**: `createUser()`, `createAdminUser()`, `createMatch()`, `createMap()` with sensible defaults. Match `scheduledAt` defaults to `2099-01-01` to avoid date boundary flakiness.
+- **`tests/helpers/test_setup.ts`**: `runMigrationsOnce()` (single-process assumption), `beginTransaction()`/`rollbackTransaction()` for per-test isolation.
+- **`tests/fixtures/`**: test images for upload tests.
+
+### Writing New Tests
+
+1. Add functional tests in `tests/functional/<feature>.spec.ts`
+2. Use the same group setup pattern (migrations once, transaction per test)
+3. Use `SessionClient` + `loginAs()` for authenticated requests
+4. Fetch CSRF tokens from rendered pages — don't bypass CSRF
+5. Assert status codes and redirects first, then check data persistence, then HTML content
+6. For HTMX endpoints, test both with and without `HX-Request: true` header
+7. For file upload tests, clean up uploaded files (ideally in teardown)
+
+### Known Limitations
+
+- E2E only runs Chromium (primary user browser is Firefox — consider adding Firefox project)
+- E2E tests share state (no per-test cleanup) — test order matters
+- Functional and E2E share the same SQLite DB file — don't run concurrently
+- File cleanup in upload tests is done inline, not in teardown — orphaned files if test fails mid-run

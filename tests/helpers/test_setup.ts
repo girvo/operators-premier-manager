@@ -4,6 +4,8 @@ import db from '@adonisjs/lucid/services/db'
 let migrated = false
 
 export const runMigrationsOnce = async () => {
+  // Process-local guard: this is safe for single-process test runners.
+  // If tests run with isolated workers/processes, each worker will run migrations.
   if (migrated) return
 
   const ace = await app.container.make('ace')

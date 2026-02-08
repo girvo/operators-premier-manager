@@ -7,6 +7,8 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
       <div class="lg:col-span-3">
+        @include('partials/form_errors')
+
         <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
           <form action="/matches/{{ match.id }}?_method=PUT" method="POST" class="space-y-6">
             {{ csrfField() }}
