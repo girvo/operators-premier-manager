@@ -9,6 +9,21 @@ const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   passwordColumnName: 'password',
 })
 
+const parseAgentPrefs = (value: string | null): string[] => {
+  if (!value) return []
+
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed.filter((item): item is string => typeof item === 'string')
+  } catch {
+    return []
+  }
+}
+
 export default class User extends compose(BaseModel, AuthFinder) {
   @column({ isPrimary: true })
   declare id: number
@@ -57,15 +72,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column({
     prepare: (value: string[] | null) => JSON.stringify(value ?? []),
-    consume: (value: string | null) => {
-      if (!value) return []
-      try {
-        const parsed = JSON.parse(value)
-        return Array.isArray(parsed) ? parsed : []
-      } catch {
-        return []
-      }
-    },
+    consume: (value: string | null) => parseAgentPrefs(value),
   })
   declare agentPrefs: string[]
 

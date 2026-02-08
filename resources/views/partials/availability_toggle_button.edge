@@ -1,0 +1,14 @@
+<button
+  class="w-full h-8 rounded text-xs transition flex items-center justify-center {{ isAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-valorant-dark hover:bg-valorant-gray border border-valorant-light/10' }}"
+  hx-put="/availability"
+  hx-vals='{"dayOfWeek": "{{ utcDayOfWeek }}", "hour": "{{ utcHour }}", "isAvailable": "{{ !isAvailable }}"}'
+  hx-swap="outerHTML"
+  title="{{ title }}"
+>
+  <span class="htmx-indicator">
+    @!component('components/spinner', { size: 'xs' })
+  </span>
+  <span class="htmx-hide-on-request">
+    {{ isAvailable ? '✓' : '' }}
+  </span>
+</button>

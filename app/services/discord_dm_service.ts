@@ -8,6 +8,20 @@ export type SendPlayerDataNudgeInput = {
   missingAgents: boolean
 }
 
+export type SendMatchAvailabilityNudgeInput = {
+  discordUserId: string
+  playerName: string
+  opponentName: string
+  mapName: string
+  scheduledForPlayer: string
+  playerTimezone: string
+  actionPaths: {
+    yes: string
+    maybe: string
+    no: string
+  }
+}
+
 export type DiscordDmResult = {
   ok: boolean
   externalMessageId?: string
@@ -32,7 +46,7 @@ export default class DiscordDmService {
     return `${this.appUrl.replace(/\/$/, '')}${path}`
   }
 
-  private buildMessage(input: SendPlayerDataNudgeInput): string {
+  private buildPlayerDataNudgeMessage(input: SendPlayerDataNudgeInput): string {
     const tasks: string[] = []
     if (input.missingAvailability) {
       tasks.push(`- Set availability: ${this.buildAppLink('/availability')}`)
@@ -50,39 +64,70 @@ export default class DiscordDmService {
     ].join('\n')
   }
 
-  async sendPlayerDataNudge(input: SendPlayerDataNudgeInput): Promise<DiscordDmResult> {
+  private buildMatchAvailabilityNudgeMessage(input: SendMatchAvailabilityNudgeInput): string {
+    return [
+      `Hey ${input.playerName}, quick availability check for your upcoming match:`,
+      '',
+      `- Opponent: ${input.opponentName}`,
+      `- Map: ${input.mapName}`,
+      `- Your time (${input.playerTimezone}): ${input.scheduledForPlayer}`,
+      '',
+      'Respond with one click:',
+      `- Yes: ${this.buildAppLink(input.actionPaths.yes)}`,
+      `- Maybe: ${this.buildAppLink(input.actionPaths.maybe)}`,
+      `- No: ${this.buildAppLink(input.actionPaths.no)}`,
+      '',
+      'Thanks.',
+    ].join('\n')
+  }
+
+  private getTestModeResult(): DiscordDmResult | null {
     // Keep functional tests deterministic without requiring external Discord infrastructure.
-    if (env.get('NODE_ENV') === 'test') {
-      if (process.env.DISCORD_DM_TEST_MODE === 'fail') {
-        return {
-          ok: false,
-          errorCode: 'discord_dm_test_failure',
-          errorMessage: 'Forced failure in test mode',
-        }
-      }
+    if (env.get('NODE_ENV') !== 'test') {
+      return null
+    }
 
-      if (process.env.DISCORD_DM_TEST_MODE === 'bot_token_missing') {
-        return {
-          ok: false,
-          errorCode: 'discord_bot_token_missing',
-          errorMessage: 'Discord bot token is not configured',
-        }
+    if (process.env.DISCORD_DM_TEST_MODE === 'fail') {
+      return {
+        ok: false,
+        errorCode: 'discord_dm_test_failure',
+        errorMessage: 'Forced failure in test mode',
       }
+    }
 
-      if (process.env.DISCORD_DM_TEST_MODE === 'forbidden') {
-        return {
-          ok: false,
-          errorCode: 'discord_dm_message_http_403',
-          errorMessage: 'Cannot send messages to this user',
-        }
+    if (process.env.DISCORD_DM_TEST_MODE === 'bot_token_missing') {
+      return {
+        ok: false,
+        errorCode: 'discord_bot_token_missing',
+        errorMessage: 'Discord bot token is not configured',
       }
+    }
 
-      if (process.env.DISCORD_DM_TEST_MODE !== 'real') {
-        return {
-          ok: true,
-          externalMessageId: 'test-mode-message-id',
-        }
+    if (process.env.DISCORD_DM_TEST_MODE === 'forbidden') {
+      return {
+        ok: false,
+        errorCode: 'discord_dm_message_http_403',
+        errorMessage: 'Cannot send messages to this user',
       }
+    }
+
+    if (process.env.DISCORD_DM_TEST_MODE !== 'real') {
+      return {
+        ok: true,
+        externalMessageId: 'test-mode-message-id',
+      }
+    }
+
+    return null
+  }
+
+  private async sendDirectMessage(
+    discordUserId: string,
+    content: string
+  ): Promise<DiscordDmResult> {
+    const testModeResult = this.getTestModeResult()
+    if (testModeResult) {
+      return testModeResult
     }
 
     if (!this.botToken) {
@@ -103,7 +148,7 @@ export default class DiscordDmService {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({
-          recipient_id: input.discordUserId,
+          recipient_id: discordUserId,
         }),
       })
 
@@ -132,7 +177,7 @@ export default class DiscordDmService {
           method: 'POST',
           headers: authHeaders,
           body: JSON.stringify({
-            content: this.buildMessage(input),
+            content,
           }),
         }
       )
@@ -160,5 +205,18 @@ export default class DiscordDmService {
         errorMessage: error instanceof Error ? error.message : 'Unknown Discord DM error',
       }
     }
+  }
+
+  async sendPlayerDataNudge(input: SendPlayerDataNudgeInput): Promise<DiscordDmResult> {
+    return this.sendDirectMessage(input.discordUserId, this.buildPlayerDataNudgeMessage(input))
+  }
+
+  async sendMatchAvailabilityNudge(
+    input: SendMatchAvailabilityNudgeInput
+  ): Promise<DiscordDmResult> {
+    return this.sendDirectMessage(
+      input.discordUserId,
+      this.buildMatchAvailabilityNudgeMessage(input)
+    )
   }
 }

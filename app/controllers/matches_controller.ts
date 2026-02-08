@@ -242,7 +242,7 @@ export default class MatchesController {
     return response.redirect('/matches')
   }
 
-  async updateResult({ params, request, response }: HttpContext) {
+  async updateResult({ params, request, response, view }: HttpContext) {
     const match = await Match.findOrFail(params.id)
     const { result } = request.only(['result'])
 
@@ -250,20 +250,7 @@ export default class MatchesController {
     await match.save()
 
     if (request.header('HX-Request')) {
-      let resultHtml = ''
-      if (result === 'win') {
-        resultHtml =
-          '<span class="px-3 py-1 bg-green-900/50 text-green-400 rounded font-bold">WIN</span>'
-      } else if (result === 'loss') {
-        resultHtml =
-          '<span class="px-3 py-1 bg-red-900/50 text-red-400 rounded font-bold">LOSS</span>'
-      } else if (result === 'draw') {
-        resultHtml =
-          '<span class="px-3 py-1 bg-yellow-900/50 text-yellow-400 rounded font-bold">DRAW</span>'
-      } else {
-        resultHtml = '<span class="text-valorant-light/50">Pending</span>'
-      }
-      return response.send(resultHtml)
+      return response.send(await view.render('partials/match_result_badge', { result }))
     }
 
     return response.redirect('/matches')

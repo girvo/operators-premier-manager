@@ -44,18 +44,11 @@
             @each(day in grid)
               @let(slot = day.hours.find(h => h.localHour === hour))
               <div class="p-0.5">
-                <button
-                  class="w-full h-8 rounded text-xs transition flex items-center justify-center {{ slot.isAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-valorant-dark hover:bg-valorant-gray border border-valorant-light/10' }}"
-                  hx-put="/availability"
-                  hx-vals='{"dayOfWeek": "{{ slot.utcDayOfWeek }}", "hour": "{{ slot.utcHour }}", "isAvailable": "{{ !slot.isAvailable }}"}'
-                  hx-swap="outerHTML"
-                  title="{{ day.dayName }} {{ slot.displayHour }}"
-                >
-                  <span class="htmx-indicator">
-                    @!component('components/spinner', { size: 'xs' })
-                  </span>
-                  <span class="htmx-hide-on-request">{{ slot.isAvailable ? '✓' : '' }}</span>
-                </button>
+                @let(isAvailable = slot.isAvailable)
+                @let(utcDayOfWeek = slot.utcDayOfWeek)
+                @let(utcHour = slot.utcHour)
+                @let(title = day.dayName + ' ' + slot.displayHour)
+                @include('partials/availability_toggle_button')
               </div>
             @end
           </div>

@@ -9,6 +9,10 @@ const PlayersController = () => import('#controllers/players_controller')
 const AvailabilityController = () => import('#controllers/availability_controller')
 const MatchesController = () => import('#controllers/matches_controller')
 const MatchAvailabilityController = () => import('#controllers/match_availability_controller')
+const MatchAvailabilityNudgesController = () =>
+  import('#controllers/match_availability_nudges_controller')
+const MatchAvailabilityResponseController = () =>
+  import('#controllers/match_availability_response_controller')
 const StratsController = () => import('#controllers/strats_controller')
 const PublicController = () => import('#controllers/public_controller')
 const RegistrationsController = () => import('#controllers/admin/registrations_controller')
@@ -34,6 +38,7 @@ router.get('/pending-approval', [AuthController, 'showPendingApproval']).use(mid
 
 router.get('/onboarding', [AuthController, 'showOnboarding']).use(middleware.auth())
 router.post('/onboarding', [AuthController, 'completeOnboarding']).use(middleware.auth())
+router.get('/match-availability/respond/:token', [MatchAvailabilityResponseController, 'show'])
 
 router
   .group(() => {
@@ -84,6 +89,9 @@ router
       .use(middleware.admin())
 
     router.put('/matches/:id/availability', [MatchAvailabilityController, 'update'])
+    router
+      .post('/matches/:id/nudge-non-responders', [MatchAvailabilityNudgesController, 'store'])
+      .use(middleware.admin())
 
     router.get('/strats', [StratsController, 'index'])
     router.get('/strats/:mapSlug', [StratsController, 'showMap'])

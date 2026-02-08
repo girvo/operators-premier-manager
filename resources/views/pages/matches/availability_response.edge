@@ -1,0 +1,53 @@
+@layouts.public({
+  title: title
+})
+  <section class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 sm:p-8">
+      <h1 class="text-2xl font-bold text-valorant-red">
+        {{ title }}
+      </h1>
+
+      <p class="mt-3 text-valorant-light/80">
+        {{ message }}
+      </p>
+
+      @if(success && formattedMatchTime)
+        <dl class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt class="text-valorant-light/50">
+              Opponent
+            </dt>
+            <dd class="mt-1">
+              {{ opponentName }}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-valorant-light/50">
+              Map
+            </dt>
+            <dd class="mt-1">
+              {{ mapName }}
+            </dd>
+          </div>
+          <div class="sm:col-span-2">
+            <dt class="text-valorant-light/50">
+              Scheduled Time
+            </dt>
+            <dd class="mt-1">
+              {{ formattedMatchTime }} ({{ timezone }})
+            </dd>
+          </div>
+        </dl>
+      @endif
+
+      <div class="mt-8">
+        <a
+          href="/login"
+          class="inline-flex items-center px-4 py-2 rounded bg-valorant-red text-white hover:bg-valorant-red/80 transition"
+        >
+          Open Team App
+        </a>
+      </div>
+    </div>
+  </section>
+@end

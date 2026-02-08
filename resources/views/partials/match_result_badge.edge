@@ -1,0 +1,9 @@
+@if(result === 'win')
+  <span class="px-3 py-1 bg-green-900/50 text-green-400 rounded font-bold">WIN</span>
+@elseif(result === 'loss')
+  <span class="px-3 py-1 bg-red-900/50 text-red-400 rounded font-bold">LOSS</span>
+@elseif(result === 'draw')
+  <span class="px-3 py-1 bg-yellow-900/50 text-yellow-400 rounded font-bold">DRAW</span>
+@else
+  <span class="text-valorant-light/50">Pending</span>
+@endif

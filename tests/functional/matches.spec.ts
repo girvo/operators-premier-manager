@@ -63,6 +63,7 @@ test.group('Matches', (group) => {
 
     assert.equal(response.status(), 200)
     assert.include(response.text(), '<span')
+    assert.include(response.text(), 'WIN')
     assert.notInclude(response.text(), '<!DOCTYPE html>')
 
     await match.refresh()

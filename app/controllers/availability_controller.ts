@@ -2,7 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import WeeklyAvailability from '#models/weekly_availability'
 import User from '#models/user'
 import TimezoneService from '#services/timezone_service'
-import { spinner } from '#utils/html_components'
 
 export default class AvailabilityController {
   async index({ view, auth }: HttpContext) {
@@ -43,7 +42,7 @@ export default class AvailabilityController {
     })
   }
 
-  async update({ request, auth, response }: HttpContext) {
+  async update({ request, auth, response, view }: HttpContext) {
     const user = auth.user!
     const { dayOfWeek, hour, isAvailable } = request.only(['dayOfWeek', 'hour', 'isAvailable'])
 
@@ -64,18 +63,14 @@ export default class AvailabilityController {
 
     const localTime = TimezoneService.toLocal(utcDayOfWeek, utcHour, user.timezone)
 
-    return response.send(`
-      <button
-        class="w-full h-8 rounded text-xs transition flex items-center justify-center ${available ? 'bg-green-600 hover:bg-green-700' : 'bg-valorant-dark hover:bg-valorant-gray border border-valorant-light/10'}"
-        hx-put="/availability"
-        hx-vals='{"dayOfWeek": "${utcDayOfWeek}", "hour": "${utcHour}", "isAvailable": "${!available}"}'
-        hx-swap="outerHTML"
-        title="${TimezoneService.getDayName(localTime.dayOfWeek)} ${TimezoneService.formatHour(localTime.hour)}"
-      >
-        <span class="htmx-indicator">${spinner('xs')}</span>
-        <span class="htmx-hide-on-request">${available ? '✓' : ''}</span>
-      </button>
-    `)
+    return response.send(
+      await view.render('partials/availability_toggle_button', {
+        isAvailable: available,
+        utcDayOfWeek,
+        utcHour,
+        title: `${TimezoneService.getDayName(localTime.dayOfWeek)} ${TimezoneService.formatHour(localTime.hour)}`,
+      })
+    )
   }
 
   async compare({ view, auth }: HttpContext) {
