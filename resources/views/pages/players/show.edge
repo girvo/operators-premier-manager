@@ -23,12 +23,15 @@
         </div>
       </div>
       @if(auth.user?.isAdmin)
-        <a
-          href="/players/{{ player.id }}/edit"
-          class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
-        >
-          Edit Player
-      </a>
+        <div class="flex flex-col items-end gap-2">
+          <a
+            href="/players/{{ player.id }}/edit"
+            class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+          >
+            Edit Player
+          </a>
+          @include('partials/player_nudge_controls')
+        </div>
       @endif
     </div>
 
@@ -70,6 +73,24 @@
             {{ player.createdAt.toFormat('dd LLL yyyy') }}
           </dd>
         </div>
+        @if(auth.user?.isAdmin)
+          <div>
+            <dt class="text-sm text-valorant-light/50">
+              Last Login
+            </dt>
+            <dd class="mt-1">
+              @if(player.lastLoginAt)
+                @if(viewerTimezone)
+                  {{ player.lastLoginAt.setZone(viewerTimezone).toFormat('dd LLL yyyy h:mm a') }}
+                @else
+                  {{ player.lastLoginAt.toFormat('dd LLL yyyy h:mm a') }}
+                @endif
+              @else
+                Never
+              @endif
+            </dd>
+          </div>
+        @endif
         @if(player.trackerggUrl)
           <div class="md:col-span-2">
             <dt class="text-sm text-valorant-light/50">

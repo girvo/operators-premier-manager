@@ -6,10 +6,11 @@
     hx-swap-oob="true"
   @end
 >
-  @let(yesPlayers = match.availabilities.filter(a => a.status === 'yes'))
-  @let(maybePlayers = match.availabilities.filter(a => a.status === 'maybe'))
-  @let(noPlayers = match.availabilities.filter(a => a.status === 'no'))
-  @let(respondedIds = match.availabilities.map(a => a.userId))
+  @let(validAvailabilities = match.availabilities.filter(a => a.user))
+  @let(yesPlayers = validAvailabilities.filter(a => a.status === 'yes'))
+  @let(maybePlayers = validAvailabilities.filter(a => a.status === 'maybe'))
+  @let(noPlayers = validAvailabilities.filter(a => a.status === 'no'))
+  @let(respondedIds = validAvailabilities.map(a => a.userId))
   @let(notResponded = players.filter(p => !respondedIds.includes(p.id)))
 
   <div class="flex items-center gap-2">

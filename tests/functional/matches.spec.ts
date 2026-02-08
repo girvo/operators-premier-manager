@@ -367,6 +367,49 @@ test.group('Matches', (group) => {
     assert.equal(availability?.status, 'yes')
   })
 
+  test('fetch from Valorant step1 includes player after roster checkbox update', async ({
+    assert,
+    client,
+  }) => {
+    const admin = await createAdminUser({ email: 'admin-fetch-step1@example.com' })
+    const player = await createUser({
+      email: 'fetch-step1-player@example.com',
+      fullName: 'Fetch Step Player',
+      role: 'player',
+      isOnRoster: false,
+      trackerggUsername: null,
+      agentPrefs: ['jett'],
+    })
+    const match = await createMatch()
+
+    const session = new SessionClient(client)
+    await loginAs(session, admin.email, 'password')
+
+    const csrfToken = await getCsrfTokenFromAppPage(session, '/players')
+    const updateResponse = await session.put(`/players/${player.id}`, {
+      headers: {
+        'x-csrf-token': csrfToken,
+      },
+      form: {
+        'fullName': player.fullName!,
+        'email': player.email,
+        'role': 'player',
+        'timezone': player.timezone,
+        'trackerggUsername': 'RiotName#NA1',
+        'isOnRoster': 'on',
+        'agents[]': ['jett'],
+      },
+    })
+    assert.equal(updateResponse.status(), 302)
+    assert.equal(updateResponse.header('location'), '/players')
+
+    const step1Response = await session.get(`/matches/${match.id}/fetch-valorant/step1`)
+    assert.equal(step1Response.status(), 200)
+    assert.include(step1Response.text(), 'Fetch Step Player')
+    assert.include(step1Response.text(), 'RiotName#NA1')
+    assert.notInclude(step1Response.text(), 'No roster players have a Riot ID configured')
+  })
+
   test('non-htmx match availability update redirects to match page', async ({ assert, client }) => {
     const player = await createUser({ email: 'availability-player-no-hx@example.com' })
     const match = await createMatch()

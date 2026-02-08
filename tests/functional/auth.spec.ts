@@ -1,4 +1,5 @@
 import { test } from '@japa/runner'
+import User from '#models/user'
 import { createAdminUser, createUser } from '../helpers/factories.js'
 import { SessionClient } from '../helpers/api_client.js'
 import { getCsrfTokenFromAppPage, loginAs, submitLogin } from '../helpers/session.js'
@@ -37,10 +38,13 @@ test.group('Auth', (group) => {
 
     assert.equal(response.status(), 302)
     assert.equal(response.header('location'), '/dashboard')
+
+    const refreshedAdmin = await User.findOrFail(admin.id)
+    assert.isNotNull(refreshedAdmin.lastLoginAt)
   })
 
   test('invalid login shows an error on the login page', async ({ assert, client }) => {
-    await createAdminUser({
+    const admin = await createAdminUser({
       email: 'admin-invalid@example.com',
     })
 
@@ -53,6 +57,9 @@ test.group('Auth', (group) => {
     const loginPage = await session.get('/login')
     assert.equal(loginPage.status(), 200)
     assert.include(loginPage.text(), 'Invalid email or password')
+
+    const refreshedAdmin = await User.findOrFail(admin.id)
+    assert.isNull(refreshedAdmin.lastLoginAt)
   })
 
   test('unauthenticated users are redirected to login', async ({ assert, client }) => {

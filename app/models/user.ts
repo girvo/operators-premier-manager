@@ -52,6 +52,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare needsOnboarding: boolean
 
+  @column.dateTime()
+  declare lastLoginAt: DateTime | null
+
   @column({
     prepare: (value: string[] | null) => JSON.stringify(value ?? []),
     consume: (value: string | null) => {

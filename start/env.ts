@@ -52,6 +52,13 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   /*
   |----------------------------------------------------------
+  | Variables for Discord DM sending via bot token
+  |----------------------------------------------------------
+  */
+  DISCORD_BOT_TOKEN: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
   | App URL for external links (Discord notifications, etc.)
   |----------------------------------------------------------
   */

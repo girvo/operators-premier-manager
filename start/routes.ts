@@ -53,6 +53,7 @@ router
     router.put('/players/:id', [PlayersController, 'update']).use(middleware.admin())
     router.delete('/players/:id', [PlayersController, 'destroy']).use(middleware.admin())
     router.delete('/players/:id/logo', [PlayersController, 'destroyLogo']).use(middleware.admin())
+    router.post('/players/:id/nudge', [PlayersController, 'nudge']).use(middleware.admin())
 
     router.get('/availability', [AvailabilityController, 'index'])
     router.get('/availability/compare', [AvailabilityController, 'compare']).use(middleware.admin())

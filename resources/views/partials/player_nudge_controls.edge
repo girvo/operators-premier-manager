@@ -1,0 +1,23 @@
+@let(isDisabled = typeof disableNudge !== 'undefined' ? disableNudge : false)
+@let(message = typeof nudgeMessage !== 'undefined' ? nudgeMessage : null)
+@let(tone = typeof nudgeTone !== 'undefined' ? nudgeTone : null)
+@let(messageClass = tone === 'success' ? 'text-green-400' : tone === 'warning' ? 'text-yellow-300' : tone === 'error' ? 'text-red-300' : 'text-valorant-light/60')
+
+<div id="player-nudge-controls-{{ player.id }}" class="inline-flex flex-col items-end gap-1">
+  <button
+    type="button"
+    hx-post="/players/{{ player.id }}/nudge"
+    hx-target="#player-nudge-controls-{{ player.id }}"
+    hx-swap="outerHTML"
+    class="px-2 py-1 text-xs rounded border border-valorant-light/20 hover:border-valorant-red/60 hover:text-valorant-red transition disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:text-inherit disabled:hover:border-valorant-light/20"
+    @if(isDisabled)
+      disabled
+    @end
+  >
+    <span class="htmx-indicator">Sending...</span>
+    <span class="htmx-hide-on-request">Nudge</span>
+  </button>
+  @if(message)
+    <span class="text-xs {{ messageClass }}">{{ message }}</span>
+  @end
+</div>

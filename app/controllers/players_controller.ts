@@ -2,16 +2,23 @@ import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import WeeklyAvailability from '#models/weekly_availability'
 import TimezoneService from '#services/timezone_service'
+import PlayerNudgeService from '#services/player_nudge_service'
 import { createPlayerValidator, updatePlayerValidator } from '#validators/player_validator'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import * as fs from 'node:fs'
 import { AGENTS_BY_ROLE, AGENT_LOOKUP } from '#constants/agents'
 
+const toBoolean = (value: unknown): boolean =>
+  value === true || value === 'true' || value === 'on' || value === 1 || value === '1'
+
 export default class PlayersController {
-  async index({ view }: HttpContext) {
+  async index({ view, auth }: HttpContext) {
     const players = await User.query().orderBy('fullName', 'asc')
-    return view.render('pages/players/index', { players })
+    return view.render('pages/players/index', {
+      players,
+      viewerTimezone: auth.user?.timezone,
+    })
   }
 
   async create({ view }: HttpContext) {
@@ -51,7 +58,7 @@ export default class PlayersController {
       timezone: data.timezone,
       logoFilename,
       trackerggUsername: data.trackerggUsername || null,
-      isOnRoster: data.isOnRoster ?? false,
+      isOnRoster: toBoolean(data.isOnRoster),
     })
 
     session.flash('success', 'Player created successfully')
@@ -95,6 +102,7 @@ export default class PlayersController {
       availabilityGrid,
       availabilityHours,
       agentLookup: AGENT_LOOKUP,
+      viewerTimezone: auth.user?.timezone,
     })
   }
 
@@ -116,7 +124,7 @@ export default class PlayersController {
     player.role = data.role
     player.timezone = data.timezone
     player.trackerggUsername = data.trackerggUsername || null
-    player.isOnRoster = data.isOnRoster ?? false
+    player.isOnRoster = toBoolean(data.isOnRoster)
     player.agentPrefs = Array.from(new Set(data.agents))
 
     if (data.password) {
@@ -196,5 +204,42 @@ export default class PlayersController {
 
     session.flash('success', 'Logo removed successfully')
     return response.redirect(`/players/${params.id}/edit`)
+  }
+
+  async nudge({ params, auth, request, response, session, view }: HttpContext) {
+    const adminUser = auth.user!
+    const player = await User.findOrFail(params.id)
+
+    const nudgeService = new PlayerNudgeService()
+    const result = await nudgeService.sendProfileDataNudge(adminUser, player)
+
+    let statusCode = 200
+    if (result.status === 'blocked') {
+      statusCode = result.errorCode === 'cooldown_active' ? 409 : 422
+    } else if (result.status === 'failed') {
+      statusCode = 502
+    }
+
+    const nudgeTone =
+      result.status === 'sent' ? 'success' : result.status === 'blocked' ? 'warning' : 'error'
+    const disableNudge = result.status === 'blocked'
+
+    if (request.header('HX-Request')) {
+      response.status(statusCode)
+      return view.render('partials/player_nudge_controls', {
+        player,
+        nudgeMessage: result.message,
+        nudgeTone,
+        disableNudge,
+      })
+    }
+
+    if (result.status === 'sent') {
+      session.flash('success', result.message)
+    } else {
+      session.flash('error', result.message)
+    }
+
+    return response.redirect().back()
   }
 }

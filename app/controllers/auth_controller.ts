@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import hash from '@adonisjs/core/services/hash'
 import { cuid } from '@adonisjs/core/helpers'
+import { DateTime } from 'luxon'
 import User from '#models/user'
 import {
   loginValidator,
@@ -18,6 +19,8 @@ export default class AuthController {
 
     try {
       const user = await User.verifyCredentials(email, password)
+      user.lastLoginAt = DateTime.now()
+      await user.save()
       await auth.use('web').login(user)
       return response.redirect('/dashboard')
     } catch {
@@ -97,6 +100,8 @@ export default class AuthController {
         return response.redirect('/login')
       }
 
+      user.lastLoginAt = DateTime.now()
+      await user.save()
       await auth.use('web').login(user)
 
       if (user.isPending) {
@@ -131,6 +136,8 @@ export default class AuthController {
       needsOnboarding: true,
     })
 
+    user.lastLoginAt = DateTime.now()
+    await user.save()
     await auth.use('web').login(user)
     return response.redirect('/onboarding')
   }
