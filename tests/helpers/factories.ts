@@ -52,6 +52,8 @@ export const createMatch = async (overrides: Partial<Match> = {}) => {
     result: null,
     scoreUs: null,
     scoreThem: null,
+    valorantMatchId: null,
+    valorantMap: null,
     notes: null,
     ...overrides,
   })

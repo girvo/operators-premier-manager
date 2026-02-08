@@ -75,12 +75,24 @@ export interface ParsedMatch {
   result: 'win' | 'loss' | 'draw'
 }
 
-export interface MatchAgentEntry {
+export interface MatchPlayerStatEntry {
   riotId: string
-  agentKey: string
+  playerName: string
+  playerTag: string
+  team: 'Red' | 'Blue' | null
+  agentKey: string | null
   kills: number | null
   deaths: number | null
   assists: number | null
+  score: number | null
+  headshots: number | null
+  bodyshots: number | null
+  legshots: number | null
+}
+
+export interface MatchStatsSnapshot {
+  map: string | null
+  players: MatchPlayerStatEntry[]
 }
 
 export default class ValorantApiService {
@@ -95,7 +107,12 @@ export default class ValorantApiService {
     }
   }
 
-  static async getMatchAgents(matchId: string): Promise<MatchAgentEntry[]> {
+  static async getMatchPlayerStats(matchId: string): Promise<MatchPlayerStatEntry[]> {
+    const snapshot = await this.getMatchStatsSnapshot(matchId)
+    return snapshot.players
+  }
+
+  static async getMatchStatsSnapshot(matchId: string): Promise<MatchStatsSnapshot> {
     const apiKey = env.get('HENRIK_API_KEY')
     if (!apiKey) {
       throw new Error('HENRIK_API_KEY is not configured')
@@ -115,12 +132,20 @@ export default class ValorantApiService {
 
     const json = (await response.json()) as {
       data?: {
+        metadata?: {
+          map?: unknown
+        }
         players?: { all_players?: Array<Record<string, unknown>> }
       }
     }
 
+    const map =
+      typeof json?.data?.metadata?.map === 'string' && json.data.metadata.map.trim()
+        ? json.data.metadata.map.trim()
+        : null
+
     const players = json?.data?.players?.all_players ?? []
-    return players
+    const parsedPlayers = players
       .map((player) => {
         const name = typeof player.name === 'string' ? player.name.trim() : null
         const tag = typeof player.tag === 'string' ? player.tag.trim() : null
@@ -134,38 +159,44 @@ export default class ValorantApiService {
           (typeof player.character_id === 'string' && player.character_id) ||
           null
 
-        if (!rawAgent) return null
-
-        const agentKey = this.normalizeAgentKey(rawAgent)
-        if (!agentKey || !AGENT_LOOKUP[agentKey]) {
-          return null
-        }
-
-        const kills = typeof player.kills === 'number' ? player.kills : null
-        const deaths = typeof player.deaths === 'number' ? player.deaths : null
-        const assists = typeof player.assists === 'number' ? player.assists : null
+        const normalizedAgent = rawAgent ? this.normalizeAgentKey(rawAgent) : null
+        const agentKey = normalizedAgent && AGENT_LOOKUP[normalizedAgent] ? normalizedAgent : null
+        const team = player.team === 'Red' || player.team === 'Blue' ? player.team : null
 
         const stats =
           typeof player.stats === 'object' && player.stats
             ? (player.stats as Record<string, unknown>)
             : null
 
-        const resolvedKills =
-          kills ?? (typeof stats?.kills === 'number' ? (stats.kills as number) : null)
-        const resolvedDeaths =
-          deaths ?? (typeof stats?.deaths === 'number' ? (stats.deaths as number) : null)
-        const resolvedAssists =
-          assists ?? (typeof stats?.assists === 'number' ? (stats.assists as number) : null)
+        const kills = this.readNumber(player.kills) ?? this.readNumber(stats?.kills)
+        const deaths = this.readNumber(player.deaths) ?? this.readNumber(stats?.deaths)
+        const assists = this.readNumber(player.assists) ?? this.readNumber(stats?.assists)
+        const score = this.readNumber(player.score) ?? this.readNumber(stats?.score)
+        const headshots = this.readNumber(player.headshots) ?? this.readNumber(stats?.headshots)
+        const bodyshots = this.readNumber(player.bodyshots) ?? this.readNumber(stats?.bodyshots)
+        const legshots = this.readNumber(player.legshots) ?? this.readNumber(stats?.legshots)
 
         return {
           riotId: `${name}#${tag}`.toLowerCase(),
+          playerName: name,
+          playerTag: tag,
+          team,
           agentKey,
-          kills: resolvedKills,
-          deaths: resolvedDeaths,
-          assists: resolvedAssists,
+          kills,
+          deaths,
+          assists,
+          score,
+          headshots,
+          bodyshots,
+          legshots,
         }
       })
-      .filter((entry): entry is MatchAgentEntry => entry !== null)
+      .filter((entry): entry is MatchPlayerStatEntry => entry !== null)
+
+    return {
+      map,
+      players: parsedPlayers,
+    }
   }
 
   static async getRecentMatches(
@@ -309,6 +340,10 @@ export default class ValorantApiService {
     if (scoreUs > scoreThem) return 'win'
     if (scoreUs < scoreThem) return 'loss'
     return 'draw'
+  }
+
+  private static readNumber(value: unknown): number | null {
+    return typeof value === 'number' ? value : null
   }
 
   private static normalizeAgentKey(rawAgent: string): string | null {

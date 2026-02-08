@@ -3,11 +3,12 @@ import Match from '#models/match'
 import GameMap from '#models/map'
 import User from '#models/user'
 import WeeklyAvailability from '#models/weekly_availability'
-import MatchPlayerAgent from '#models/match_player_agent'
 import { createMatchValidator, updateMatchValidator } from '#validators/match_validator'
 import { valorantScoreValidator } from '#validators/valorant_validator'
 import { DateTime } from 'luxon'
 import ValorantApiService from '#services/valorant_api_service'
+import MatchStatsSyncService from '#services/match_stats_sync_service'
+import MatchSyncedPlayersOrderService from '#services/match_synced_players_order_service'
 import { AGENT_LOOKUP } from '#constants/agents'
 import logger from '@adonisjs/core/services/logger'
 import MatchNotification from '#models/match_notification'
@@ -137,6 +138,9 @@ export default class MatchesController {
         query.preload('user')
       })
       .preload('playerAgents')
+      .preload('syncedPlayers', (query) => {
+        query.orderBy('kills', 'desc').orderBy('playerName', 'asc')
+      })
       .firstOrFail()
 
     const players = await User.query().orderBy('fullName', 'asc')
@@ -174,6 +178,16 @@ export default class MatchesController {
         } => Boolean(entry)
       )
 
+    const knownRiotIds = await MatchSyncedPlayersOrderService.getKnownRiotIds()
+    const ourSyncedTeam = MatchSyncedPlayersOrderService.determineOurTeam(
+      match.syncedPlayers || [],
+      knownRiotIds
+    )
+    const sortedSyncedPlayers = MatchSyncedPlayersOrderService.sortPlayers(
+      match.syncedPlayers || [],
+      ourSyncedTeam
+    )
+
     return view.render('pages/matches/show', {
       match,
       players,
@@ -183,6 +197,8 @@ export default class MatchesController {
       agentLookup: AGENT_LOOKUP,
       matchAgentByUserId,
       playedAgents,
+      ourSyncedTeam,
+      sortedSyncedPlayers,
     })
   }
 
@@ -335,54 +351,17 @@ export default class MatchesController {
     match.scoreUs = payload.scoreUs
     match.scoreThem = payload.scoreThem
     match.result = payload.result
+    match.valorantMatchId = payload.matchId
 
     await match.save()
 
     try {
-      const agents = await ValorantApiService.getMatchAgents(payload.matchId)
-      const rosterPlayers = await User.query().whereNotNull('trackerggUsername')
-      const riotIdToUserId = new Map<string, number>()
-
-      for (const player of rosterPlayers) {
-        const parsed = ValorantApiService.parseRiotId(player.trackerggUsername || '')
-        if (!parsed) continue
-        const riotIdKey = `${parsed.name}#${parsed.tag}`.toLowerCase()
-        riotIdToUserId.set(riotIdKey, player.id)
-      }
-
-      const records = agents
-        .map((entry) => {
-          const userId = riotIdToUserId.get(entry.riotId)
-          if (!userId) return null
-          if (!entry.agentKey) return null
-          return {
-            matchId: match.id,
-            userId,
-            agentKey: entry.agentKey,
-            kills: entry.kills,
-            deaths: entry.deaths,
-            assists: entry.assists,
-          }
-        })
-        .filter(
-          (
-            record
-          ): record is {
-            matchId: number
-            userId: number
-            agentKey: string
-            kills: number | null
-            deaths: number | null
-            assists: number | null
-          } => Boolean(record && record.userId && record.agentKey)
-        )
-
-      await MatchPlayerAgent.query().where('matchId', match.id).delete()
-      if (records.length > 0) {
-        await MatchPlayerAgent.createMany(records)
-      }
+      await MatchStatsSyncService.syncFromValorantMatchId(match, payload.matchId)
     } catch (error) {
-      logger.warn({ matchId: match.id, error }, 'Failed to sync match agents from Valorant API')
+      logger.warn(
+        { matchId: match.id, error },
+        'Failed to sync match player stats from Valorant API'
+      )
     }
 
     response.header('HX-Trigger', 'valorantScoreSaved')

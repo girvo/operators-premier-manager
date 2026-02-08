@@ -4,26 +4,27 @@
       Match Results
     </h1>
 
-    @if(matches.length === 0)
+    @if(matches.total === 0)
       <p class="text-center text-valorant-light/70">
         No match results to display yet.
       </p>
     @else
       <div class="space-y-4">
-        @each(match in matches)
+        @each(match in matches.all())
           <div class="bg-valorant-gray rounded-lg p-6 border border-valorant-red/20">
             <div class="flex items-center justify-between">
               <!-- Column 1: Info (Stacked) -->
               <div class="flex-1 flex flex-col justify-center">
+                @let(displayMap = match.valorantMap ?? match.map)
                 <span class="text-xs text-valorant-light/50 uppercase mb-1">
                   {{ match.scheduledAt.toFormat('dd LLL yyyy') }}
                 </span>
                 <h3 class="text-xl font-bold text-valorant-light leading-none mb-1">
                   vs {{ match.opponentName ?? 'Official Match' }}
                 </h3>
-                @if(match.map)
+                @if(displayMap)
                   <span class="text-xs text-valorant-light/70 uppercase tracking-wider font-medium">
-                    {{ match.map }}
+                    {{ displayMap }}
                   </span>
                 @endif
               </div>
@@ -56,9 +57,149 @@
                 @endif
               </div>
             </div>
+
+            @if(match.syncedPlayers && match.syncedPlayers.length > 0)
+              @let(sortedPlayers = sortedSyncedPlayersByMatchId[match.id] || match.syncedPlayers)
+              @let(ourTeam = ourTeamByMatchId[match.id] || null)
+              <div class="mt-4 pt-4 border-t border-valorant-red/10">
+                <div class="flex items-center justify-between gap-4 mb-3">
+                  <h4 class="text-sm font-semibold uppercase tracking-wide text-valorant-light/70">
+                    Full Match Stats
+                  </h4>
+                  @if(match.trackerMatchUrl)
+                    <a
+                      href="{{ match.trackerMatchUrl }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-xs text-valorant-red hover:underline"
+                    >Open on tracker.gg</a>
+                  @endif
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-xs">
+                    <thead class="text-valorant-light/60 border-b border-valorant-red/10">
+                      <tr class="text-left">
+                        <th class="py-2 pr-3 font-medium">
+                          Team
+                        </th>
+                        <th class="py-2 pr-3 font-medium">
+                          Player
+                        </th>
+                        <th class="py-2 pr-3 font-medium">
+                          Agent
+                        </th>
+                        <th class="py-2 pr-3 font-medium">
+                          K / D / A
+                        </th>
+                        <th class="py-2 pr-3 font-medium">
+                          Score
+                        </th>
+                        <th class="py-2 font-medium">
+                          HS%
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-valorant-red/10">
+                      @each(entry in sortedPlayers)
+                        @let(agent = entry.agentKey ? agentLookup[entry.agentKey] : null)
+                        <tr>
+                          <td class="py-2 pr-3">
+                            @if(ourTeam)
+                              @if(entry.team === ourTeam)
+                                <span class="text-green-300">
+                                  Us
+                                </span>
+                              @elseif(entry.team === 'Red')
+                                <span class="text-red-300">Opp</span>
+                              @elseif(entry.team === 'Blue')
+                                <span class="text-blue-300">Opp</span>
+                              @else
+                                <span class="text-valorant-light/50">
+                                  -
+                                </span>
+                              @endif
+                            @elseif(entry.team === 'Red')
+                              <span class="text-red-300">Red</span>
+                            @elseif(entry.team === 'Blue')
+                              <span class="text-blue-300">Blue</span>
+                            @else
+                              <span class="text-valorant-light/50">
+                                -
+                              </span>
+                            @endif
+                          </td>
+                          <td class="py-2 pr-3">
+                            {{ entry.playerName }}
+                          </td>
+                          <td class="py-2 pr-3">
+                            <div class="flex items-center gap-2">
+                              @if(agent)
+                                <img src="/images/agent-icons/{{ agent.key }}.png" alt="{{ agent.name }}" class="w-4 h-4 rounded" />
+                                <span>{{ agent.name }}</span>
+                              @else
+                                <span class="text-valorant-light/50">Unknown</span>
+                              @endif
+                            </div>
+                          </td>
+                          <td class="py-2 pr-3">
+                            @if(entry.kills !== null && entry.deaths !== null && entry.assists !== null)
+                              {{ entry.kills }} / {{ entry.deaths }} / {{ entry.assists }}
+                            @else
+                              <span class="text-valorant-light/50">-</span>
+                            @endif
+                          </td>
+                          <td class="py-2 pr-3">
+                            @if(entry.score !== null)
+                              {{ entry.score }}
+                            @else
+                              <span class="text-valorant-light/50">-</span>
+                            @endif
+                          </td>
+                          <td class="py-2">
+                            @let(totalShots = (entry.headshots ?? 0) + (entry.bodyshots ?? 0) + (entry.legshots ?? 0))
+                            @if(entry.headshots !== null && totalShots > 0)
+                              {{ Math.round((entry.headshots / totalShots) * 100) }}%
+                            @else
+                              <span class="text-valorant-light/50">-</span>
+                            @endif
+                          </td>
+                        </tr>
+                      @end
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            @endif
           </div>
         @end
       </div>
+
+      @if(matches.lastPage > 1)
+        <div class="flex items-center justify-center space-x-2 mt-8">
+          @if(matches.currentPage > 1)
+            <a
+              href="/results?page={{ matches.currentPage - 1 }}"
+              class="px-3 py-1 bg-valorant-gray border border-valorant-red/20 rounded hover:bg-valorant-red/20 transition text-sm"
+            >Previous</a>
+          @endif
+          @each(p in Array.from({ length: matches.lastPage }, (_, i) => i + 1))
+            @if(p === matches.currentPage)
+              <span class="px-3 py-1 bg-valorant-red text-white rounded text-sm">{{ p }}</span>
+            @else
+              <a
+                href="/results?page={{ p }}"
+                class="px-3 py-1 bg-valorant-gray border border-valorant-red/20 rounded hover:bg-valorant-red/20 transition text-sm"
+              >{{ p }}</a>
+            @endif
+          @end
+          @if(matches.currentPage < matches.lastPage)
+            <a
+              href="/results?page={{ matches.currentPage + 1 }}"
+              class="px-3 py-1 bg-valorant-gray border border-valorant-red/20 rounded hover:bg-valorant-red/20 transition text-sm"
+            >Next</a>
+          @endif
+        </div>
+      @endif
     @endif
   </div>
 @end

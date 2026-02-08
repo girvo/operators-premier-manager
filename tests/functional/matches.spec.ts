@@ -2,6 +2,7 @@ import { test } from '@japa/runner'
 import { DateTime } from 'luxon'
 import Match from '#models/match'
 import MatchAvailability from '#models/match_availability'
+import MatchSyncedPlayer from '#models/match_synced_player'
 import { createAdminUser, createMatch, createUser } from '../helpers/factories.js'
 import { SessionClient, extractCsrfTokenFromForm } from '../helpers/api_client.js'
 import { getCsrfTokenFromAppPage, loginAs } from '../helpers/session.js'
@@ -475,5 +476,117 @@ test.group('Matches', (group) => {
     assert.equal(aucklandResponse.status(), 200)
     assert.include(aucklandResponse.text(), aucklandExpectedTime)
     assert.notEqual(laExpectedTime, aucklandExpectedTime)
+  })
+
+  test('synced past match shows full stats on public and match details pages', async ({
+    assert,
+    client,
+  }) => {
+    const viewer = await createUser({
+      email: 'synced-results-viewer@example.com',
+      trackerggUsername: 'Bravo#NA1',
+    })
+    const match = await createMatch({
+      scheduledAt: DateTime.fromISO('2025-01-01T12:00:00.000Z', { zone: 'utc' }),
+      opponentName: 'Synced Opponent',
+      map: 'Bind',
+      valorantMap: 'Sunset',
+      result: 'win',
+      scoreUs: 13,
+      scoreThem: 9,
+      valorantMatchId: 'valorant-match-123',
+    })
+
+    await MatchSyncedPlayer.createMany([
+      {
+        matchId: match.id,
+        riotId: 'alpha#na1',
+        playerName: 'Alpha',
+        playerTag: 'NA1',
+        team: 'Red',
+        agentKey: 'jett',
+        kills: 21,
+        deaths: 15,
+        assists: 6,
+        score: 320,
+        headshots: 18,
+        bodyshots: 20,
+        legshots: 2,
+      },
+      {
+        matchId: match.id,
+        riotId: 'bravo#na1',
+        playerName: 'Bravo',
+        playerTag: 'NA1',
+        team: 'Blue',
+        agentKey: 'omen',
+        kills: 17,
+        deaths: 16,
+        assists: 9,
+        score: 255,
+        headshots: 9,
+        bodyshots: 27,
+        legshots: 4,
+      },
+    ])
+
+    const publicResponse = await client.get('/results')
+    assert.equal(publicResponse.status(), 200)
+    assert.include(publicResponse.text(), 'Full Match Stats')
+    assert.include(publicResponse.text(), 'Alpha')
+    assert.include(publicResponse.text(), 'Sunset')
+    assert.include(publicResponse.text(), 'Open on tracker.gg')
+    assert.include(publicResponse.text(), 'https://tracker.gg/valorant/match/valorant-match-123')
+    const publicBravoIndex = publicResponse.text().indexOf('Bravo')
+    const publicAlphaIndex = publicResponse.text().indexOf('Alpha')
+    assert.isAtLeast(publicBravoIndex, 0)
+    assert.isAtLeast(publicAlphaIndex, 0)
+    assert.isBelow(publicBravoIndex, publicAlphaIndex)
+
+    const session = new SessionClient(client)
+    await loginAs(session, viewer.email, 'password')
+
+    const matchResponse = await session.get(`/matches/${match.id}`)
+    assert.equal(matchResponse.status(), 200)
+    assert.include(matchResponse.text(), 'Full Match Stats')
+    assert.include(matchResponse.text(), 'Bravo')
+    assert.include(matchResponse.text(), 'Sunset')
+    assert.include(matchResponse.text(), '17 / 16 / 9')
+    assert.include(matchResponse.text(), 'https://tracker.gg/valorant/match/valorant-match-123')
+    const detailBravoIndex = matchResponse.text().indexOf('Bravo')
+    const detailAlphaIndex = matchResponse.text().indexOf('Alpha')
+    assert.isAtLeast(detailBravoIndex, 0)
+    assert.isAtLeast(detailAlphaIndex, 0)
+    assert.isBelow(detailBravoIndex, detailAlphaIndex)
+  })
+
+  test('public results is paginated and exposes older results on later pages', async ({
+    assert,
+    client,
+  }) => {
+    const baseDate = DateTime.fromISO('2025-01-01T12:00:00.000Z', { zone: 'utc' })
+
+    for (let i = 1; i <= 21; i++) {
+      const label = String(i).padStart(2, '0')
+      await createMatch({
+        scheduledAt: baseDate.plus({ days: i }),
+        opponentName: `Paginated Opponent ${label}`,
+        result: 'win',
+        scoreUs: 13,
+        scoreThem: 7,
+      })
+    }
+
+    const pageOneResponse = await client.get('/results')
+    assert.equal(pageOneResponse.status(), 200)
+    assert.include(pageOneResponse.text(), 'Paginated Opponent 21')
+    assert.notInclude(pageOneResponse.text(), 'Paginated Opponent 01')
+    assert.include(pageOneResponse.text(), '/results?page=2')
+
+    const pageTwoResponse = await client.get('/results?page=2')
+    assert.equal(pageTwoResponse.status(), 200)
+    assert.include(pageTwoResponse.text(), 'Paginated Opponent 01')
+    assert.notInclude(pageTwoResponse.text(), 'Paginated Opponent 21')
+    assert.include(pageTwoResponse.text(), '/results?page=1')
   })
 })

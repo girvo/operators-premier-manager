@@ -64,7 +64,7 @@
               Map
             </dt>
             <dd class="mt-1">
-              {{ match.map ?? 'TBD' }}
+              {{ match.valorantMap ?? match.map ?? 'TBD' }}
             </dd>
           </div>
           <div>
@@ -124,10 +124,122 @@
 
     @if(match.result)
       <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
-        <h2 class="text-xl font-semibold mb-4">
-          Played Agents
-        </h2>
-        @if(playedAgents && playedAgents.length > 0)
+        <div class="flex items-center justify-between gap-4 mb-4">
+          <h2 class="text-xl font-semibold">
+            Full Match Stats
+          </h2>
+          @if(match.trackerMatchUrl)
+            <a
+              href="{{ match.trackerMatchUrl }}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-sm text-valorant-red hover:underline"
+            >Open on tracker.gg</a>
+          @endif
+        </div>
+        @if(sortedSyncedPlayers && sortedSyncedPlayers.length > 0)
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="text-valorant-light/60 border-b border-valorant-red/10">
+                <tr class="text-left">
+                  <th class="py-2 pr-4 font-medium">
+                    Team
+                  </th>
+                  <th class="py-2 pr-4 font-medium">
+                    Player
+                  </th>
+                  <th class="py-2 pr-4 font-medium">
+                    Agent
+                  </th>
+                  <th class="py-2 pr-4 font-medium">
+                    K / D / A
+                  </th>
+                  <th class="py-2 pr-4 font-medium">
+                    Score
+                  </th>
+                  <th class="py-2 font-medium">
+                    HS%
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-valorant-red/10">
+                @each(entry in sortedSyncedPlayers)
+                  @let(agent = entry.agentKey ? agentLookup[entry.agentKey] : null)
+                  <tr>
+                    <td class="py-2 pr-4">
+                      @if(ourSyncedTeam)
+                        @if(entry.team === ourSyncedTeam)
+                          <span class="text-green-300">
+                            Us
+                          </span>
+                        @elseif(entry.team === 'Red')
+                          <span class="text-red-300">
+                            Opp
+                          </span>
+                        @elseif(entry.team === 'Blue')
+                          <span class="text-blue-300">
+                            Opp
+                          </span>
+                        @else
+                          <span class="text-valorant-light/50">
+                            -
+                          </span>
+                        @endif
+                      @elseif(entry.team === 'Red')
+                        <span class="text-red-300">
+                          Red
+                        </span>
+                      @elseif(entry.team === 'Blue')
+                        <span class="text-blue-300">
+                          Blue
+                        </span>
+                      @else
+                        <span class="text-valorant-light/50">
+                          -
+                        </span>
+                      @endif
+                    </td>
+                    <td class="py-2 pr-4">
+                      {{ entry.playerName }}
+                    </td>
+                    <td class="py-2 pr-4">
+                      <div class="flex items-center gap-2">
+                        @if(agent)
+                          <img src="/images/agent-icons/{{ agent.key }}.png" alt="{{ agent.name }}" class="w-6 h-6 rounded" />
+                          <span>{{ agent.name }}</span>
+                        @else
+                          <span class="text-valorant-light/50">Unknown</span>
+                        @endif
+                      </div>
+                    </td>
+                    <td class="py-2 pr-4">
+                      @if(entry.kills !== null && entry.deaths !== null && entry.assists !== null)
+                        {{ entry.kills }} / {{ entry.deaths }} / {{ entry.assists }}
+                      @else
+                        <span class="text-valorant-light/50">-</span>
+                      @endif
+                    </td>
+                    <td class="py-2 pr-4">
+                      @if(entry.score !== null)
+                        {{ entry.score }}
+                      @else
+                        <span class="text-valorant-light/50">-</span>
+                      @endif
+                    </td>
+                    <td class="py-2">
+                      @let(totalShots = (entry.headshots ?? 0) + (entry.bodyshots ?? 0) + (entry.legshots ?? 0))
+                      @if(entry.headshots !== null && totalShots > 0)
+                        {{ Math.round((entry.headshots / totalShots) * 100) }}%
+                      @else
+                        <span class="text-valorant-light/50">-</span>
+                      @endif
+                    </td>
+                  </tr>
+                @end
+              </tbody>
+            </table>
+          </div>
+        @elseif(playedAgents && playedAgents.length > 0)
           <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
               <thead class="text-valorant-light/60 border-b border-valorant-red/10">
@@ -174,7 +286,7 @@
           </div>
         @else
           <p class="text-sm text-valorant-light/50">
-            No synced agent data yet.
+            No synced match stats yet.
           </p>
         @endif
       </div>
