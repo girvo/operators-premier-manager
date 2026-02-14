@@ -147,6 +147,42 @@ test.group('Match availability nudges', (group) => {
     assert.equal(Boolean(attempts[2].forced), true)
   })
 
+  test('HTMX nudge request returns partial instead of redirect', async ({
+    assert,
+    client,
+  }) => {
+    const admin = await createAdminUser({
+      email: 'match-nudge-htmx-admin@example.com',
+    })
+    const match = await createMatch({
+      scheduledAt: DateTime.now().plus({ days: 2 }),
+    })
+    await createUser({
+      email: 'match-nudge-htmx-target@example.com',
+      discordId: '40001',
+    })
+
+    const session = new SessionClient(client)
+    await loginAs(session, admin.email, 'password')
+
+    const csrfToken = await getCsrfTokenFromAppPage(session, `/matches/${match.id}`)
+    const response = await session.post(`/matches/${match.id}/nudge-non-responders`, {
+      headers: {
+        'x-csrf-token': csrfToken,
+        'HX-Request': 'true',
+      },
+      form: {},
+    })
+
+    assert.equal(response.status(), 200)
+    assert.include(response.text(), 'match-nudge-controls')
+    assert.include(response.text(), 'text-green-400')
+
+    const nudges = await MatchAvailabilityNudge.query().where('matchId', match.id)
+    assert.isAbove(nudges.length, 0)
+    assert.equal(nudges[0].status, 'sent')
+  })
+
   test('token links update match availability for yes, maybe, and no', async ({
     assert,
     client,

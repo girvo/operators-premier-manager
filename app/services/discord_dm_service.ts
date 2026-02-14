@@ -11,7 +11,8 @@ export type SendPlayerDataNudgeInput = {
 export type SendMatchAvailabilityNudgeInput = {
   discordUserId: string
   playerName: string
-  opponentName: string
+  matchType: string
+  opponentName: string | null
   mapName: string
   scheduledForPlayer: string
   playerTimezone: string
@@ -65,12 +66,19 @@ export default class DiscordDmService {
   }
 
   private buildMatchAvailabilityNudgeMessage(input: SendMatchAvailabilityNudgeInput): string {
+    const typeLabel = input.matchType === 'official' ? 'Official' : input.matchType === 'prac' ? 'Prac' : 'Scrim'
+    const details: string[] = []
+    details.push(`- Type: ${typeLabel}`)
+    if (input.opponentName) {
+      details.push(`- Opponent: ${input.opponentName}`)
+    }
+    details.push(`- Map: ${input.mapName}`)
+    details.push(`- Your time (${input.playerTimezone}): ${input.scheduledForPlayer}`)
+
     return [
       `Hey ${input.playerName}, quick availability check for your upcoming match:`,
       '',
-      `- Opponent: ${input.opponentName}`,
-      `- Map: ${input.mapName}`,
-      `- Your time (${input.playerTimezone}): ${input.scheduledForPlayer}`,
+      ...details,
       '',
       'Respond with one click:',
       `- Yes: ${this.buildAppLink(input.actionPaths.yes)}`,

@@ -1,0 +1,45 @@
+@let(resultMessage = typeof nudgeResult !== 'undefined' ? nudgeResult : null)
+@let(resultTone = typeof nudgeResultTone !== 'undefined' ? nudgeResultTone : null)
+@let(resultClass = resultTone === 'success' ? 'text-green-400' : resultTone === 'error' ? 'text-red-300' : 'text-valorant-light/60')
+
+<div id="match-nudge-controls" class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+  <h2 class="text-xl font-semibold mb-3">
+    Admin Utility
+  </h2>
+  <p class="text-sm text-valorant-light/70 mb-4">
+    Send Discord reminders to roster players who still have not responded for this match.
+  </p>
+
+  <form
+    hx-post="/matches/{{ match.id }}/nudge-non-responders"
+    hx-target="#match-nudge-controls"
+    hx-swap="outerHTML"
+    class="space-y-3"
+  >
+    {{ csrfField() }}
+    <label class="inline-flex items-center gap-2 text-sm text-valorant-light/80">
+      <input
+        type="checkbox"
+        name="force"
+        value="1"
+        class="rounded border-valorant-red/30 bg-valorant-dark text-valorant-red focus:ring-valorant-red"
+      />
+      Force re-send (ignore cooldown)
+    </label>
+    <button
+      type="submit"
+      class="w-full px-4 py-2 rounded bg-valorant-red text-white hover:bg-valorant-red/80 transition"
+    >
+      <span class="htmx-indicator">Sending nudges...</span>
+      <span class="htmx-hide-on-request">Nudge Non-Responders</span>
+    </button>
+  </form>
+
+  @if(resultMessage)
+    <p class="mt-3 text-sm {{ resultClass }}">{{ resultMessage }}</p>
+  @end
+
+  <p class="mt-3 text-xs text-valorant-light/50">
+    Players nudged in the last 24 hours are skipped unless force is enabled.
+  </p>
+</div>

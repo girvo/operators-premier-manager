@@ -224,7 +224,8 @@ export default class MatchAvailabilityNudgeService {
       const dmResult = await this.dmService.sendMatchAvailabilityNudge({
         discordUserId: player.discordId!,
         playerName: player.fullName ?? player.discordUsername ?? player.email,
-        opponentName: match.opponentName ?? 'TBD',
+        matchType: match.matchType,
+        opponentName: match.matchType === 'scrim' ? (match.opponentName ?? 'TBD') : null,
         mapName: match.valorantMap ?? match.map ?? 'TBD',
         scheduledForPlayer: matchContext.formattedTime,
         playerTimezone: matchContext.timezone,
