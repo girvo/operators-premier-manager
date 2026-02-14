@@ -47,25 +47,31 @@ export default class DiscordDmService {
     return `${this.appUrl.replace(/\/$/, '')}${path}`
   }
 
-  private buildPlayerDataNudgeMessage(input: SendPlayerDataNudgeInput): string {
+  private buildPlayerDataNudgeEmbed(input: SendPlayerDataNudgeInput): Record<string, unknown> {
     const tasks: string[] = []
     if (input.missingAvailability) {
-      tasks.push(`- Set availability: ${this.buildAppLink('/availability')}`)
+      tasks.push(`- [Set availability](${this.buildAppLink('/availability')})`)
     }
     if (input.missingAgents) {
-      tasks.push(`- Update agent preferences: ${this.buildAppLink('/settings/profile')}`)
+      tasks.push(`- [Update agent preferences](${this.buildAppLink('/settings/profile')})`)
     }
 
-    return [
+    const description = [
       `Hey ${input.playerName}, quick admin reminder to complete your team data:`,
       '',
       ...tasks,
       '',
       'Thanks.',
     ].join('\n')
+
+    return {
+      title: 'Team Data Reminder',
+      description,
+      color: 0xff4655,
+    }
   }
 
-  private buildMatchAvailabilityNudgeMessage(input: SendMatchAvailabilityNudgeInput): string {
+  private buildMatchAvailabilityNudgeEmbed(input: SendMatchAvailabilityNudgeInput): Record<string, unknown> {
     const typeLabel = input.matchType === 'official' ? 'Official' : input.matchType === 'prac' ? 'Prac' : 'Scrim'
     const details: string[] = []
     details.push(`- Type: ${typeLabel}`)
@@ -75,18 +81,47 @@ export default class DiscordDmService {
     details.push(`- Map: ${input.mapName}`)
     details.push(`- Your time (${input.playerTimezone}): ${input.scheduledForPlayer}`)
 
-    return [
+    const description = [
       `Hey ${input.playerName}, quick availability check for your upcoming match:`,
       '',
       ...details,
-      '',
-      'Respond with one click:',
-      `- Yes: ${this.buildAppLink(input.actionPaths.yes)}`,
-      `- Maybe: ${this.buildAppLink(input.actionPaths.maybe)}`,
-      `- No: ${this.buildAppLink(input.actionPaths.no)}`,
-      '',
-      'Thanks.',
     ].join('\n')
+
+    return {
+      embed: {
+        title: 'Match Availability Check',
+        description,
+        color: 0xff4655,
+      },
+      components: [
+        {
+          type: 1, // Action Row
+          components: [
+            {
+              type: 2, // Button
+              style: 5, // Link
+              label: 'Yes',
+              url: this.buildAppLink(input.actionPaths.yes),
+              emoji: { name: '\u2705' },
+            },
+            {
+              type: 2,
+              style: 5,
+              label: 'Maybe',
+              url: this.buildAppLink(input.actionPaths.maybe),
+              emoji: { name: '\uD83E\uDD14' },
+            },
+            {
+              type: 2,
+              style: 5,
+              label: 'No',
+              url: this.buildAppLink(input.actionPaths.no),
+              emoji: { name: '\u274C' },
+            },
+          ],
+        },
+      ],
+    }
   }
 
   private getTestModeResult(): DiscordDmResult | null {
@@ -131,7 +166,7 @@ export default class DiscordDmService {
 
   private async sendDirectMessage(
     discordUserId: string,
-    content: string
+    payload: Record<string, unknown>
   ): Promise<DiscordDmResult> {
     const testModeResult = this.getTestModeResult()
     if (testModeResult) {
@@ -184,9 +219,7 @@ export default class DiscordDmService {
         {
           method: 'POST',
           headers: authHeaders,
-          body: JSON.stringify({
-            content,
-          }),
+          body: JSON.stringify(payload),
         }
       )
 
@@ -216,15 +249,18 @@ export default class DiscordDmService {
   }
 
   async sendPlayerDataNudge(input: SendPlayerDataNudgeInput): Promise<DiscordDmResult> {
-    return this.sendDirectMessage(input.discordUserId, this.buildPlayerDataNudgeMessage(input))
+    return this.sendDirectMessage(input.discordUserId, {
+      embeds: [this.buildPlayerDataNudgeEmbed(input)],
+    })
   }
 
   async sendMatchAvailabilityNudge(
     input: SendMatchAvailabilityNudgeInput
   ): Promise<DiscordDmResult> {
-    return this.sendDirectMessage(
-      input.discordUserId,
-      this.buildMatchAvailabilityNudgeMessage(input)
-    )
+    const { embed, components } = this.buildMatchAvailabilityNudgeEmbed(input)
+    return this.sendDirectMessage(input.discordUserId, {
+      embeds: [embed],
+      components,
+    })
   }
 }
