@@ -48,7 +48,7 @@ test.group('ValorantApiService.getRecentMatches', () => {
     const fetchCalls: string[] = []
     const originalFetch = globalThis.fetch
 
-    globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
+    globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
       const url = input.toString()
       fetchCalls.push(url)
 
@@ -77,7 +77,7 @@ test.group('ValorantApiService.getRecentMatches', () => {
     const fetchCalls: string[] = []
     const originalFetch = globalThis.fetch
 
-    globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
+    globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
       const url = input.toString()
       fetchCalls.push(url)
 
@@ -117,7 +117,7 @@ test.group('ValorantApiService.getRecentMatches', () => {
     const originalFetch = globalThis.fetch
     const sharedMatch = makeHenrikMatch({ matchid: 'shared-1', mode: 'Custom', queue: 'Custom' })
 
-    globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
+    globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
       const url = input.toString()
 
       if (url.includes('mode=custom')) {
