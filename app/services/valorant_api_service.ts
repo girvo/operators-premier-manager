@@ -212,32 +212,59 @@ export default class ValorantApiService {
 
     const encodedName = encodeURIComponent(name)
     const encodedTag = encodeURIComponent(tag)
-    const url = `https://api.henrikdev.xyz/valorant/v3/matches/${region}/${encodedName}/${encodedTag}`
+    const baseUrl = `https://api.henrikdev.xyz/valorant/v3/matches/${region}/${encodedName}/${encodedTag}`
 
-    const response = await fetch(url, {
-      headers: {
-        Authorization: apiKey,
-      },
-    })
+    const fetchMatches = async (mode?: string) => {
+      const url = mode ? `${baseUrl}?mode=${mode}` : baseUrl
+      const response = await fetch(url, {
+        headers: {
+          Authorization: apiKey,
+        },
+      })
 
-    if (!response.ok) {
-      const text = await response.text()
-      throw new Error(`Henrik API error: ${response.status} - ${text}`)
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(`Henrik API error: ${response.status} - ${text}`)
+      }
+
+      return response.text()
     }
 
-    const rawText = await response.text()
+    const fetchPromises: Promise<string>[] = [fetchMatches()]
+    if (showAll) {
+      fetchPromises.push(fetchMatches('custom'))
+    }
+    const [defaultRawText, customRawText] = await Promise.all(fetchPromises)
 
     const logsDir = path.join(process.cwd(), 'storage', 'logs')
     await mkdir(logsDir, { recursive: true })
 
-    const logFile = path.join(logsDir, `valorant_matchlist_${Date.now()}.json`)
-    await writeFile(logFile, rawText, 'utf8')
-    logger.info({ url, logFile }, 'Valorant match lookup raw response saved')
+    const timestamp = Date.now()
+    const logFile = path.join(logsDir, `valorant_matchlist_${timestamp}.json`)
+    await writeFile(logFile, defaultRawText, 'utf8')
+    if (customRawText) {
+      const customLogFile = path.join(logsDir, `valorant_matchlist_${timestamp}_custom.json`)
+      await writeFile(customLogFile, customRawText, 'utf8')
+      logger.info({ baseUrl, logFile, customLogFile }, 'Valorant match lookup raw responses saved')
+    } else {
+      logger.info({ baseUrl, logFile }, 'Valorant match lookup raw response saved')
+    }
 
-    const json = JSON.parse(rawText)
-    const data = await vine.validate({ schema: henrikApiResponseSchema, data: json })
+    const defaultJson = JSON.parse(defaultRawText)
+    const defaultData = await vine.validate({ schema: henrikApiResponseSchema, data: defaultJson })
 
-    return data.data
+    let allMatches = defaultData.data
+    if (customRawText) {
+      const customJson = JSON.parse(customRawText)
+      const customData = await vine.validate({ schema: henrikApiResponseSchema, data: customJson })
+      const seenMatchIds = new Set(defaultData.data.map((m) => m.metadata.matchid))
+      const uniqueCustomMatches = customData.data.filter(
+        (match) => !seenMatchIds.has(match.metadata.matchid)
+      )
+      allMatches = [...defaultData.data, ...uniqueCustomMatches]
+    }
+
+    return allMatches
       .map((match) => {
         const matchTypeInfo = this.getMatchType(match)
         if (!matchTypeInfo) {
