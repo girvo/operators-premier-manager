@@ -48,26 +48,37 @@ export default class DiscordDmService {
   }
 
   private buildPlayerDataNudgeEmbed(input: SendPlayerDataNudgeInput): Record<string, unknown> {
-    const tasks: string[] = []
+    const description = `Hey ${input.playerName}, quick admin reminder to complete your team data:`
+
+    const buttons: Record<string, unknown>[] = []
     if (input.missingAvailability) {
-      tasks.push(`- [Set availability](${this.buildAppLink('/availability')})`)
+      buttons.push({
+        type: 2,
+        style: 5,
+        label: 'Set Availability',
+        url: this.buildAppLink('/availability'),
+        emoji: { name: '\uD83D\uDCC5' },
+      })
     }
     if (input.missingAgents) {
-      tasks.push(`- [Update agent preferences](${this.buildAppLink('/settings/profile')})`)
+      buttons.push({
+        type: 2,
+        style: 5,
+        label: 'Update Agent Preferences',
+        url: this.buildAppLink('/settings/profile'),
+        emoji: { name: '\uD83C\uDFAE' },
+      })
     }
 
-    const description = [
-      `Hey ${input.playerName}, quick admin reminder to complete your team data:`,
-      '',
-      ...tasks,
-      '',
-      'Thanks.',
-    ].join('\n')
-
     return {
-      title: 'Team Data Reminder',
-      description,
-      color: 0xff4655,
+      embed: {
+        title: 'Team Data Reminder',
+        description,
+        color: 0xff4655,
+      },
+      components: buttons.length > 0
+        ? [{ type: 1, components: buttons }]
+        : [],
     }
   }
 
@@ -249,8 +260,10 @@ export default class DiscordDmService {
   }
 
   async sendPlayerDataNudge(input: SendPlayerDataNudgeInput): Promise<DiscordDmResult> {
+    const { embed, components } = this.buildPlayerDataNudgeEmbed(input)
     return this.sendDirectMessage(input.discordUserId, {
-      embeds: [this.buildPlayerDataNudgeEmbed(input)],
+      embeds: [embed],
+      components,
     })
   }
 

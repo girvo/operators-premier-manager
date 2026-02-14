@@ -148,7 +148,7 @@ test.group('Players', (group) => {
     assert.equal(firstResponse.status(), 200)
 
     const secondResponse = await postNudge(session, target.id)
-    assert.equal(secondResponse.status(), 409)
+    assert.equal(secondResponse.status(), 200)
     assert.match(secondResponse.text(), /On cooldown/i)
 
     const latestNudge = await PlayerNudge.query()
@@ -175,7 +175,7 @@ test.group('Players', (group) => {
     await loginAs(session, admin.email, 'password')
 
     const response = await postNudge(session, target.id)
-    assert.equal(response.status(), 422)
+    assert.equal(response.status(), 200)
     assert.match(response.text(), /no linked Discord/i)
 
     const latestNudge = await PlayerNudge.query()
@@ -209,7 +209,7 @@ test.group('Players', (group) => {
     await loginAs(session, admin.email, 'password')
 
     const response = await postNudge(session, target.id)
-    assert.equal(response.status(), 422)
+    assert.equal(response.status(), 200)
     assert.match(response.text(), /No nudge needed/i)
 
     const latestNudge = await PlayerNudge.query()
@@ -241,7 +241,7 @@ test.group('Players', (group) => {
       await loginAs(session, admin.email, 'password')
 
       const response = await postNudge(session, target.id)
-      assert.equal(response.status(), 502)
+      assert.equal(response.status(), 200)
       assert.match(response.text(), /Failed to send nudge/i)
 
       const latestNudge = await PlayerNudge.query()
@@ -281,7 +281,7 @@ test.group('Players', (group) => {
       await loginAs(session, admin.email, 'password')
 
       const response = await postNudge(session, target.id)
-      assert.equal(response.status(), 422)
+      assert.equal(response.status(), 200)
       assert.match(response.text(), /DISCORD_BOT_TOKEN is not configured/i)
 
       const latestNudge = await PlayerNudge.query()

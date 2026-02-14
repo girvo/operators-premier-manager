@@ -213,19 +213,11 @@ export default class PlayersController {
     const nudgeService = new PlayerNudgeService()
     const result = await nudgeService.sendProfileDataNudge(adminUser, player)
 
-    let statusCode = 200
-    if (result.status === 'blocked') {
-      statusCode = result.errorCode === 'cooldown_active' ? 409 : 422
-    } else if (result.status === 'failed') {
-      statusCode = 502
-    }
-
     const nudgeTone =
       result.status === 'sent' ? 'success' : result.status === 'blocked' ? 'warning' : 'error'
     const disableNudge = result.status === 'blocked'
 
     if (request.header('HX-Request')) {
-      response.status(statusCode)
       return view.render('partials/player_nudge_controls', {
         player,
         nudgeMessage: result.message,
