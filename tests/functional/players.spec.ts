@@ -30,6 +30,77 @@ test.group('Players', (group) => {
     await rollbackTransaction()
   })
 
+  test('non-admin players list hides email column', async ({ assert, client }) => {
+    const player = await createUser({
+      email: 'email-hidden-viewer@example.com',
+    })
+    await createUser({
+      email: 'email-hidden-target@example.com',
+      fullName: 'Visible Player',
+    })
+
+    const session = new SessionClient(client)
+    await loginAs(session, player.email, 'password')
+
+    const response = await session.get('/players')
+    assert.equal(response.status(), 200)
+    assert.notInclude(response.text(), 'email-hidden-target@example.com')
+    assert.notInclude(response.text(), '>Email<')
+  })
+
+  test('admin players list shows email column', async ({ assert, client }) => {
+    const admin = await createAdminUser({
+      email: 'email-visible-admin@example.com',
+    })
+    await createUser({
+      email: 'email-visible-target@example.com',
+      fullName: 'Email Target',
+    })
+
+    const session = new SessionClient(client)
+    await loginAs(session, admin.email, 'password')
+
+    const response = await session.get('/players')
+    assert.equal(response.status(), 200)
+    assert.include(response.text(), 'email-visible-target@example.com')
+    assert.include(response.text(), 'Email')
+  })
+
+  test('non-admin player show page hides email', async ({ assert, client }) => {
+    const player = await createUser({
+      email: 'show-email-hidden-viewer@example.com',
+    })
+    const target = await createUser({
+      email: 'show-email-hidden-target@example.com',
+      fullName: 'Show Target',
+    })
+
+    const session = new SessionClient(client)
+    await loginAs(session, player.email, 'password')
+
+    const response = await session.get(`/players/${target.id}`)
+    assert.equal(response.status(), 200)
+    assert.include(response.text(), 'Show Target')
+    assert.notInclude(response.text(), 'show-email-hidden-target@example.com')
+  })
+
+  test('admin player show page shows email', async ({ assert, client }) => {
+    const admin = await createAdminUser({
+      email: 'show-email-visible-admin@example.com',
+    })
+    const target = await createUser({
+      email: 'show-email-visible-target@example.com',
+      fullName: 'Show Email Target',
+    })
+
+    const session = new SessionClient(client)
+    await loginAs(session, admin.email, 'password')
+
+    const response = await session.get(`/players/${target.id}`)
+    assert.equal(response.status(), 200)
+    assert.include(response.text(), 'show-email-visible-target@example.com')
+  })
+
   test('admin players list shows Last Login and Never states', async ({ assert, client }) => {
     const admin = await createAdminUser({
       email: 'players-last-login-admin@example.com',

@@ -37,14 +37,16 @@
 
     <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
       <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <dt class="text-sm text-valorant-light/50">
-            Email
-          </dt>
-          <dd class="mt-1">
-            {{ player.email }}
-          </dd>
-        </div>
+        @if(auth.user?.isAdmin)
+          <div>
+            <dt class="text-sm text-valorant-light/50">
+              Email
+            </dt>
+            <dd class="mt-1">
+              {{ player.email }}
+            </dd>
+          </div>
+        @endif
         <div>
           <dt class="text-sm text-valorant-light/50">
             Role
