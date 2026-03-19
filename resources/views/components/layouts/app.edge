@@ -51,6 +51,15 @@
           setTimeout(() => toast.remove(), 300);
         }, 5e3);
       }
+      // Close admin dropdown on click outside
+      document.addEventListener("click", function(evt) {
+        const dropdown = document.getElementById("admin-dropdown");
+        const menu = document.getElementById("admin-dropdown-menu");
+        if (dropdown && menu && !dropdown.contains(evt.target)) {
+          menu.classList.add("hidden");
+        }
+      });
+
       // Global HTMX error handling
 
       document.addEventListener("htmx:responseError", function(evt) {
@@ -245,20 +254,32 @@
                 <a href="/players" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Players</a>
                 <a href="/strats" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Strats</a>
                 @if(auth.user?.isAdmin)
-                  <a
-                    href="/admin/registrations"
-                    class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition"
-                  >Registrations</a>
-                  <a href="/admin/maps" class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition">Maps</a>
+                  <div class="relative" id="admin-dropdown">
+                    <button
+                      type="button"
+                      onclick="document.getElementById('admin-dropdown-menu').classList.toggle('hidden')"
+                      class="px-3 py-2 text-sm font-medium text-valorant-red hover:text-valorant-red/80 transition inline-flex items-center gap-1"
+                    >
+                      Admin
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    <div
+                      id="admin-dropdown-menu"
+                      class="hidden absolute left-0 top-full mt-1 w-44 bg-valorant-gray border border-valorant-red/20 rounded shadow-lg z-50"
+                    >
+                      <a href="/admin/registrations" class="block px-4 py-2 text-sm hover:bg-valorant-red/20 hover:text-valorant-red transition">Registrations</a>
+                      <a href="/admin/maps" class="block px-4 py-2 text-sm hover:bg-valorant-red/20 hover:text-valorant-red transition">Maps</a>
+                      <a href="/admin/schedule" class="block px-4 py-2 text-sm hover:bg-valorant-red/20 hover:text-valorant-red transition">Schedule</a>
+                    </div>
+                  </div>
                 @endif
               </div>
             </div>
           </div>
           <div class="hidden md:flex items-center space-x-4">
             <span class="text-sm text-valorant-light/70">{{ auth.user?.fullName ?? auth.user?.email }}</span>
-            @if(auth.user?.isAdmin)
-              <span class="px-2 py-1 text-xs bg-valorant-red/20 text-valorant-red rounded">Admin</span>
-            @endif
             <a
               href="/settings/profile"
               class="px-3 py-2 text-sm font-medium hover:text-valorant-red transition"
@@ -323,6 +344,10 @@
               href="/admin/maps"
               class="block px-3 py-2 rounded-md text-base font-medium text-valorant-light hover:text-white hover:bg-valorant-red/20"
             >Maps</a>
+            <a
+              href="/admin/schedule"
+              class="block px-3 py-2 rounded-md text-base font-medium text-valorant-light hover:text-white hover:bg-valorant-red/20"
+            >Schedule</a>
           @endif
         </div>
         <div class="pt-4 pb-3 border-t border-valorant-red/20">

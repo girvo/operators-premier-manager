@@ -17,6 +17,8 @@ const StratsController = () => import('#controllers/strats_controller')
 const PublicController = () => import('#controllers/public_controller')
 const RegistrationsController = () => import('#controllers/admin/registrations_controller')
 const AdminMapsController = () => import('#controllers/admin/maps_controller')
+const AdminMatchesController = () => import('#controllers/admin/matches_controller')
+const ScheduleController = () => import('#controllers/admin/schedule_controller')
 
 router.get('/uploads/*', async ({ request, response }) => {
   const filePath = app.makePath('storage', request.url())
@@ -111,6 +113,13 @@ router
       .use(middleware.admin())
     router
       .post('/admin/registrations/:id/reject', [RegistrationsController, 'reject'])
+      .use(middleware.admin())
+
+    router.get('/admin/schedule', [ScheduleController, 'index']).use(middleware.admin())
+    router.post('/admin/schedule', [ScheduleController, 'store']).use(middleware.admin())
+
+    router
+      .delete('/admin/matches/bulk-delete', [AdminMatchesController, 'bulkDestroy'])
       .use(middleware.admin())
 
     router.get('/admin/maps', [AdminMapsController, 'index']).use(middleware.admin())

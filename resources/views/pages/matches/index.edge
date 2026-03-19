@@ -13,9 +13,20 @@
     </div>
 
     <div>
-      <h2 class="text-xl font-semibold mb-4">
-        Upcoming Matches
-      </h2>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">
+          Upcoming Matches
+        </h2>
+        @if(auth.user?.isAdmin && upcomingMatches.length > 0)
+          <button
+            type="button"
+            id="toggle-bulk-select"
+            class="px-3 py-1.5 text-sm bg-valorant-dark hover:bg-valorant-dark/70 text-valorant-light/70 rounded border border-valorant-red/20 transition"
+          >
+            Select for deletion
+          </button>
+        @endif
+      </div>
       @if(upcomingMatches.length === 0)
         <div
           class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6 text-center text-valorant-light/50"
@@ -23,29 +34,54 @@
           No upcoming matches scheduled
         </div>
       @else
+        @if(auth.user?.isAdmin)
+          <div id="bulk-delete-controls" class="hidden mb-4 flex items-center gap-4">
+            <label class="flex items-center gap-2 text-sm text-valorant-light/70 cursor-pointer">
+              <input type="checkbox" id="select-all-matches" class="accent-valorant-red" />
+              Select All
+            </label>
+            <button
+              type="button"
+              id="bulk-delete-btn"
+              disabled
+              class="px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Delete Selected (0)
+            </button>
+          </div>
+        @endif
         <div class="space-y-4">
           @each(match in upcomingMatches)
             <div id="match-{{ match.id }}" class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
               <div class="flex items-center justify-between">
-                <div>
-                  <div class="flex items-center space-x-3">
-                    <span
-                      class="text-sm px-2 py-1 rounded {{ match.matchType === 'official' ? 'bg-valorant-red/20 text-valorant-red' : match.matchType === 'prac' ? 'bg-purple-500/20 text-purple-400' : 'bg-valorant-light/10 text-valorant-light/70' }}"
-                    >
-                      {{ match.matchType === 'official' ? 'Official' : match.matchType === 'prac' ? 'Prac' : 'Scrim' }}
-                  </span>
-                    <span class="text-sm text-valorant-light/50">{{ match.scheduledAt.setZone(timezone).toFormat('EEE, dd LLL yyyy \'at\' h:mm a') }}</span>
-                  </div>
-                  <h3 class="text-xl font-semibold mt-2">
-                    @if(match.opponentName)
-                      vs {{ match.opponentName }}
-                    @else
-                      Official Match
-                    @endif
-                  </h3>
-                  @if(match.map)
-                    <span class="text-sm text-valorant-light/70">{{ match.map }}</span>
+                <div class="flex items-center gap-4">
+                  @if(auth.user?.isAdmin)
+                    <input
+                      type="checkbox"
+                      class="bulk-match-checkbox hidden accent-valorant-red w-4 h-4"
+                      value="{{ match.id }}"
+                    />
                   @endif
+                  <div>
+                    <div class="flex items-center space-x-3">
+                      <span
+                        class="text-sm px-2 py-1 rounded {{ match.matchType === 'official' ? 'bg-valorant-red/20 text-valorant-red' : match.matchType === 'prac' ? 'bg-purple-500/20 text-purple-400' : 'bg-valorant-light/10 text-valorant-light/70' }}"
+                      >
+                        {{ match.matchType === 'official' ? 'Official' : match.matchType === 'prac' ? 'Prac' : 'Scrim' }}
+                    </span>
+                      <span class="text-sm text-valorant-light/50">{{ match.scheduledAt.setZone(timezone).toFormat('EEE, dd LLL yyyy \'at\' h:mm a') }}</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mt-2">
+                      @if(match.opponentName)
+                        vs {{ match.opponentName }}
+                      @else
+                        Official Match
+                      @endif
+                    </h3>
+                    @if(match.map)
+                      <span class="text-sm text-valorant-light/70">{{ match.map }}</span>
+                    @endif
+                  </div>
                 </div>
                 <div class="flex items-center space-x-4">
                   <div class="text-right">
@@ -234,4 +270,79 @@
       @endif
     </div>
   </div>
+
+  @if(auth.user?.isAdmin && upcomingMatches.length > 0)
+    <script>
+      (() => {
+        const toggleBtn = document.getElementById('toggle-bulk-select');
+        const controls = document.getElementById('bulk-delete-controls');
+        const selectAll = document.getElementById('select-all-matches');
+        const deleteBtn = document.getElementById('bulk-delete-btn');
+        const checkboxes = document.querySelectorAll('.bulk-match-checkbox');
+        let bulkMode = false;
+
+        const updateDeleteBtn = () => {
+          const checked = document.querySelectorAll('.bulk-match-checkbox:checked');
+          const count = checked.length;
+          deleteBtn.textContent = 'Delete Selected (' + count + ')';
+          deleteBtn.disabled = count === 0;
+        };
+
+        toggleBtn.addEventListener('click', () => {
+          bulkMode = !bulkMode;
+          toggleBtn.textContent = bulkMode ? 'Cancel' : 'Select for deletion';
+          controls.classList.toggle('hidden', !bulkMode);
+          checkboxes.forEach(cb => {
+            cb.classList.toggle('hidden', !bulkMode);
+            if (!bulkMode) cb.checked = false;
+          });
+          if (!bulkMode) {
+            selectAll.checked = false;
+            updateDeleteBtn();
+          }
+        });
+
+        selectAll.addEventListener('change', () => {
+          checkboxes.forEach(cb => { cb.checked = selectAll.checked; });
+          updateDeleteBtn();
+        });
+
+        checkboxes.forEach(cb => {
+          cb.addEventListener('change', () => {
+            const allChecked = document.querySelectorAll('.bulk-match-checkbox:checked').length === checkboxes.length;
+            selectAll.checked = allChecked;
+            updateDeleteBtn();
+          });
+        });
+
+        deleteBtn.addEventListener('click', () => {
+          const checked = document.querySelectorAll('.bulk-match-checkbox:checked');
+          const count = checked.length;
+          if (count === 0) return;
+
+          if (!confirm('Are you sure you want to delete ' + count + ' match' + (count === 1 ? '' : 'es') + '?')) return;
+
+          const ids = Array.from(checked).map(cb => cb.value);
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+          fetch('/admin/matches/bulk-delete', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+            },
+            body: JSON.stringify({ matchIds: ids.map(Number) }),
+          }).then(res => {
+            if (res.ok) {
+              window.location.href = '/matches';
+            } else {
+              showToast('Failed to delete matches. Please try again.');
+            }
+          }).catch(() => {
+            showToast('Failed to delete matches. Please try again.');
+          });
+        });
+      })();
+    </script>
+  @endif
 @end
