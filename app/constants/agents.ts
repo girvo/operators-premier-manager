@@ -30,6 +30,7 @@ export const AGENTS: AgentDefinition[] = [
   { key: 'astra', name: 'Astra', role: 'Controller' },
   { key: 'harbor', name: 'Harbor', role: 'Controller' },
   { key: 'clove', name: 'Clove', role: 'Controller' },
+  { key: 'miks', name: 'Miks', role: 'Controller' },
   { key: 'sage', name: 'Sage', role: 'Sentinel' },
   { key: 'cypher', name: 'Cypher', role: 'Sentinel' },
   { key: 'killjoy', name: 'Killjoy', role: 'Sentinel' },

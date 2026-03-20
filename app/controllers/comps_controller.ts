@@ -14,9 +14,13 @@ export default class CompsController {
 
     const rosterPlayers = await User.query().where('isOnRoster', true)
     const pool = new Set<string>()
+    const agentPlayers: Record<string, string[]> = {}
     for (const player of rosterPlayers) {
+      const name = player.fullName ?? player.email
       for (const key of player.agentPrefs) {
         pool.add(key)
+        if (!agentPlayers[key]) agentPlayers[key] = []
+        agentPlayers[key].push(name)
       }
     }
 
@@ -38,6 +42,7 @@ export default class CompsController {
       agentsByRole,
       pool: [...pool],
       selectedAgents,
+      agentPlayers,
     })
   }
 
@@ -103,9 +108,13 @@ export default class CompsController {
 
     const rosterPlayers = await User.query().where('isOnRoster', true)
     const pool = new Set<string>()
+    const agentPlayers: Record<string, string[]> = {}
     for (const player of rosterPlayers) {
+      const name = player.fullName ?? player.email
       for (const key of player.agentPrefs) {
         pool.add(key)
+        if (!agentPlayers[key]) agentPlayers[key] = []
+        agentPlayers[key].push(name)
       }
     }
 
@@ -124,6 +133,7 @@ export default class CompsController {
       agentsByRole,
       pool: [...pool],
       selectedAgents,
+      agentPlayers,
     })
   }
 

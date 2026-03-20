@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Map from '#models/map'
 import MapCompSlot from '#models/map_comp_slot'
+import User from '#models/user'
 import StratBook from '#models/strat_book'
 import StratImage from '#models/strat_image'
 import { createStratValidator, updateStratValidator } from '#validators/strat_validator'
@@ -27,7 +28,22 @@ export default class StratsController {
       compsByMap[slot.mapId].push(slot)
     }
 
-    return view.render('pages/strats/index', { maps, compsByMap, agentLookup: AGENT_LOOKUP })
+    const rosterPlayers = await User.query().where('isOnRoster', true)
+    const agentPlayers: Record<string, string[]> = {}
+    for (const player of rosterPlayers) {
+      const name = player.fullName ?? player.email
+      for (const key of player.agentPrefs) {
+        if (!agentPlayers[key]) agentPlayers[key] = []
+        agentPlayers[key].push(name)
+      }
+    }
+
+    return view.render('pages/strats/index', {
+      maps,
+      compsByMap,
+      agentLookup: AGENT_LOOKUP,
+      agentPlayers,
+    })
   }
 
   async showMap({ params, view, auth }: HttpContext) {
@@ -41,6 +57,16 @@ export default class StratsController {
     const compSlots = await MapCompSlot.query()
       .where('mapId', map.id)
       .orderBy('slotOrder', 'asc')
+
+    const rosterPlayers = await User.query().where('isOnRoster', true)
+    const agentPlayers: Record<string, string[]> = {}
+    for (const player of rosterPlayers) {
+      const name = player.fullName ?? player.email
+      for (const key of player.agentPrefs) {
+        if (!agentPlayers[key]) agentPlayers[key] = []
+        agentPlayers[key].push(name)
+      }
+    }
 
     const pendingSuggestions = auth.user!.isAdmin
       ? await (await import('#models/map_comp_suggestion')).default
@@ -58,6 +84,7 @@ export default class StratsController {
       compSlots,
       pendingSuggestions,
       agentLookup: AGENT_LOOKUP,
+      agentPlayers,
     })
   }
 

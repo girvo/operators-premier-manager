@@ -17,6 +17,7 @@
         @each(agent in group.agents)
           @let(inPool = poolSet.has(agent.key))
           @let(isSelected = selectedAgents.includes(agent.key))
+          @let(players = agentPlayers[agent.key] || [])
           <button
             type="button"
             class="agent-icon relative flex flex-col items-center p-2 rounded-lg border-2 transition
@@ -28,6 +29,7 @@
             data-agent-key="{{ agent.key }}"
             data-in-pool="{{ inPool ? 'true' : 'false' }}"
             {{ inPool ? '' : 'disabled' }}
+            title="{{ players.length > 0 ? players.join(', ') : 'No players' }}"
           >
             <img
               src="/images/agent-icons/{{ agent.key }}.png"

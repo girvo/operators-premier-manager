@@ -42,7 +42,8 @@
           <div class="grid grid-cols-5 gap-4">
             @each(slot in compSlots)
               @let(agent = agentLookup[slot.agentKey])
-              <div class="text-center">
+              @let(players = agentPlayers[slot.agentKey] || [])
+              <div class="text-center" title="{{ players.length > 0 ? players.join(', ') : '' }}">
                 @if(agent)
                   <img
                     src="/images/agent-icons/{{ agent.key }}.png"

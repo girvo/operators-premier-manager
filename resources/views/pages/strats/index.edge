@@ -33,11 +33,12 @@
                 @each(slot in compsByMap[map.id])
                   @let(agent = agentLookup[slot.agentKey])
                   @if(agent)
+                    @let(players = agentPlayers[agent.key] || [])
                     <img
                       src="/images/agent-icons/{{ agent.key }}.png"
                       alt="{{ agent.name }}"
                       class="w-6 h-6 rounded"
-                      title="{{ agent.name }}"
+                      title="{{ agent.name }}{{ players.length > 0 ? ' — ' + players.join(', ') : '' }}"
                     />
                   @endif
                 @end
