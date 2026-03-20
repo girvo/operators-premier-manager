@@ -28,6 +28,27 @@
             <h3 class="text-lg font-semibold">
               {{ map.name }}
             </h3>
+            <div class="flex items-center gap-1 mt-2">
+              @if(compsByMap[map.id] && compsByMap[map.id].length > 0)
+                @each(slot in compsByMap[map.id])
+                  @let(agent = agentLookup[slot.agentKey])
+                  @if(agent)
+                    <img
+                      src="/images/agent-icons/{{ agent.key }}.png"
+                      alt="{{ agent.name }}"
+                      class="w-6 h-6 rounded"
+                      title="{{ agent.name }}"
+                    />
+                  @endif
+                @end
+              @else
+                @each(_ in Array.from({ length: 5 }))
+                  <div class="w-6 h-6 rounded border border-valorant-light/20 bg-valorant-dark/60 flex items-center justify-center">
+                    <span class="text-[10px] text-valorant-light/30">?</span>
+                  </div>
+                @end
+              @endif
+            </div>
           </div>
         </a>
       @else

@@ -1,8 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Map from '#models/map'
+import MapCompSlot from '#models/map_comp_slot'
 import StratBook from '#models/strat_book'
 import StratImage from '#models/strat_image'
 import { createStratValidator, updateStratValidator } from '#validators/strat_validator'
+import { AGENT_LOOKUP } from '#constants/agents'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import * as fs from 'node:fs'
@@ -11,10 +13,24 @@ import * as path from 'node:path'
 export default class StratsController {
   async index({ view }: HttpContext) {
     const maps = await Map.query().where('isActive', true).orderBy('name', 'asc')
-    return view.render('pages/strats/index', { maps })
+
+    const allSlots = await MapCompSlot.query()
+      .whereIn(
+        'mapId',
+        maps.map((m) => m.id)
+      )
+      .orderBy('slotOrder', 'asc')
+
+    const compsByMap: Record<number, typeof allSlots> = {}
+    for (const slot of allSlots) {
+      if (!compsByMap[slot.mapId]) compsByMap[slot.mapId] = []
+      compsByMap[slot.mapId].push(slot)
+    }
+
+    return view.render('pages/strats/index', { maps, compsByMap, agentLookup: AGENT_LOOKUP })
   }
 
-  async showMap({ params, view }: HttpContext) {
+  async showMap({ params, view, auth }: HttpContext) {
     const map = await Map.query().where('slug', params.mapSlug).firstOrFail()
 
     const strats = await StratBook.query()
@@ -22,7 +38,28 @@ export default class StratsController {
       .preload('images')
       .orderBy('sortOrder', 'asc')
 
-    return view.render('pages/strats/map', { map, strats })
+    const compSlots = await MapCompSlot.query()
+      .where('mapId', map.id)
+      .preload('user')
+      .orderBy('slotOrder', 'asc')
+
+    const pendingSuggestions = auth.user!.isAdmin
+      ? await (await import('#models/map_comp_suggestion')).default
+          .query()
+          .where('mapId', map.id)
+          .where('status', 'pending')
+          .preload('suggestor')
+          .preload('slots', (query) => query.preload('user'))
+          .orderBy('createdAt', 'desc')
+      : []
+
+    return view.render('pages/strats/map', {
+      map,
+      strats,
+      compSlots,
+      pendingSuggestions,
+      agentLookup: AGENT_LOOKUP,
+    })
   }
 
   async create({ params, view }: HttpContext) {

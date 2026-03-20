@@ -4,7 +4,7 @@
       <div>
         <a href="/strats" class="text-sm text-valorant-light/50 hover:text-valorant-red transition">&larr; Back to Maps</a>
         <h1 class="text-3xl font-bold text-valorant-red mt-2">
-          {{ map.name }} Strats
+          {{ map.name }}
         </h1>
       </div>
       @if(auth.user?.isAdmin)
@@ -15,6 +15,125 @@
       @endif
     </div>
 
+    {{-- Agent Comp --}}
+    <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 overflow-hidden">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold">Agent Comp</h2>
+          <div class="flex items-center gap-3">
+            @if(compSlots.length > 0)
+              <a
+                href="/strats/{{ map.slug }}/comp/suggest"
+                class="text-sm text-valorant-light/50 hover:text-valorant-red transition"
+              >Suggest Changes</a>
+            @endif
+            @if(auth.user?.isAdmin)
+              <a
+                href="/strats/{{ map.slug }}/comp/edit"
+                class="text-sm text-valorant-red hover:text-valorant-red/80 transition"
+              >{{ compSlots.length > 0 ? 'Edit' : 'Set Up Comp' }}</a>
+            @endif
+          </div>
+        </div>
+
+        @if(compSlots.length === 0)
+          <p class="text-valorant-light/50 text-sm">No comp set yet.</p>
+        @else
+          <div class="grid grid-cols-5 gap-4">
+            @each(slot in compSlots)
+              @let(agent = agentLookup[slot.agentKey])
+              <div class="text-center">
+                @if(agent)
+                  <img
+                    src="/images/agent-icons/{{ agent.key }}.png"
+                    alt="{{ agent.name }}"
+                    class="w-14 h-14 mx-auto rounded-lg border border-valorant-light/10"
+                  />
+                  <div class="mt-1.5 text-sm font-medium">{{ agent.name }}</div>
+                  <div class="text-xs text-valorant-light/50">{{ agent.role }}</div>
+                @endif
+                <div class="mt-1 text-xs text-valorant-red">
+                  {{ slot.user.fullName ?? slot.user.email }}
+                </div>
+              </div>
+            @end
+          </div>
+        @endif
+      </div>
+
+      {{-- Pending suggestions (admin only) --}}
+      @if(auth.user?.isAdmin && pendingSuggestions.length > 0)
+        <div class="border-t border-valorant-light/10 p-6 space-y-4">
+          <h3 class="text-sm font-semibold text-yellow-400">
+            {{ pendingSuggestions.length }} Pending {{ pendingSuggestions.length === 1 ? 'Suggestion' : 'Suggestions' }}
+          </h3>
+
+          @each(suggestion in pendingSuggestions)
+            <div id="suggestion-{{ suggestion.id }}" class="p-4 bg-valorant-dark/50 rounded border border-yellow-500/20">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <span class="text-sm text-valorant-light/70">
+                    {{ suggestion.suggestor.fullName ?? suggestion.suggestor.email }}
+                  </span>
+                  <span class="text-xs text-valorant-light/40 ml-2">
+                    {{ suggestion.createdAt.toRelative() }}
+                  </span>
+                  @if(suggestion.note)
+                    <p class="text-sm text-valorant-light/60 mt-1 italic">"{{ suggestion.note }}"</p>
+                  @endif
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    hx-put="/strats/{{ map.slug }}/comp/suggestions/{{ suggestion.id }}/accept"
+                    hx-confirm="Accept this suggestion and apply the changes?"
+                    class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition"
+                  >
+                    <span class="htmx-indicator">
+                      @!component('components/spinner', { size: 'xs' })
+                    </span>
+                    <span class="htmx-hide-on-request">Accept</span>
+                  </button>
+                  <button
+                    hx-put="/strats/{{ map.slug }}/comp/suggestions/{{ suggestion.id }}/reject"
+                    hx-target="#suggestion-{{ suggestion.id }}"
+                    hx-swap="delete"
+                    hx-confirm="Reject this suggestion?"
+                    class="px-3 py-1 text-xs text-red-400 border border-red-500/30 rounded hover:bg-red-600/20 transition"
+                  >
+                    <span class="htmx-indicator">
+                      @!component('components/spinner', { size: 'xs' })
+                    </span>
+                    <span class="htmx-hide-on-request">Reject</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="space-y-1.5">
+                @each(changeSlot in suggestion.slots)
+                  @let(changeAgent = agentLookup[changeSlot.agentKey])
+                  @let(currentSlot = compSlots.find(s => s.userId === changeSlot.userId))
+                  @let(currentAgent = currentSlot ? agentLookup[currentSlot.agentKey] : null)
+                  <div class="flex items-center gap-2 text-sm">
+                    <span class="text-valorant-light/70">{{ changeSlot.user.fullName ?? changeSlot.user.email }}:</span>
+                    @if(currentAgent)
+                      <img src="/images/agent-icons/{{ currentAgent.key }}.png" alt="{{ currentAgent.name }}" class="w-5 h-5 rounded" />
+                      <span class="text-valorant-light/50">{{ currentAgent.name }}</span>
+                      <span class="text-valorant-light/30">&rarr;</span>
+                    @endif
+                    @if(changeAgent)
+                      <img src="/images/agent-icons/{{ changeAgent.key }}.png" alt="{{ changeAgent.name }}" class="w-5 h-5 rounded" />
+                      <span class="text-green-400">{{ changeAgent.name }}</span>
+                    @endif
+                  </div>
+                @end
+              </div>
+            </div>
+          @end
+        </div>
+      @endif
+    </div>
+
+    {{-- Strat Books --}}
     @if(strats.length === 0)
       <div
         class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-8 text-center text-valorant-light/50"
@@ -75,7 +194,7 @@
                       class="text-sm text-red-400 hover:text-red-300 transition"
                     >
                       Delete
-                </button>
+                  </button>
                   </div>
                 @endif
               </div>

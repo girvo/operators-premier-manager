@@ -14,6 +14,7 @@ const MatchAvailabilityNudgesController = () =>
 const MatchAvailabilityResponseController = () =>
   import('#controllers/match_availability_response_controller')
 const StratsController = () => import('#controllers/strats_controller')
+const CompsController = () => import('#controllers/comps_controller')
 const PublicController = () => import('#controllers/public_controller')
 const RegistrationsController = () => import('#controllers/admin/registrations_controller')
 const AdminMapsController = () => import('#controllers/admin/maps_controller')
@@ -96,6 +97,19 @@ router
       .use(middleware.admin())
 
     router.get('/strats', [StratsController, 'index'])
+    router.get('/strats/:mapSlug/comp/edit', [CompsController, 'edit']).use(middleware.admin())
+    router.put('/strats/:mapSlug/comp', [CompsController, 'update']).use(middleware.admin())
+    router.get('/strats/:mapSlug/comp/suggest', [CompsController, 'suggest'])
+    router.post('/strats/:mapSlug/comp/suggestions', [CompsController, 'storeSuggestion'])
+    router
+      .put('/strats/:mapSlug/comp/suggestions/:id/accept', [CompsController, 'acceptSuggestion'])
+      .use(middleware.admin())
+    router
+      .put('/strats/:mapSlug/comp/suggestions/:id/reject', [CompsController, 'rejectSuggestion'])
+      .use(middleware.admin())
+    router
+      .get('/strats/:mapSlug/comp/player-agents', [CompsController, 'playerAgents'])
+      .use(middleware.admin())
     router.get('/strats/:mapSlug', [StratsController, 'showMap'])
     router.get('/strats/:mapSlug/new', [StratsController, 'create']).use(middleware.admin())
     router.post('/strats/:mapSlug', [StratsController, 'store']).use(middleware.admin())

@@ -1,0 +1,144 @@
+@layouts.app({ title: 'Edit Comp - ' + map.name })
+  <div class="max-w-2xl">
+    <a
+      href="/strats/{{ map.slug }}"
+      class="text-sm text-valorant-light/50 hover:text-valorant-red transition"
+    >&larr; Back to {{ map.name }} Comp</a>
+    <h1 class="text-3xl font-bold text-valorant-red mt-2 mb-6">
+      {{ map.name }} Agent Comp
+    </h1>
+
+    <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
+      <form action="/strats/{{ map.slug }}?_method=PUT" method="POST" class="space-y-6">
+        {{ csrfField() }}
+
+        <p class="text-sm text-valorant-light/60">
+          Assign 5 roster players and their agents for {{ map.name }}.
+        </p>
+
+        @each((slot, index) in slotData)
+          <div class="p-4 bg-valorant-dark/50 rounded border border-valorant-light/10">
+            <div class="text-xs text-valorant-light/40 mb-3">Slot {{ index + 1 }}</div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-valorant-light mb-2">Player</label>
+                <select
+                  name="slots[{{ index }}][userId]"
+                  id="slot-{{ index }}-player"
+                  required
+                  class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light player-agent-select"
+                  data-agent-target="slot-{{ index }}-agents"
+                  data-agent-url="/strats/{{ map.slug }}/player-agents"
+                  data-preview-target="slot-{{ index }}-agent-preview"
+                >
+                  <option value="">Select player...</option>
+                  @each(player in rosterPlayers)
+                    <option
+                      value="{{ player.id }}"
+                      {{ slot.existing && slot.existing.userId === player.id ? 'selected' : '' }}
+                    >{{ player.fullName ?? player.email }}</option>
+                  @end
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-valorant-light mb-2">Agent</label>
+                <div class="flex items-center gap-3">
+                  <img
+                    id="slot-{{ index }}-agent-preview"
+                    src="{{ slot.existing ? '/images/agent-icons/' + slot.existing.agentKey + '.png' : '' }}"
+                    alt=""
+                    class="w-10 h-10 rounded-lg border border-valorant-light/10 flex-shrink-0 {{ slot.existing ? '' : 'hidden' }}"
+                  />
+                  <select
+                    name="slots[{{ index }}][agentKey]"
+                    id="slot-{{ index }}-agents"
+                    required
+                    class="w-full px-4 py-3 bg-valorant-dark border border-valorant-light/20 rounded focus:outline-none focus:border-valorant-red text-valorant-light agent-key-select"
+                    data-preview-target="slot-{{ index }}-agent-preview"
+                  >
+                    @if(slot.existing)
+                      @each(agent in slot.agentOptions)
+                        <option
+                          value="{{ agent.key }}"
+                          {{ slot.existing.agentKey === agent.key ? 'selected' : '' }}
+                        >{{ agent.name }} ({{ agent.role }})</option>
+                      @end
+                    @else
+                      <option value="">Select player first...</option>
+                    @endif
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        @end
+
+        <div class="flex justify-end space-x-4">
+          <a
+            href="/strats/{{ map.slug }}"
+            class="px-4 py-2 text-valorant-light/70 hover:text-valorant-light transition"
+          >Cancel</a>
+          <button
+            type="submit"
+            class="px-6 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+          >Save Comp</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function updateAgentPreview(selectEl) {
+      var previewId = selectEl.dataset.previewTarget;
+      var preview = document.getElementById(previewId);
+      if (!preview) return;
+      if (selectEl.value) {
+        preview.src = '/images/agent-icons/' + selectEl.value + '.png';
+        preview.classList.remove('hidden');
+      } else {
+        preview.src = '';
+        preview.classList.add('hidden');
+      }
+    }
+
+    // Player select: load agents via HTMX, then reset preview
+    document.querySelectorAll('.player-agent-select').forEach(function(select) {
+      select.addEventListener('change', function() {
+        var agentTargetId = this.dataset.agentTarget;
+        var agentTargetEl = document.getElementById(agentTargetId);
+        var previewId = this.dataset.previewTarget;
+        var preview = document.getElementById(previewId);
+
+        if (!this.value) {
+          agentTargetEl.innerHTML = '<option value="">Select player first...</option>';
+          if (preview) { preview.src = ''; preview.classList.add('hidden'); }
+          return;
+        }
+
+        htmx.ajax('GET', this.dataset.agentUrl + '?userId=' + this.value, {
+          source: this,
+          target: agentTargetEl,
+          swap: 'innerHTML'
+        });
+
+        // Reset preview until an agent is selected
+        if (preview) { preview.src = ''; preview.classList.add('hidden'); }
+      });
+    });
+
+    // Agent select: update preview icon on change
+    document.addEventListener('change', function(event) {
+      if (event.target.classList.contains('agent-key-select')) {
+        updateAgentPreview(event.target);
+      }
+    });
+
+    // Also update preview after HTMX swaps in new agent options
+    document.addEventListener('htmx:afterSwap', function(event) {
+      var select = event.detail.target;
+      if (select.classList && select.classList.contains('agent-key-select')) {
+        updateAgentPreview(select);
+      }
+    });
+  </script>
+@end
