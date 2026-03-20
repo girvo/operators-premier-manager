@@ -1,0 +1,78 @@
+<div id="pending-suggestions">
+  @if(pendingSuggestions.length > 0)
+    <div class="border-t border-valorant-light/10 p-6 space-y-4">
+      <h3 class="text-sm font-semibold text-yellow-400">
+        {{ pendingSuggestions.length }} Pending {{ pendingSuggestions.length === 1 ? 'Suggestion' : 'Suggestions' }}
+      </h3>
+
+      @each(suggestion in pendingSuggestions)
+        <div class="p-4 bg-valorant-dark/50 rounded border border-yellow-500/20">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <span class="text-sm text-valorant-light/70">
+                {{ suggestion.suggestor.fullName ?? suggestion.suggestor.email }}
+              </span>
+              <span class="text-xs text-valorant-light/40 ml-2">
+                {{ suggestion.createdAt.toRelative() }}
+              </span>
+              @if(suggestion.note)
+                <p class="text-sm text-valorant-light/60 mt-1 italic">"{{ suggestion.note }}"</p>
+              @endif
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                hx-put="/strats/{{ map.slug }}/comp/suggestions/{{ suggestion.id }}/accept"
+                hx-confirm="Accept this suggestion and apply the changes?"
+                class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition"
+              >
+                <span class="htmx-indicator">
+                  @!component('components/spinner', { size: 'xs' })
+                </span>
+                <span class="htmx-hide-on-request">Accept</span>
+              </button>
+              <button
+                hx-put="/strats/{{ map.slug }}/comp/suggestions/{{ suggestion.id }}/reject"
+                hx-target="#pending-suggestions"
+                hx-swap="outerHTML"
+                hx-confirm="Reject this suggestion?"
+                class="px-3 py-1 text-xs text-red-400 border border-red-500/30 rounded hover:bg-red-600/20 transition"
+              >
+                <span class="htmx-indicator">
+                  @!component('components/spinner', { size: 'xs' })
+                </span>
+                <span class="htmx-hide-on-request">Reject</span>
+              </button>
+            </div>
+          </div>
+
+          @let(currentKeys = compSlots.map(s => s.agentKey))
+          @let(suggestedKeys = suggestion.slots.map(s => s.agentKey))
+          @let(removed = currentKeys.filter(k => !suggestedKeys.includes(k)))
+          @let(added = suggestedKeys.filter(k => !currentKeys.includes(k)))
+          <div class="space-y-1.5">
+            @each(key in removed)
+              @let(removedAgent = agentLookup[key])
+              @if(removedAgent)
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="text-red-400">&minus;</span>
+                  <img src="/images/agent-icons/{{ removedAgent.key }}.png" alt="{{ removedAgent.name }}" class="w-5 h-5 rounded" />
+                  <span class="text-red-400">{{ removedAgent.name }}</span>
+                </div>
+              @endif
+            @end
+            @each(key in added)
+              @let(addedAgent = agentLookup[key])
+              @if(addedAgent)
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="text-green-400">+</span>
+                  <img src="/images/agent-icons/{{ addedAgent.key }}.png" alt="{{ addedAgent.name }}" class="w-5 h-5 rounded" />
+                  <span class="text-green-400">{{ addedAgent.name }}</span>
+                </div>
+              @endif
+            @end
+          </div>
+        </div>
+      @end
+    </div>
+  @endif
+</div>

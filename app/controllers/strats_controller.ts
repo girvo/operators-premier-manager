@@ -40,7 +40,6 @@ export default class StratsController {
 
     const compSlots = await MapCompSlot.query()
       .where('mapId', map.id)
-      .preload('user')
       .orderBy('slotOrder', 'asc')
 
     const pendingSuggestions = auth.user!.isAdmin
@@ -49,7 +48,7 @@ export default class StratsController {
           .where('mapId', map.id)
           .where('status', 'pending')
           .preload('suggestor')
-          .preload('slots', (query) => query.preload('user'))
+          .preload('slots', (query) => query.orderBy('slotOrder', 'asc'))
           .orderBy('createdAt', 'desc')
       : []
 

@@ -5,39 +5,39 @@ import MapCompSlot from '#models/map_comp_slot'
 import MapCompSuggestion from '#models/map_comp_suggestion'
 import MapCompSuggestionSlot from '#models/map_comp_suggestion_slot'
 import User from '#models/user'
-import { AGENT_LOOKUP } from '#constants/agents'
+import { AGENT_LOOKUP, AGENTS_BY_ROLE } from '#constants/agents'
 import { updateCompValidator, storeSuggestionValidator } from '#validators/comp_validator'
 
 export default class CompsController {
   async edit({ params, view }: HttpContext) {
     const map = await Map.query().where('slug', params.mapSlug).firstOrFail()
 
-    const slots = await MapCompSlot.query()
+    const rosterPlayers = await User.query().where('isOnRoster', true)
+    const pool = new Set<string>()
+    for (const player of rosterPlayers) {
+      for (const key of player.agentPrefs) {
+        pool.add(key)
+      }
+    }
+
+    const currentSlots = await MapCompSlot.query()
       .where('mapId', map.id)
-      .preload('user')
       .orderBy('slotOrder', 'asc')
+    const selectedAgents = currentSlots.map((s) => s.agentKey)
 
-    const rosterPlayers = await User.query()
-      .where('isOnRoster', true)
-      .orderBy('fullName', 'asc')
-
-    // Pre-compute slot data with agent options for each existing slot
-    const slotData = Array.from({ length: 5 }, (_, i) => {
-      const existing = slots[i] || null
-      const player = existing
-        ? rosterPlayers.find((p) => p.id === existing.userId)
-        : null
-      const agentOptions = player
-        ? player.agentPrefs.map((key) => AGENT_LOOKUP[key]).filter(Boolean)
-        : []
-      return { existing, agentOptions }
-    })
+    const agentsByRole = AGENTS_BY_ROLE.map((group) => ({
+      role: group.role,
+      agents: [
+        ...group.agents.filter((a) => pool.has(a.key)),
+        ...group.agents.filter((a) => !pool.has(a.key)),
+      ],
+    }))
 
     return view.render('pages/strats/comp_edit', {
       map,
-      slotData,
-      rosterPlayers,
-      agentLookup: AGENT_LOOKUP,
+      agentsByRole,
+      pool: [...pool],
+      selectedAgents,
     })
   }
 
@@ -46,44 +46,27 @@ export default class CompsController {
     const data = await request.validateUsing(updateCompValidator)
 
     const rosterPlayers = await User.query().where('isOnRoster', true)
-    const rosterIds = new Set(rosterPlayers.map((p) => p.id))
-
-    const userIds = data.slots.map((s) => s.userId)
-    const agentKeys = data.slots.map((s) => s.agentKey)
-
-    // Validate no duplicate players
-    if (new Set(userIds).size !== userIds.length) {
-      session.flash('error', 'Each player can only appear once in the comp')
-      return response.redirect(`/strats/${params.mapSlug}/comp/edit`)
+    const pool = new Set<string>()
+    for (const player of rosterPlayers) {
+      for (const key of player.agentPrefs) {
+        pool.add(key)
+      }
     }
 
     // Validate no duplicate agents
-    if (new Set(agentKeys).size !== agentKeys.length) {
+    if (new Set(data.agents).size !== data.agents.length) {
       session.flash('error', 'Each agent can only appear once in the comp')
       return response.redirect(`/strats/${params.mapSlug}/comp/edit`)
     }
 
-    // Validate all players are on roster
-    for (const userId of userIds) {
-      if (!rosterIds.has(userId)) {
-        session.flash('error', 'All players must be on the roster')
+    // Validate all agents are valid and in pool
+    for (const agentKey of data.agents) {
+      if (!AGENT_LOOKUP[agentKey]) {
+        session.flash('error', `Invalid agent: ${agentKey}`)
         return response.redirect(`/strats/${params.mapSlug}/comp/edit`)
       }
-    }
-
-    // Validate agent keys are valid and in player prefs
-    const playerMap = new globalThis.Map(rosterPlayers.map((p) => [p.id, p]))
-    for (const slot of data.slots) {
-      if (!AGENT_LOOKUP[slot.agentKey]) {
-        session.flash('error', `Invalid agent: ${slot.agentKey}`)
-        return response.redirect(`/strats/${params.mapSlug}/comp/edit`)
-      }
-      const player = playerMap.get(slot.userId)
-      if (player && !player.agentPrefs.includes(slot.agentKey)) {
-        session.flash(
-          'error',
-          `${player.fullName ?? player.email} cannot play ${AGENT_LOOKUP[slot.agentKey].name}`
-        )
+      if (!pool.has(agentKey)) {
+        session.flash('error', `${AGENT_LOOKUP[agentKey].name} is not in the roster pool`)
         return response.redirect(`/strats/${params.mapSlug}/comp/edit`)
       }
     }
@@ -91,12 +74,11 @@ export default class CompsController {
     await db.transaction(async (trx) => {
       await MapCompSlot.query({ client: trx }).where('mapId', map.id).delete()
 
-      for (let i = 0; i < data.slots.length; i++) {
+      for (let i = 0; i < data.agents.length; i++) {
         await MapCompSlot.create(
           {
             mapId: map.id,
-            userId: data.slots[i].userId,
-            agentKey: data.slots[i].agentKey,
+            agentKey: data.agents[i],
             slotOrder: i + 1,
           },
           { client: trx }
@@ -111,31 +93,37 @@ export default class CompsController {
   async suggest({ params, view, response }: HttpContext) {
     const map = await Map.query().where('slug', params.mapSlug).firstOrFail()
 
-    const slots = await MapCompSlot.query()
+    const currentSlots = await MapCompSlot.query()
       .where('mapId', map.id)
-      .preload('user')
       .orderBy('slotOrder', 'asc')
 
-    if (slots.length === 0) {
+    if (currentSlots.length === 0) {
       return response.redirect(`/strats/${params.mapSlug}`)
     }
 
-    // Build agent options for each player in the comp
-    const playerAgentOptions = slots.map((slot) => {
-      const playerAgents = slot.user.agentPrefs
-        .map((key) => AGENT_LOOKUP[key])
-        .filter(Boolean)
-      return {
-        slot,
-        agents: playerAgents,
+    const rosterPlayers = await User.query().where('isOnRoster', true)
+    const pool = new Set<string>()
+    for (const player of rosterPlayers) {
+      for (const key of player.agentPrefs) {
+        pool.add(key)
       }
-    })
+    }
+
+    const selectedAgents = currentSlots.map((s) => s.agentKey)
+
+    const agentsByRole = AGENTS_BY_ROLE.map((group) => ({
+      role: group.role,
+      agents: [
+        ...group.agents.filter((a) => pool.has(a.key)),
+        ...group.agents.filter((a) => !pool.has(a.key)),
+      ],
+    }))
 
     return view.render('pages/strats/comp_suggest', {
       map,
-      slots,
-      playerAgentOptions,
-      agentLookup: AGENT_LOOKUP,
+      agentsByRole,
+      pool: [...pool],
+      selectedAgents,
     })
   }
 
@@ -152,47 +140,39 @@ export default class CompsController {
       return response.redirect(`/strats/${params.mapSlug}`)
     }
 
-    // Build a map of current comp: userId -> agentKey
-    const currentAgents = new globalThis.Map(currentSlots.map((s) => [s.userId, s.agentKey]))
+    const currentAgentKeys = currentSlots.map((s) => s.agentKey)
 
-    // Find changed slots
-    const changes = data.slots.filter((submitted) => {
-      const currentAgent = currentAgents.get(submitted.userId)
-      return currentAgent !== submitted.agentKey
-    })
-
-    if (changes.length === 0) {
+    // Require at least one change
+    const same =
+      data.agents.length === currentAgentKeys.length &&
+      data.agents.every((a, i) => a === currentAgentKeys[i])
+    if (same) {
       session.flash('error', 'No changes detected')
-      return response.redirect(`/strats/${params.mapSlug}`)
-    }
-
-    // Validate the resulting comp would be valid (no duplicate agents)
-    const resultingAgents = new globalThis.Map(currentSlots.map((s) => [s.userId, s.agentKey]))
-    for (const change of changes) {
-      resultingAgents.set(change.userId, change.agentKey)
-    }
-    const agentValues = [...resultingAgents.values()]
-    if (new Set(agentValues).size !== agentValues.length) {
-      session.flash('error', 'The suggested changes would result in duplicate agents')
       return response.redirect(`/strats/${params.mapSlug}/comp/suggest`)
     }
 
-    // Validate agent keys are valid and in player prefs
-    const playerIds = changes.map((c) => c.userId)
-    const players = await User.query().whereIn('id', playerIds)
-    const playerMap = new globalThis.Map(players.map((p) => [p.id, p]))
+    // Validate no duplicate agents
+    if (new Set(data.agents).size !== data.agents.length) {
+      session.flash('error', 'Each agent can only appear once in the comp')
+      return response.redirect(`/strats/${params.mapSlug}/comp/suggest`)
+    }
 
-    for (const change of changes) {
-      if (!AGENT_LOOKUP[change.agentKey]) {
-        session.flash('error', `Invalid agent: ${change.agentKey}`)
+    const rosterPlayers = await User.query().where('isOnRoster', true)
+    const pool = new Set<string>()
+    for (const player of rosterPlayers) {
+      for (const key of player.agentPrefs) {
+        pool.add(key)
+      }
+    }
+
+    // Validate all agents are valid and in pool
+    for (const agentKey of data.agents) {
+      if (!AGENT_LOOKUP[agentKey]) {
+        session.flash('error', `Invalid agent: ${agentKey}`)
         return response.redirect(`/strats/${params.mapSlug}/comp/suggest`)
       }
-      const player = playerMap.get(change.userId)
-      if (player && !player.agentPrefs.includes(change.agentKey)) {
-        session.flash(
-          'error',
-          `${player.fullName ?? player.email} cannot play ${AGENT_LOOKUP[change.agentKey].name}`
-        )
+      if (!pool.has(agentKey)) {
+        session.flash('error', `${AGENT_LOOKUP[agentKey].name} is not in the roster pool`)
         return response.redirect(`/strats/${params.mapSlug}/comp/suggest`)
       }
     }
@@ -208,12 +188,12 @@ export default class CompsController {
         { client: trx }
       )
 
-      for (const change of changes) {
+      for (let i = 0; i < data.agents.length; i++) {
         await MapCompSuggestionSlot.create(
           {
             suggestionId: suggestion.id,
-            userId: change.userId,
-            agentKey: change.agentKey,
+            agentKey: data.agents[i],
+            slotOrder: i + 1,
           },
           { client: trx }
         )
@@ -230,16 +210,21 @@ export default class CompsController {
       .where('id', params.id)
       .where('mapId', map.id)
       .where('status', 'pending')
-      .preload('slots')
+      .preload('slots', (query) => query.orderBy('slotOrder', 'asc'))
       .firstOrFail()
 
     await db.transaction(async (trx) => {
-      // Apply each slot change to the comp
+      await MapCompSlot.query({ client: trx }).where('mapId', map.id).delete()
+
       for (const slot of suggestion.slots) {
-        await MapCompSlot.query({ client: trx })
-          .where('mapId', map.id)
-          .where('userId', slot.userId)
-          .update({ agentKey: slot.agentKey })
+        await MapCompSlot.create(
+          {
+            mapId: map.id,
+            agentKey: slot.agentKey,
+            slotOrder: slot.slotOrder,
+          },
+          { client: trx }
+        )
       }
 
       suggestion.status = 'accepted'
@@ -257,7 +242,7 @@ export default class CompsController {
     return response.redirect(`/strats/${params.mapSlug}`)
   }
 
-  async rejectSuggestion({ params, request, response, session }: HttpContext) {
+  async rejectSuggestion({ params, request, response, session, view }: HttpContext) {
     const map = await Map.query().where('slug', params.mapSlug).firstOrFail()
     const suggestion = await MapCompSuggestion.query()
       .where('id', params.id)
@@ -269,19 +254,26 @@ export default class CompsController {
     await suggestion.save()
 
     if (request.header('HX-Request')) {
-      return response.send('')
+      const compSlots = await MapCompSlot.query()
+        .where('mapId', map.id)
+        .orderBy('slotOrder', 'asc')
+
+      const pendingSuggestions = await MapCompSuggestion.query()
+        .where('mapId', map.id)
+        .where('status', 'pending')
+        .preload('suggestor')
+        .preload('slots', (query) => query.orderBy('slotOrder', 'asc'))
+        .orderBy('createdAt', 'desc')
+
+      return view.render('partials/comp_pending_suggestions', {
+        map,
+        compSlots,
+        pendingSuggestions,
+        agentLookup: AGENT_LOOKUP,
+      })
     }
 
     session.flash('success', 'Suggestion rejected')
     return response.redirect(`/strats/${params.mapSlug}`)
-  }
-
-  async playerAgents({ params, request, view }: HttpContext) {
-    const userId = request.input('userId', params.userId)
-    const user = await User.findOrFail(userId)
-
-    const agents = user.agentPrefs.map((key) => AGENT_LOOKUP[key]).filter(Boolean)
-
-    return view.render('partials/comp_player_agents', { agents })
   }
 }

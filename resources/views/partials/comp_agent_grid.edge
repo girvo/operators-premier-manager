@@ -1,0 +1,122 @@
+@let(poolSet = new Set(pool))
+
+<div id="agent-grid" class="space-y-6">
+  <div class="flex items-center justify-between">
+    <p class="text-sm text-valorant-light/60">
+      Select 5 agents for the comp. Greyed-out agents are not in any roster player's pool.
+    </p>
+    <span id="agent-counter" class="text-sm font-medium text-valorant-light/70">
+      {{ selectedAgents.length }}/5 selected
+    </span>
+  </div>
+
+  @each(group in agentsByRole)
+    <div>
+      <h3 class="text-sm font-semibold text-valorant-light/50 uppercase tracking-wider mb-3">{{ group.role }}</h3>
+      <div class="flex flex-wrap gap-3">
+        @each(agent in group.agents)
+          @let(inPool = poolSet.has(agent.key))
+          @let(isSelected = selectedAgents.includes(agent.key))
+          <button
+            type="button"
+            class="agent-icon relative flex flex-col items-center p-2 rounded-lg border-2 transition
+              {{ inPool
+                ? (isSelected
+                  ? 'border-valorant-red bg-valorant-red/20 cursor-pointer'
+                  : 'border-valorant-light/10 hover:border-valorant-light/30 cursor-pointer')
+                : 'border-valorant-light/5 opacity-30 cursor-not-allowed' }}"
+            data-agent-key="{{ agent.key }}"
+            data-in-pool="{{ inPool ? 'true' : 'false' }}"
+            {{ inPool ? '' : 'disabled' }}
+          >
+            <img
+              src="/images/agent-icons/{{ agent.key }}.png"
+              alt="{{ agent.name }}"
+              class="w-12 h-12 rounded-lg"
+            />
+            <span class="mt-1 text-xs {{ inPool ? 'text-valorant-light/70' : 'text-valorant-light/30' }}">{{ agent.name }}</span>
+          </button>
+        @end
+      </div>
+    </div>
+  @end
+
+  <div id="agent-hidden-inputs">
+    @each((agentKey, index) in selectedAgents)
+      <input type="hidden" name="agents[]" value="{{ agentKey }}" />
+    @end
+  </div>
+</div>
+
+<script>
+  (function() {
+    var grid = document.getElementById('agent-grid');
+    var inputsContainer = document.getElementById('agent-hidden-inputs');
+    var counter = document.getElementById('agent-counter');
+    var saveBtn = document.getElementById('save-btn');
+
+    function getSelected() {
+      return Array.from(inputsContainer.querySelectorAll('input[name="agents[]"]')).map(function(input) {
+        return input.value;
+      });
+    }
+
+    function updateUI() {
+      var selected = getSelected();
+      counter.textContent = selected.length + '/5 selected';
+
+      grid.querySelectorAll('.agent-icon').forEach(function(btn) {
+        var key = btn.dataset.agentKey;
+        var inPool = btn.dataset.inPool === 'true';
+        if (!inPool) return;
+
+        var isSelected = selected.indexOf(key) !== -1;
+        btn.classList.toggle('border-valorant-red', isSelected);
+        btn.classList.toggle('bg-valorant-red/20', isSelected);
+        btn.classList.toggle('border-valorant-light/10', !isSelected);
+      });
+
+      if (saveBtn) {
+        if (selected.length === 5) {
+          saveBtn.disabled = false;
+          saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+          saveBtn.disabled = true;
+          saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      }
+    }
+
+    grid.querySelectorAll('.agent-icon').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (this.dataset.inPool !== 'true') return;
+
+        var key = this.dataset.agentKey;
+        var selected = getSelected();
+        var idx = selected.indexOf(key);
+
+        if (idx !== -1) {
+          // Deselect
+          var inputs = inputsContainer.querySelectorAll('input[name="agents[]"]');
+          for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].value === key) {
+              inputs[i].remove();
+              break;
+            }
+          }
+        } else if (selected.length < 5) {
+          // Select
+          var input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'agents[]';
+          input.value = key;
+          inputsContainer.appendChild(input);
+        }
+
+        updateUI();
+      });
+    });
+
+    updateUI();
+  })();
+</script>

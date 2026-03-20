@@ -2,7 +2,6 @@ import { DateTime } from 'luxon'
 import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import MapCompSuggestion from '#models/map_comp_suggestion'
-import User from '#models/user'
 
 export default class MapCompSuggestionSlot extends BaseModel {
   @column({ isPrimary: true })
@@ -12,10 +11,10 @@ export default class MapCompSuggestionSlot extends BaseModel {
   declare suggestionId: number
 
   @column()
-  declare userId: number
+  declare agentKey: string
 
   @column()
-  declare agentKey: string
+  declare slotOrder: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -25,7 +24,4 @@ export default class MapCompSuggestionSlot extends BaseModel {
 
   @belongsTo(() => MapCompSuggestion, { foreignKey: 'suggestionId' })
   declare suggestion: BelongsTo<typeof MapCompSuggestion>
-
-  @belongsTo(() => User)
-  declare user: BelongsTo<typeof User>
 }

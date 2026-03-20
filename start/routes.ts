@@ -107,9 +107,6 @@ router
     router
       .put('/strats/:mapSlug/comp/suggestions/:id/reject', [CompsController, 'rejectSuggestion'])
       .use(middleware.admin())
-    router
-      .get('/strats/:mapSlug/comp/player-agents', [CompsController, 'playerAgents'])
-      .use(middleware.admin())
     router.get('/strats/:mapSlug', [StratsController, 'showMap'])
     router.get('/strats/:mapSlug/new', [StratsController, 'create']).use(middleware.admin())
     router.post('/strats/:mapSlug', [StratsController, 'store']).use(middleware.admin())
