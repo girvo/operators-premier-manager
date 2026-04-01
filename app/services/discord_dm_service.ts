@@ -76,14 +76,15 @@ export default class DiscordDmService {
         description,
         color: 0xff4655,
       },
-      components: buttons.length > 0
-        ? [{ type: 1, components: buttons }]
-        : [],
+      components: buttons.length > 0 ? [{ type: 1, components: buttons }] : [],
     }
   }
 
-  private buildMatchAvailabilityNudgeEmbed(input: SendMatchAvailabilityNudgeInput): Record<string, unknown> {
-    const typeLabel = input.matchType === 'official' ? 'Official' : input.matchType === 'prac' ? 'Prac' : 'Scrim'
+  private buildMatchAvailabilityNudgeEmbed(
+    input: SendMatchAvailabilityNudgeInput
+  ): Record<string, unknown> {
+    const typeLabel =
+      input.matchType === 'official' ? 'Official' : input.matchType === 'prac' ? 'Prac' : 'Scrim'
     const details: string[] = []
     details.push(`- Type: ${typeLabel}`)
     if (input.opponentName) {

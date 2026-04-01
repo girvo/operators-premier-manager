@@ -264,9 +264,7 @@ export default class CompsController {
     await suggestion.save()
 
     if (request.header('HX-Request')) {
-      const compSlots = await MapCompSlot.query()
-        .where('mapId', map.id)
-        .orderBy('slotOrder', 'asc')
+      const compSlots = await MapCompSlot.query().where('mapId', map.id).orderBy('slotOrder', 'asc')
 
       const pendingSuggestions = await MapCompSuggestion.query()
         .where('mapId', map.id)

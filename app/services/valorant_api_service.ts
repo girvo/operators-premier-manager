@@ -6,62 +6,81 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { AGENT_LOOKUP } from '#constants/agents'
 
-const henrikPlayerSchema = vine
+// v4 player schema
+const henrikV4PlayerSchema = vine
   .object({
     puuid: vine.string(),
     name: vine.string(),
     tag: vine.string(),
-    team: vine.string(),
+    team_id: vine.string(),
+    agent: vine
+      .object({
+        name: vine.string(),
+      })
+      .allowUnknownProperties()
+      .optional(),
   })
   .allowUnknownProperties()
 
-const henrikTeamSchema = vine
+// v4 team schema
+const henrikV4TeamSchema = vine
   .object({
-    rounds_won: vine.number().nullable(),
-    rounds_lost: vine.number().nullable(),
+    team_id: vine.string(),
+    rounds: vine
+      .object({
+        won: vine.number(),
+        lost: vine.number(),
+      })
+      .allowUnknownProperties(),
+    won: vine.boolean(),
+    premier_roster: vine
+      .object({
+        id: vine.string().optional(),
+      })
+      .allowUnknownProperties()
+      .optional(),
   })
   .allowUnknownProperties()
 
-const henrikMatchSchema = vine
+// v4 match schema
+const henrikV4MatchSchema = vine
   .object({
     metadata: vine
       .object({
-        matchid: vine.string(),
-        map: vine.string(),
-        game_start_patched: vine.string(),
-        mode: vine.string(),
-        mode_id: vine.string().optional(),
-        queue: vine.string().nullable().optional(),
-        premier_info: vine
+        match_id: vine.string(),
+        map: vine
           .object({
-            tournament_id: vine.string().nullable(),
-            matchup_id: vine.string().nullable(),
+            name: vine.string(),
+          })
+          .allowUnknownProperties(),
+        started_at: vine.string(),
+        queue: vine
+          .object({
+            id: vine.string(),
+            name: vine.string(),
+          })
+          .allowUnknownProperties(),
+        premier: vine
+          .object({
+            id: vine.string().optional(),
           })
           .allowUnknownProperties()
-          .optional(),
+          .optional()
+          .nullable(),
         region: vine.string(),
       })
       .allowUnknownProperties(),
-    teams: vine
-      .object({
-        red: henrikTeamSchema,
-        blue: henrikTeamSchema,
-      })
-      .allowUnknownProperties(),
-    players: vine
-      .object({
-        all_players: vine.array(henrikPlayerSchema),
-      })
-      .allowUnknownProperties(),
+    teams: vine.array(henrikV4TeamSchema),
+    players: vine.array(henrikV4PlayerSchema),
   })
   .allowUnknownProperties()
 
-const henrikApiResponseSchema = vine.object({
+const henrikV4ApiResponseSchema = vine.object({
   status: vine.number(),
-  data: vine.array(henrikMatchSchema),
+  data: vine.array(henrikV4MatchSchema),
 })
 
-type HenrikMatch = Infer<typeof henrikMatchSchema>
+type HenrikV4Match = Infer<typeof henrikV4MatchSchema>
 
 export interface ParsedMatch {
   matchId: string
@@ -203,7 +222,8 @@ export default class ValorantApiService {
     name: string,
     tag: string,
     region: string = 'ap',
-    showAll: boolean = false
+    showAll: boolean = false,
+    daysBack: number = 14
   ): Promise<ParsedMatch[]> {
     const apiKey = env.get('HENRIK_API_KEY')
     if (!apiKey) {
@@ -212,10 +232,16 @@ export default class ValorantApiService {
 
     const encodedName = encodeURIComponent(name)
     const encodedTag = encodeURIComponent(tag)
-    const baseUrl = `https://api.henrikdev.xyz/valorant/v3/matches/${region}/${encodedName}/${encodedTag}`
+    const baseUrl = `https://api.henrikdev.xyz/valorant/v4/matches/${region}/pc/${encodedName}/${encodedTag}`
 
-    const fetchMatches = async (mode?: string) => {
-      const url = mode ? `${baseUrl}?mode=${mode}` : baseUrl
+    // v4 API has max size=10 per request, need pagination for more matches
+    const fetchMatchesPage = async (start: number, mode?: string) => {
+      const params = new URLSearchParams()
+      params.set('size', '10')
+      params.set('start', String(start))
+      if (mode) params.set('mode', mode)
+
+      const url = `${baseUrl}?${params.toString()}`
       const response = await fetch(url, {
         headers: {
           Authorization: apiKey,
@@ -230,43 +256,65 @@ export default class ValorantApiService {
       return response.text()
     }
 
-    const fetchPromises: Promise<string>[] = [fetchMatches()]
+    // Fetch multiple pages to get enough matches for the date range
+    // Start with 3 pages (30 matches) which should cover 14 days for most players
+    const pagesToFetch = 3
+    const fetchPromises: Promise<string>[] = []
+
+    // Fetch default pages (all modes)
+    for (let i = 0; i < pagesToFetch; i++) {
+      fetchPromises.push(fetchMatchesPage(i * 10))
+    }
+
+    // Also fetch custom games if showAll is true
     if (showAll) {
-      fetchPromises.push(fetchMatches('custom'))
-    }
-    const [defaultRawText, customRawText] = await Promise.all(fetchPromises)
-
-    const logsDir = path.join(process.cwd(), 'storage', 'logs')
-    await mkdir(logsDir, { recursive: true })
-
-    const timestamp = Date.now()
-    const logFile = path.join(logsDir, `valorant_matchlist_${timestamp}.json`)
-    await writeFile(logFile, defaultRawText, 'utf8')
-    if (customRawText) {
-      const customLogFile = path.join(logsDir, `valorant_matchlist_${timestamp}_custom.json`)
-      await writeFile(customLogFile, customRawText, 'utf8')
-      logger.info({ baseUrl, logFile, customLogFile }, 'Valorant match lookup raw responses saved')
-    } else {
-      logger.info({ baseUrl, logFile }, 'Valorant match lookup raw response saved')
+      for (let i = 0; i < pagesToFetch; i++) {
+        fetchPromises.push(fetchMatchesPage(i * 10, 'custom'))
+      }
     }
 
-    const defaultJson = JSON.parse(defaultRawText)
-    const defaultData = await vine.validate({ schema: henrikApiResponseSchema, data: defaultJson })
+    const rawResponses = await Promise.all(fetchPromises)
 
-    let allMatches = defaultData.data
-    if (customRawText) {
-      const customJson = JSON.parse(customRawText)
-      const customData = await vine.validate({ schema: henrikApiResponseSchema, data: customJson })
-      const seenMatchIds = new Set(defaultData.data.map((m) => m.metadata.matchid))
-      const uniqueCustomMatches = customData.data.filter(
-        (match) => !seenMatchIds.has(match.metadata.matchid)
+    // Log responses for debugging (skip in test environment)
+    if (process.env.NODE_ENV !== 'test') {
+      const logsDir = path.join(process.cwd(), 'storage', 'logs')
+      await mkdir(logsDir, { recursive: true })
+      const timestamp = Date.now()
+      const logFile = path.join(logsDir, `valorant_matchlist_${timestamp}.json`)
+      await writeFile(logFile, JSON.stringify(rawResponses), 'utf8')
+      logger.info(
+        { baseUrl, logFile, pagesFetched: rawResponses.length },
+        'Valorant match lookup raw responses saved'
       )
-      allMatches = [...defaultData.data, ...uniqueCustomMatches]
     }
 
-    return allMatches
+    // Parse and validate responses
+    const allMatches: HenrikV4Match[] = []
+    const seenMatchIds = new Set<string>()
+
+    for (const rawText of rawResponses) {
+      const json = JSON.parse(rawText)
+      const validated = await vine.validate({ schema: henrikV4ApiResponseSchema, data: json })
+      for (const match of validated.data) {
+        if (!seenMatchIds.has(match.metadata.match_id)) {
+          seenMatchIds.add(match.metadata.match_id)
+          allMatches.push(match)
+        }
+      }
+    }
+
+    // Filter by date range
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - daysBack)
+
+    const matchesWithinRange = allMatches.filter((match) => {
+      const matchDate = new Date(match.metadata.started_at)
+      return matchDate >= cutoffDate
+    })
+
+    return matchesWithinRange
       .map((match) => {
-        const matchTypeInfo = this.getMatchType(match)
+        const matchTypeInfo = this.getMatchTypeV4(match)
         if (!matchTypeInfo) {
           return null
         }
@@ -274,12 +322,12 @@ export default class ValorantApiService {
           return null
         }
 
-        const playerTeam = this.findPlayerTeam(match, name, tag)
+        const playerTeam = this.findPlayerTeamV4(match, name, tag)
         if (!playerTeam) {
           return null
         }
 
-        const scores = this.calculateScores(match, playerTeam)
+        const scores = this.calculateScoresV4(match, playerTeam)
         if (!scores) {
           return null
         }
@@ -288,10 +336,10 @@ export default class ValorantApiService {
         const result = this.determineResult(scoreUs, scoreThem)
 
         return {
-          matchId: match.metadata.matchid,
-          map: match.metadata.map,
-          mode: match.metadata.mode,
-          date: match.metadata.game_start_patched,
+          matchId: match.metadata.match_id,
+          map: match.metadata.map.name,
+          mode: match.metadata.queue.name,
+          date: match.metadata.started_at,
           matchType: matchTypeInfo.matchType,
           matchTypeLabel: matchTypeInfo.label,
           scoreUs,
@@ -302,54 +350,57 @@ export default class ValorantApiService {
       .filter((match): match is ParsedMatch => match !== null)
   }
 
-  private static getMatchType(
-    match: HenrikMatch
+  private static getMatchTypeV4(
+    match: HenrikV4Match
   ): { matchType: 'Premier' | 'Custom' | 'Other'; label: string | null } | null {
-    if (match.metadata.premier_info?.tournament_id || match.metadata.premier_info?.matchup_id) {
+    // Check premier roster info on teams
+    if (match.teams.some((t) => t.premier_roster?.id)) {
       return { matchType: 'Premier', label: 'Premier' }
     }
 
-    const queue = (match.metadata.queue || '').toLowerCase()
-    const mode = (match.metadata.mode || '').toLowerCase()
-    const modeId = (match.metadata.mode_id || '').toLowerCase()
-
-    if (queue.includes('premier') || mode.includes('premier') || modeId.includes('premier')) {
+    // Check queue id
+    const queueId = match.metadata.queue.id.toLowerCase()
+    if (queueId === 'premier') {
       return { matchType: 'Premier', label: 'Premier' }
     }
-    if (queue.includes('custom') || mode.includes('custom') || modeId.includes('custom')) {
+    if (queueId === 'custom') {
       return { matchType: 'Custom', label: 'Custom' }
     }
 
     return { matchType: 'Other', label: null }
   }
 
-  private static findPlayerTeam(
-    match: HenrikMatch,
+  private static findPlayerTeamV4(
+    match: HenrikV4Match,
     name: string,
     tag: string
   ): 'Red' | 'Blue' | null {
-    const player = match.players.all_players.find(
+    const player = match.players.find(
       (p) =>
         p.name.toLowerCase() === name.toLowerCase() && p.tag.toLowerCase() === tag.toLowerCase()
     )
     if (!player) {
       return null
     }
-    if (player.team !== 'Red' && player.team !== 'Blue') {
+    if (player.team_id !== 'Red' && player.team_id !== 'Blue') {
       return null
     }
-    return player.team
+    return player.team_id
   }
 
-  private static calculateScores(
-    match: HenrikMatch,
+  private static calculateScoresV4(
+    match: HenrikV4Match,
     playerTeam: 'Red' | 'Blue'
   ): { scoreUs: number; scoreThem: number } | null {
-    const redWon = match.teams.red.rounds_won
-    const blueWon = match.teams.blue.rounds_won
-    if (typeof redWon !== 'number' || typeof blueWon !== 'number') {
+    const redTeam = match.teams.find((t) => t.team_id === 'Red')
+    const blueTeam = match.teams.find((t) => t.team_id === 'Blue')
+
+    if (!redTeam || !blueTeam) {
       return null
     }
+
+    const redWon = redTeam.rounds.won
+    const blueWon = blueTeam.rounds.won
 
     if (playerTeam === 'Red') {
       return {

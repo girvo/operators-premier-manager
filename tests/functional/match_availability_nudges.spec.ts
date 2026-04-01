@@ -147,10 +147,7 @@ test.group('Match availability nudges', (group) => {
     assert.equal(Boolean(attempts[2].forced), true)
   })
 
-  test('HTMX nudge request returns partial instead of redirect', async ({
-    assert,
-    client,
-  }) => {
+  test('HTMX nudge request returns partial instead of redirect', async ({ assert, client }) => {
     const admin = await createAdminUser({
       email: 'match-nudge-htmx-admin@example.com',
     })

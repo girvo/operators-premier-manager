@@ -54,9 +54,7 @@ export default class StratsController {
       .preload('images')
       .orderBy('sortOrder', 'asc')
 
-    const compSlots = await MapCompSlot.query()
-      .where('mapId', map.id)
-      .orderBy('slotOrder', 'asc')
+    const compSlots = await MapCompSlot.query().where('mapId', map.id).orderBy('slotOrder', 'asc')
 
     const rosterPlayers = await User.query().where('isOnRoster', true)
     const agentPlayers: Record<string, string[]> = {}
@@ -69,7 +67,9 @@ export default class StratsController {
     }
 
     const pendingSuggestions = auth.user!.isAdmin
-      ? await (await import('#models/map_comp_suggestion')).default
+      ? await (
+          await import('#models/map_comp_suggestion')
+        ).default
           .query()
           .where('mapId', map.id)
           .where('status', 'pending')

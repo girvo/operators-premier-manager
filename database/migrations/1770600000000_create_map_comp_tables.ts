@@ -19,12 +19,7 @@ export default class extends BaseSchema {
     this.schema.createTable('map_comp_suggestions', (table) => {
       table.increments('id')
       table.integer('map_id').unsigned().references('id').inTable('maps').onDelete('CASCADE')
-      table
-        .integer('suggested_by')
-        .unsigned()
-        .references('id')
-        .inTable('users')
-        .onDelete('CASCADE')
+      table.integer('suggested_by').unsigned().references('id').inTable('users').onDelete('CASCADE')
       table.string('status').notNullable().defaultTo('pending')
       table.text('note').nullable()
 

@@ -6,7 +6,8 @@ import MatchAvailabilityNudge from '#models/match_availability_nudge'
 
 export default class ClearNudgeCooldown extends BaseCommand {
   static commandName = 'nudge:clear-cooldown'
-  static description = 'Clear all nudge cooldowns for a user so they can be nudged again immediately'
+  static description =
+    'Clear all nudge cooldowns for a user so they can be nudged again immediately'
 
   static options: CommandOptions = {
     startApp: true,

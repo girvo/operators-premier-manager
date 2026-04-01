@@ -345,8 +345,9 @@ export default class MatchesController {
     try {
       await MatchStatsSyncService.syncFromValorantMatchId(match, payload.matchId)
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       logger.warn(
-        { matchId: match.id, error },
+        { matchId: match.id, valorantMatchId: payload.matchId, error: errorMessage },
         'Failed to sync match player stats from Valorant API'
       )
     }

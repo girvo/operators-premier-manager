@@ -24,10 +24,10 @@ const createRosterPlayers = async () => {
 }
 
 const createComp = async (mapId: number) => {
-  for (let i = 0; i < AGENT_KEYS.length; i++) {
+  for (const [i, AGENT_KEY] of AGENT_KEYS.entries()) {
     await MapCompSlot.create({
       mapId,
-      agentKey: AGENT_KEYS[i],
+      agentKey: AGENT_KEY,
       slotOrder: i + 1,
     })
   }
@@ -199,10 +199,10 @@ test.group('Comps', (group) => {
       note: 'Switch to viper',
     })
     const suggestedAgents = ['viper', 'sage', 'omen', 'sova', 'killjoy']
-    for (let i = 0; i < suggestedAgents.length; i++) {
+    for (const [i, suggestedAgent] of suggestedAgents.entries()) {
       await MapCompSuggestionSlot.create({
         suggestionId: suggestion.id,
-        agentKey: suggestedAgents[i],
+        agentKey: suggestedAgent,
         slotOrder: i + 1,
       })
     }
@@ -222,9 +222,7 @@ test.group('Comps', (group) => {
     assert.equal(response.status(), 302)
 
     // Check the comp was replaced with suggestion's agents
-    const slots = await MapCompSlot.query()
-      .where('mapId', map.id)
-      .orderBy('slotOrder', 'asc')
+    const slots = await MapCompSlot.query().where('mapId', map.id).orderBy('slotOrder', 'asc')
     assert.equal(slots.length, 5)
     assert.equal(slots[0].agentKey, 'viper')
 

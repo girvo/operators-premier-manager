@@ -48,7 +48,9 @@ export default class ScheduleController {
       ]
 
       for (const schedule of schedules) {
-        const scheduledAt = schedule.date.set({ hour: schedule.hour, minute: 0, second: 0, millisecond: 0 }).toUTC()
+        const scheduledAt = schedule.date
+          .set({ hour: schedule.hour, minute: 0, second: 0, millisecond: 0 })
+          .toUTC()
 
         await Match.create({
           scheduledAt,
@@ -62,7 +64,10 @@ export default class ScheduleController {
       }
     }
 
-    session.flash('success', `${matchCount} matches scheduled across ${data.maps.length} week${data.maps.length > 1 ? 's' : ''}.`)
+    session.flash(
+      'success',
+      `${matchCount} matches scheduled across ${data.maps.length} week${data.maps.length > 1 ? 's' : ''}.`
+    )
     return response.redirect('/matches')
   }
 
