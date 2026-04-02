@@ -27,3 +27,8 @@ export const beginTransaction = async () => {
 export const rollbackTransaction = async () => {
   await db.rollbackGlobalTransaction()
 }
+
+export const runAceCommand = async (commandName: string, args: string[] = []) => {
+  const ace = await app.container.make('ace')
+  return ace.exec(commandName, args)
+}

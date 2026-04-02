@@ -192,7 +192,10 @@ export default class ValorantApiService {
 
       if (response.status === 429 && attempt < retries) {
         const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-        logger.warn({ url, status: 429, attempt: attempt + 1, delayMs: delay }, 'Rate limited, retrying')
+        logger.warn(
+          { url, status: 429, attempt: attempt + 1, delayMs: delay },
+          'Rate limited, retrying'
+        )
         await this.sleep(delay)
         continue
       }
