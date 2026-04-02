@@ -6,6 +6,50 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { AGENT_LOOKUP } from '#constants/agents'
 
+const MAX_RETRIES = 3
+const INITIAL_RETRY_DELAY_MS = 1000
+
+class RateLimiter {
+  private requests: number[] = []
+  private readonly maxRequests: number
+  private readonly windowMs: number
+  bypass = false
+
+  constructor(maxRequests: number, windowMs: number) {
+    this.maxRequests = maxRequests
+    this.windowMs = windowMs
+  }
+
+  async waitForSlot(): Promise<void> {
+    if (this.bypass) return
+
+    const now = Date.now()
+    const windowStart = now - this.windowMs
+
+    this.requests = this.requests.filter((t) => t > windowStart)
+
+    if (this.requests.length >= this.maxRequests) {
+      const oldestRequest = this.requests[0]
+      const waitTime = oldestRequest - windowStart + 100
+
+      if (waitTime > 0) {
+        logger.debug({ waitMs: waitTime }, 'Rate limiter waiting')
+        await new Promise((resolve) => setTimeout(resolve, waitTime))
+      }
+    }
+
+    this.requests.push(Date.now())
+  }
+
+  clear() {
+    this.requests = []
+  }
+}
+
+const henrikRateLimiter = new RateLimiter(30, 60_000)
+
+export { RateLimiter, henrikRateLimiter }
+
 // v4 player schema
 const henrikV4PlayerSchema = vine
   .object({
@@ -126,6 +170,41 @@ export default class ValorantApiService {
     }
   }
 
+  private static sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
+  private static async fetchWithRetry(
+    url: string,
+    options: RequestInit,
+    retries: number = MAX_RETRIES
+  ): Promise<Response> {
+    await henrikRateLimiter.waitForSlot()
+
+    let lastError: Error | null = null
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const response = await fetch(url, options)
+
+      if (response.ok) {
+        return response
+      }
+
+      if (response.status === 429 && attempt < retries) {
+        const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
+        logger.warn({ url, status: 429, attempt: attempt + 1, delayMs: delay }, 'Rate limited, retrying')
+        await this.sleep(delay)
+        continue
+      }
+
+      const text = await response.text()
+      lastError = new Error(`Henrik API error: ${response.status} - ${text}`)
+      break
+    }
+
+    throw lastError
+  }
+
   static async getMatchPlayerStats(matchId: string): Promise<MatchPlayerStatEntry[]> {
     const snapshot = await this.getMatchStatsSnapshot(matchId)
     return snapshot.players
@@ -138,16 +217,11 @@ export default class ValorantApiService {
     }
 
     const url = `https://api.henrikdev.xyz/valorant/v2/match/${encodeURIComponent(matchId)}`
-    const response = await fetch(url, {
+    const response = await this.fetchWithRetry(url, {
       headers: {
         Authorization: apiKey,
       },
     })
-
-    if (!response.ok) {
-      const text = await response.text()
-      throw new Error(`Henrik API error: ${response.status} - ${text}`)
-    }
 
     const json = (await response.json()) as {
       data?: {
@@ -242,38 +316,32 @@ export default class ValorantApiService {
       if (mode) params.set('mode', mode)
 
       const url = `${baseUrl}?${params.toString()}`
-      const response = await fetch(url, {
+      const response = await this.fetchWithRetry(url, {
         headers: {
           Authorization: apiKey,
         },
       })
-
-      if (!response.ok) {
-        const text = await response.text()
-        throw new Error(`Henrik API error: ${response.status} - ${text}`)
-      }
 
       return response.text()
     }
 
     // Fetch multiple pages to get enough matches for the date range
     // Start with 3 pages (30 matches) which should cover 14 days for most players
+    // Rate limiting is handled by fetchWithRetry
     const pagesToFetch = 3
-    const fetchPromises: Promise<string>[] = []
+    const rawResponses: string[] = []
 
-    // Fetch default pages (all modes)
+    // Fetch default pages (all modes) sequentially
     for (let i = 0; i < pagesToFetch; i++) {
-      fetchPromises.push(fetchMatchesPage(i * 10))
+      rawResponses.push(await fetchMatchesPage(i * 10))
     }
 
     // Also fetch custom games if showAll is true
     if (showAll) {
       for (let i = 0; i < pagesToFetch; i++) {
-        fetchPromises.push(fetchMatchesPage(i * 10, 'custom'))
+        rawResponses.push(await fetchMatchesPage(i * 10, 'custom'))
       }
     }
-
-    const rawResponses = await Promise.all(fetchPromises)
 
     // Log responses for debugging (skip in test environment)
     if (process.env.NODE_ENV !== 'test') {

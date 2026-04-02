@@ -1,5 +1,7 @@
 import { test } from '@japa/runner'
-import ValorantApiService from '#services/valorant_api_service'
+import ValorantApiService, { henrikRateLimiter } from '#services/valorant_api_service'
+
+henrikRateLimiter.bypass = true
 
 // v4 match factory
 function makeHenrikV4Match(overrides: {
