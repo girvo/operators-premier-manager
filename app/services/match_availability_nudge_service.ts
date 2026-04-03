@@ -229,6 +229,7 @@ export default class MatchAvailabilityNudgeService {
         mapName: match.valorantMap ?? match.map ?? 'TBD',
         scheduledForPlayer: matchContext.formattedTime,
         playerTimezone: matchContext.timezone,
+        notes: match.notes,
         actionPaths: {
           yes: this.buildActionPath(match, player, 'yes'),
           maybe: this.buildActionPath(match, player, 'maybe'),

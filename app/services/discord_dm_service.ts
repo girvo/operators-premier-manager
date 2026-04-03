@@ -16,6 +16,7 @@ export type SendMatchAvailabilityNudgeInput = {
   mapName: string
   scheduledForPlayer: string
   playerTimezone: string
+  notes: string | null
   actionPaths: {
     yes: string
     maybe: string
@@ -92,6 +93,12 @@ export default class DiscordDmService {
     }
     details.push(`- Map: ${input.mapName}`)
     details.push(`- Your time (${input.playerTimezone}): ${input.scheduledForPlayer}`)
+
+    // Include notes if present and not null/"null" (handles accidental string storage)
+    const cleanNotes = input.notes && input.notes !== 'null' ? input.notes : null
+    if (cleanNotes) {
+      details.push(`- Notes: ${cleanNotes}`)
+    }
 
     const description = [
       `Hey ${input.playerName}, quick availability check for your upcoming match:`,
