@@ -22,7 +22,8 @@ export default class AuthController {
       user.lastLoginAt = DateTime.now()
       await user.save()
       await auth.use('web').login(user)
-      return response.redirect('/dashboard')
+      const continueUrl = session.pull('continue_url')
+      return response.redirect(continueUrl || '/dashboard')
     } catch {
       session.flash('error', 'Invalid email or password')
       return response.redirect('/login')
@@ -108,7 +109,8 @@ export default class AuthController {
         return response.redirect('/pending-approval')
       }
 
-      return response.redirect('/dashboard')
+      const continueUrl = session.pull('continue_url')
+      return response.redirect(continueUrl || '/dashboard')
     }
 
     if (discordUser.email) {

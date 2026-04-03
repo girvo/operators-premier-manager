@@ -12,9 +12,23 @@ interface DiscordEmbed {
   url?: string
 }
 
+interface DiscordButtonComponent {
+  type: 2
+  style: 5
+  label: string
+  url: string
+  emoji?: { name: string }
+}
+
+interface DiscordActionRow {
+  type: 1
+  components: DiscordButtonComponent[]
+}
+
 interface DiscordWebhookPayload {
   content?: string
   embeds?: DiscordEmbed[]
+  components?: DiscordActionRow[]
 }
 
 export default class DiscordNotificationService {
@@ -174,6 +188,37 @@ export default class DiscordNotificationService {
         : `Get ready for your upcoming ${typeLabelLower} match in about 1 hour!`
     }
 
+    const availabilityComponents: DiscordActionRow[] = this.appUrl
+      ? [
+          {
+            type: 1,
+            components: [
+              {
+                type: 2,
+                style: 5,
+                label: 'Yes',
+                url: `${this.appUrl}/matches/${match.id}/quick-respond/yes`,
+                emoji: { name: '\u2705' },
+              },
+              {
+                type: 2,
+                style: 5,
+                label: 'Maybe',
+                url: `${this.appUrl}/matches/${match.id}/quick-respond/maybe`,
+                emoji: { name: '\uD83E\uDD14' },
+              },
+              {
+                type: 2,
+                style: 5,
+                label: 'No',
+                url: `${this.appUrl}/matches/${match.id}/quick-respond/no`,
+                emoji: { name: '\u274C' },
+              },
+            ],
+          },
+        ]
+      : []
+
     const payload: DiscordWebhookPayload = {
       content: mentions || undefined,
       embeds: [
@@ -186,6 +231,7 @@ export default class DiscordNotificationService {
           url: matchUrl,
         },
       ],
+      components: availabilityComponents.length > 0 ? availabilityComponents : undefined,
     }
 
     try {

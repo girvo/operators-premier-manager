@@ -19,7 +19,15 @@ export default class AuthMiddleware {
       guards?: (keyof Authenticators)[]
     } = {}
   ) {
-    await ctx.auth.authenticateUsing(options.guards, { loginRoute: this.redirectTo })
+    try {
+      await ctx.auth.authenticateUsing(options.guards, { loginRoute: this.redirectTo })
+    } catch (error) {
+      // Store the intended URL so the user can be redirected back after login
+      if (ctx.request.method() === 'GET') {
+        ctx.session.put('continue_url', ctx.request.url(true))
+      }
+      throw error
+    }
     return next()
   }
 }

@@ -15,6 +15,7 @@ const MatchAvailabilityResponseController = () =>
   import('#controllers/match_availability_response_controller')
 const StratsController = () => import('#controllers/strats_controller')
 const CompsController = () => import('#controllers/comps_controller')
+const MatchQuickRespondController = () => import('#controllers/match_quick_respond_controller')
 const PublicController = () => import('#controllers/public_controller')
 const RegistrationsController = () => import('#controllers/admin/registrations_controller')
 const AdminMapsController = () => import('#controllers/admin/maps_controller')
@@ -91,6 +92,7 @@ router
       .post('/matches/:id/notify', [MatchesController, 'sendNotification'])
       .use(middleware.admin())
 
+    router.get('/matches/:id/quick-respond/:status', [MatchQuickRespondController, 'handle'])
     router.put('/matches/:id/availability', [MatchAvailabilityController, 'update'])
     router
       .post('/matches/:id/nudge-non-responders', [MatchAvailabilityNudgesController, 'store'])
