@@ -235,7 +235,11 @@ export default class DiscordNotificationService {
     }
 
     try {
-      const response = await fetch(this.webhookUrl, {
+      const webhookUrl =
+        availabilityComponents.length > 0
+          ? `${this.webhookUrl}${this.webhookUrl!.includes('?') ? '&' : '?'}with_components=true`
+          : this.webhookUrl!
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
