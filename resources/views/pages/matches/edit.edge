@@ -99,6 +99,24 @@
               >Update Match</button>
             </div>
           </form>
+
+          <div class="mt-10 pt-6 border-t border-red-500/20">
+            <h2 class="text-sm font-semibold text-red-400 uppercase tracking-wide mb-2">Danger zone</h2>
+            <p class="text-sm text-valorant-light/60 mb-3">
+              Deleting this match removes it permanently along with any synced player stats and availability records.
+            </p>
+            <form
+              action="/matches/{{ match.id }}?_method=DELETE"
+              method="POST"
+              onsubmit="return confirm('Permanently delete this match? This cannot be undone.')"
+            >
+              {{ csrfField() }}
+              <button
+                type="submit"
+                class="px-4 py-2 bg-red-600/80 hover:bg-red-600 text-white rounded transition"
+              >Delete match</button>
+            </form>
+          </div>
         </div>
       </div>
 
