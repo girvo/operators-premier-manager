@@ -1,0 +1,106 @@
+<div class="p-4">
+  <h3 class="text-lg font-semibold">
+    Backfill a Past Match
+  </h3>
+  <p class="text-valorant-light/70 text-sm mt-1 mb-4">
+    Pick a roster player and we'll fetch their recent Valorant matches so you can add one that wasn't pre-scheduled.
+  </p>
+
+  <div class="mb-4 grid grid-cols-2 gap-3">
+    <label class="flex flex-col gap-1 text-xs text-valorant-light/70">
+      <span>Date range</span>
+      <select
+        id="valorant-backfill-days"
+        name="daysBack"
+        class="px-2 py-1.5 bg-valorant-dark border border-valorant-light/20 rounded text-sm text-valorant-light"
+      >
+        @each(days in daysBackOptions)
+          <option value="{{ days }}" {{ days === defaultDaysBack ? 'selected' : '' }}>
+            Last {{ days }} days
+          </option>
+        @end
+      </select>
+    </label>
+    <label class="flex items-end gap-2 text-xs text-valorant-light/70 pb-1">
+      <input
+        id="valorant-backfill-show-all"
+        name="showAll"
+        value="1"
+        type="checkbox"
+        class="rounded border-valorant-light/20 bg-valorant-dark text-valorant-red focus:ring-valorant-red"
+      />
+      Show all match types
+    </label>
+  </div>
+  <p class="text-xs text-valorant-light/40 -mt-2 mb-4">
+    Larger ranges may take longer and use more API requests.
+  </p>
+
+  @if(players.length === 0)
+    <p class="text-valorant-light/50 text-sm">
+      No roster players have a Riot ID configured. Players can set their Riot ID in their tracker.gg username field (format: Name#TAG).
+    </p>
+  @else
+    <div class="space-y-2">
+      @each(player in players)
+        <button
+          type="button"
+          hx-post="/admin/matches/backfill/step2"
+          hx-vals='{"playerId": {{ player.id }}}'
+          hx-include="#valorant-backfill-days, #valorant-backfill-show-all"
+          hx-indicator="#valorant-backfill-spinner-{{ player.id }}"
+          hx-target="#valorant-backfill-modal-content"
+          hx-swap="innerHTML"
+          class="w-full text-left px-4 py-3 bg-valorant-dark/50 hover:bg-valorant-red/20 rounded transition flex items-center justify-between group"
+        >
+          <div>
+            <span class="font-medium">{{ player.fullName }}</span>
+            <span class="text-valorant-light/50 text-sm ml-2">{{ player.trackerggUsername }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-valorant-light/30 group-hover:text-valorant-red transition htmx-hide-on-request">&rarr;</span>
+            <span id="valorant-backfill-spinner-{{ player.id }}" class="htmx-indicator text-valorant-red">
+              @!component('components/spinner', { size: 'xs' })
+            </span>
+          </div>
+        </button>
+      @end
+    </div>
+  @endif
+
+  <div class="mt-6 pt-4 border-t border-valorant-red/10">
+    <p class="text-xs uppercase tracking-wide text-valorant-light/40 mb-2">
+      Or skip the search
+    </p>
+    <form
+      hx-post="/admin/matches/backfill/lookup-uuid"
+      hx-target="#valorant-backfill-modal-content"
+      hx-swap="innerHTML"
+      class="flex gap-2"
+    >
+      <input
+        type="text"
+        name="matchUuid"
+        placeholder="Paste Valorant match UUID"
+        required
+        autocomplete="off"
+        class="flex-1 px-3 py-2 bg-valorant-dark border border-valorant-light/20 rounded text-sm text-valorant-light focus:outline-none focus:border-valorant-red"
+      />
+      <button
+        type="submit"
+        class="px-3 py-2 bg-valorant-red/80 text-white text-sm rounded hover:bg-valorant-red transition"
+      >Look up</button>
+    </form>
+    <p class="text-xs text-valorant-light/40 mt-1">
+      Uses 1 API request — fastest option if you already have the match ID.
+    </p>
+  </div>
+
+  <div class="mt-4 pt-4 border-t border-valorant-red/10">
+    <button
+      type="button"
+      onclick="document.getElementById('valorant-backfill-modal').classList.add('hidden')"
+      class="px-4 py-2 text-valorant-light/70 hover:text-white transition"
+    >Cancel</button>
+  </div>
+</div>

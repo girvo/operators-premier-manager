@@ -5,10 +5,20 @@
         Matches
       </h1>
       @if(auth.user?.isAdmin)
-        <a
-          href="/matches/new"
-          class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
-        >Schedule Match</a>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            hx-get="/admin/matches/backfill"
+            hx-target="#valorant-backfill-modal-content"
+            hx-swap="innerHTML"
+            onclick="document.getElementById('valorant-backfill-modal').classList.remove('hidden')"
+            class="px-4 py-2 bg-valorant-dark border border-valorant-red/30 text-valorant-light hover:bg-valorant-red/10 rounded transition"
+          >Backfill Match</button>
+          <a
+            href="/matches/new"
+            class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+          >Schedule Match</a>
+        </div>
       @endif
     </div>
 
@@ -270,6 +280,26 @@
       @endif
     </div>
   </div>
+
+  @if(auth.user?.isAdmin)
+    {{-- Valorant Backfill Modal --}}
+    <div
+      id="valorant-backfill-modal"
+      class="hidden fixed inset-0 z-50 flex items-center justify-center"
+    >
+      <div
+        class="absolute inset-0 bg-black/70"
+        onclick="document.getElementById('valorant-backfill-modal').classList.add('hidden')"
+      ></div>
+      <div
+        class="relative bg-valorant-gray border border-valorant-red/30 rounded-lg shadow-xl max-w-md w-full mx-4"
+      >
+        <div id="valorant-backfill-modal-content">
+          {{-- Content loaded via HTMX --}}
+        </div>
+      </div>
+    </div>
+  @endif
 
   @if(auth.user?.isAdmin && upcomingMatches.length > 0)
     <script>

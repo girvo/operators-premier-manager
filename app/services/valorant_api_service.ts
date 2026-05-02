@@ -8,13 +8,14 @@ import { AGENT_LOOKUP } from '#constants/agents'
 
 const MAX_RETRIES = 3
 const INITIAL_RETRY_DELAY_MS = 1000
-const MAX_RETRY_AFTER_MS = 60_000
+const MAX_RETRY_AFTER_MS = 300_000
 const DEFAULT_HENRIK_RPM = 30
 
 class RateLimiter {
   private requests: number[] = []
   private readonly maxRequests: number
   private readonly windowMs: number
+  private cooldownUntil: number = 0
   bypass = false
 
   constructor(maxRequests: number, windowMs: number) {
@@ -24,6 +25,16 @@ class RateLimiter {
 
   async waitForSlot(): Promise<void> {
     if (this.bypass) return
+
+    // If we're in a server-imposed cooldown (from a 429 Retry-After),
+    // every caller waits — not just the one that got rate limited.
+    while (Date.now() < this.cooldownUntil) {
+      const waitTime = this.cooldownUntil - Date.now()
+      if (waitTime > 0) {
+        logger.debug({ waitMs: waitTime }, 'Rate limiter cooldown active')
+        await new Promise((resolve) => setTimeout(resolve, waitTime))
+      }
+    }
 
     const now = Date.now()
     const windowStart = now - this.windowMs
@@ -43,13 +54,34 @@ class RateLimiter {
     this.requests.push(Date.now())
   }
 
+  setCooldown(durationMs: number): void {
+    const until = Date.now() + durationMs
+    if (until > this.cooldownUntil) {
+      this.cooldownUntil = until
+    }
+  }
+
+  getCooldownRemainingMs(): number {
+    return Math.max(0, this.cooldownUntil - Date.now())
+  }
+
   clear() {
     this.requests = []
+    this.cooldownUntil = 0
   }
 }
 
 const henrikRpm = env.get('HENRIK_RPM') ?? DEFAULT_HENRIK_RPM
 const henrikRateLimiter = new RateLimiter(henrikRpm, 60_000)
+
+export class RateLimitError extends Error {
+  retryAfterMs: number | null
+  constructor(message: string, retryAfterMs: number | null) {
+    super(message)
+    this.name = 'RateLimitError'
+    this.retryAfterMs = retryAfterMs
+  }
+}
 
 export { RateLimiter, henrikRateLimiter }
 
@@ -83,6 +115,7 @@ const henrikV4TeamSchema = vine
     premier_roster: vine
       .object({
         id: vine.string().optional(),
+        name: vine.string().optional(),
       })
       .allowUnknownProperties()
       .optional(),
@@ -125,6 +158,11 @@ const henrikV4MatchSchema = vine
 const henrikV4ApiResponseSchema = vine.object({
   status: vine.number(),
   data: vine.array(henrikV4MatchSchema),
+})
+
+const henrikV4SingleMatchResponseSchema = vine.object({
+  status: vine.number(),
+  data: henrikV4MatchSchema,
 })
 
 type HenrikV4Match = Infer<typeof henrikV4MatchSchema>
@@ -212,22 +250,38 @@ export default class ValorantApiService {
         return response
       }
 
-      if (response.status === 429 && attempt < retries) {
+      if (response.status === 429) {
         const retryAfterMs = this.parseRetryAfterMs(response.headers.get('retry-after'))
-        const backoffMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-        const delay = retryAfterMs ?? backoffMs
-        logger.warn(
-          {
-            url,
-            status: 429,
-            attempt: attempt + 1,
-            delayMs: delay,
-            source: retryAfterMs !== null ? 'retry-after' : 'backoff',
-          },
-          'Rate limited, retrying'
+        // Apply the cooldown to the shared limiter so concurrent callers also wait,
+        // not just this in-flight request.
+        if (retryAfterMs !== null) {
+          henrikRateLimiter.setCooldown(retryAfterMs)
+        }
+
+        if (attempt < retries) {
+          const backoffMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
+          const delay = retryAfterMs ?? backoffMs
+          logger.warn(
+            {
+              url,
+              status: 429,
+              attempt: attempt + 1,
+              delayMs: delay,
+              source: retryAfterMs !== null ? 'retry-after' : 'backoff',
+            },
+            'Rate limited, retrying'
+          )
+          await this.sleep(delay)
+          continue
+        }
+
+        const waitSeconds = retryAfterMs ? Math.ceil(retryAfterMs / 1000) : null
+        const hint = waitSeconds ? ` Try again in ${waitSeconds}s.` : ''
+        lastError = new RateLimitError(
+          `Henrik API rate limit exceeded.${hint}`,
+          retryAfterMs ?? null
         )
-        await this.sleep(delay)
-        continue
+        break
       }
 
       const text = await response.text()
@@ -330,7 +384,8 @@ export default class ValorantApiService {
     tag: string,
     region: string = 'ap',
     showAll: boolean = false,
-    daysBack: number = 14
+    daysBack: number = 14,
+    maxPages: number = 10
   ): Promise<ParsedMatch[]> {
     const apiKey = env.get('HENRIK_API_KEY')
     if (!apiKey) {
@@ -358,22 +413,44 @@ export default class ValorantApiService {
       return response.text()
     }
 
-    // Fetch multiple pages to get enough matches for the date range
-    // Start with 3 pages (30 matches) which should cover 14 days for most players
-    // Rate limiting is handled by fetchWithRetry
-    const pagesToFetch = 3
-    const rawResponses: string[] = []
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - daysBack)
 
-    // Fetch default pages (all modes) sequentially
-    for (let i = 0; i < pagesToFetch; i++) {
-      rawResponses.push(await fetchMatchesPage(i * 10))
+    // Fetch pages until we either hit the cap or cross the cutoff date.
+    // Each page is one API request, so this minimizes requests for shorter date ranges.
+    const minPages = Math.min(3, maxPages)
+    const fetchPagedUntilCutoff = async (mode?: string): Promise<string[]> => {
+      const responses: string[] = []
+      for (let i = 0; i < maxPages; i++) {
+        const rawText = await fetchMatchesPage(i * 10, mode)
+        responses.push(rawText)
+
+        if (i + 1 < minPages) continue
+
+        // Peek at the page; if the newest match in it is already older than the cutoff,
+        // there's nothing useful in subsequent pages — Henrik returns matches newest-first.
+        try {
+          const json = JSON.parse(rawText)
+          const data = Array.isArray(json?.data) ? json.data : []
+          if (data.length === 0) break
+          const oldestOnPage = data[data.length - 1]?.metadata?.started_at
+          if (typeof oldestOnPage === 'string') {
+            const oldestDate = new Date(oldestOnPage)
+            if (!Number.isNaN(oldestDate.getTime()) && oldestDate < cutoffDate) {
+              break
+            }
+          }
+          if (data.length < 10) break
+        } catch {
+          break
+        }
+      }
+      return responses
     }
 
-    // Also fetch custom games if showAll is true
+    const rawResponses: string[] = await fetchPagedUntilCutoff()
     if (showAll) {
-      for (let i = 0; i < pagesToFetch; i++) {
-        rawResponses.push(await fetchMatchesPage(i * 10, 'custom'))
-      }
+      rawResponses.push(...(await fetchPagedUntilCutoff('custom')))
     }
 
     // Log responses for debugging (skip in test environment)
@@ -404,10 +481,7 @@ export default class ValorantApiService {
       }
     }
 
-    // Filter by date range
-    const cutoffDate = new Date()
-    cutoffDate.setDate(cutoffDate.getDate() - daysBack)
-
+    // Filter by date range (cutoff already computed above for early-stop pagination)
     const matchesWithinRange = allMatches.filter((match) => {
       const matchDate = new Date(match.metadata.started_at)
       return matchDate >= cutoffDate
@@ -449,6 +523,83 @@ export default class ValorantApiService {
         }
       })
       .filter((match): match is ParsedMatch => match !== null)
+  }
+
+  // Fetch a single match by its UUID. Used by the backfill flow when an admin
+  // already has the match ID and wants to skip the per-player search (saves API calls).
+  //
+  // Identifying "our team" is tricky because Henrik's v4 single-match endpoint
+  // returns empty `name`/`tag` for all players on Premier matches. We try two
+  // strategies in order: (1) Riot ID match against known roster, (2) Premier
+  // team-name match against a configured team name.
+  static async getMatchByUuid(
+    matchId: string,
+    knownRiotIds: Set<string>,
+    premierTeamName: string | null,
+    region: string = 'ap'
+  ): Promise<ParsedMatch | null> {
+    const apiKey = env.get('HENRIK_API_KEY')
+    if (!apiKey) {
+      throw new Error('HENRIK_API_KEY is not configured')
+    }
+
+    const url = `https://api.henrikdev.xyz/valorant/v4/match/${region}/${encodeURIComponent(matchId)}`
+    const response = await this.fetchWithRetry(url, {
+      headers: { Authorization: apiKey },
+    })
+
+    const json = await response.json()
+    const validated = await vine.validate({ schema: henrikV4SingleMatchResponseSchema, data: json })
+    const match = validated.data
+
+    let ourTeam: 'Red' | 'Blue' | null = null
+
+    // Strategy 1: any known roster Riot ID present in the players array.
+    const rosterPlayer = match.players.find((p) => {
+      if (!p.name || !p.tag) return false
+      return knownRiotIds.has(`${p.name}#${p.tag}`.toLowerCase())
+    })
+    if (rosterPlayer && (rosterPlayer.team_id === 'Red' || rosterPlayer.team_id === 'Blue')) {
+      ourTeam = rosterPlayer.team_id
+    }
+
+    // Strategy 2: Premier team name (Henrik returns empty player names for Premier).
+    if (!ourTeam && premierTeamName) {
+      const wanted = premierTeamName.trim().toLowerCase()
+      const ourSide = match.teams.find(
+        (t) => t.premier_roster?.name?.toLowerCase() === wanted
+      )
+      if (ourSide && (ourSide.team_id === 'Red' || ourSide.team_id === 'Blue')) {
+        ourTeam = ourSide.team_id
+      }
+    }
+
+    if (!ourTeam) {
+      return null
+    }
+
+    const scores = this.calculateScoresV4(match, ourTeam)
+    if (!scores) {
+      return null
+    }
+
+    const matchTypeInfo = this.getMatchTypeV4(match) ?? {
+      matchType: 'Other' as const,
+      label: null,
+    }
+
+    const { scoreUs, scoreThem } = scores
+    return {
+      matchId: match.metadata.match_id,
+      map: match.metadata.map.name,
+      mode: match.metadata.queue.name,
+      date: match.metadata.started_at,
+      matchType: matchTypeInfo.matchType,
+      matchTypeLabel: matchTypeInfo.label,
+      scoreUs,
+      scoreThem,
+      result: this.determineResult(scoreUs, scoreThem),
+    }
   }
 
   private static getMatchTypeV4(

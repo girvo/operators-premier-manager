@@ -1,0 +1,22 @@
+<div class="p-4">
+  <h3 class="text-lg font-semibold text-red-400 mb-2">
+    Error
+  </h3>
+  <p class="text-valorant-light/80 text-sm mb-4">
+    {{ error }}
+  </p>
+  <div class="pt-4 border-t border-valorant-red/10 flex gap-2">
+    <button
+      type="button"
+      hx-get="/admin/matches/backfill"
+      hx-target="#valorant-backfill-modal-content"
+      hx-swap="innerHTML"
+      class="px-4 py-2 text-valorant-light/70 hover:text-white transition"
+    >&larr; Start over</button>
+    <button
+      type="button"
+      onclick="document.getElementById('valorant-backfill-modal').classList.add('hidden')"
+      class="px-4 py-2 text-valorant-light/70 hover:text-white transition"
+    >Close</button>
+  </div>
+</div>

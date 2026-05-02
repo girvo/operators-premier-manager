@@ -20,6 +20,8 @@ const PublicController = () => import('#controllers/public_controller')
 const RegistrationsController = () => import('#controllers/admin/registrations_controller')
 const AdminMapsController = () => import('#controllers/admin/maps_controller')
 const AdminMatchesController = () => import('#controllers/admin/matches_controller')
+const MatchesBackfillController = () =>
+  import('#controllers/admin/matches_backfill_controller')
 const ScheduleController = () => import('#controllers/admin/schedule_controller')
 
 router.get('/uploads/*', async ({ request, response }) => {
@@ -133,6 +135,22 @@ router
 
     router
       .delete('/admin/matches/bulk-delete', [AdminMatchesController, 'bulkDestroy'])
+      .use(middleware.admin())
+
+    router
+      .get('/admin/matches/backfill', [MatchesBackfillController, 'step1'])
+      .use(middleware.admin())
+    router
+      .post('/admin/matches/backfill/step2', [MatchesBackfillController, 'step2'])
+      .use(middleware.admin())
+    router
+      .post('/admin/matches/backfill/lookup-uuid', [MatchesBackfillController, 'lookupByUuid'])
+      .use(middleware.admin())
+    router
+      .post('/admin/matches/backfill/step3', [MatchesBackfillController, 'step3'])
+      .use(middleware.admin())
+    router
+      .post('/admin/matches/backfill', [MatchesBackfillController, 'save'])
       .use(middleware.admin())
 
     router.get('/admin/maps', [AdminMapsController, 'index']).use(middleware.admin())
