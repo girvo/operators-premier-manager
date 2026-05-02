@@ -42,6 +42,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   */
   HENRIK_API_KEY: Env.schema.string.optional(),
+  HENRIK_RPM: Env.schema.number.optional(),
 
   /*
   |----------------------------------------------------------

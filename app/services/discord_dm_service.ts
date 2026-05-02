@@ -85,7 +85,13 @@ export default class DiscordDmService {
     input: SendMatchAvailabilityNudgeInput
   ): Record<string, unknown> {
     const typeLabel =
-      input.matchType === 'official' ? 'Official' : input.matchType === 'prac' ? 'Prac' : 'Scrim'
+      input.matchType === 'official'
+        ? 'Official'
+        : input.matchType === 'prac'
+          ? 'Prac'
+          : input.matchType === 'playoffs'
+            ? 'Playoffs'
+            : 'Scrim'
     const details: string[] = []
     details.push(`- Type: ${typeLabel}`)
     if (input.opponentName) {

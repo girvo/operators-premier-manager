@@ -45,8 +45,12 @@ export default class DiscordNotificationService {
    * Returns the second match if this is the first of a pair, or null otherwise
    */
   async findPairedMatch(match: Match): Promise<Match | null> {
-    // Only official and prac matches come in pairs
-    if (match.matchType !== 'official' && match.matchType !== 'prac') {
+    // Only official, prac, and playoffs matches come in pairs
+    if (
+      match.matchType !== 'official' &&
+      match.matchType !== 'prac' &&
+      match.matchType !== 'playoffs'
+    ) {
       return null
     }
 
@@ -121,7 +125,13 @@ export default class DiscordNotificationService {
 
     // Determine type label
     const typeLabel =
-      match.matchType === 'official' ? 'Official' : match.matchType === 'prac' ? 'Prac' : 'Scrim'
+      match.matchType === 'official'
+        ? 'Official'
+        : match.matchType === 'prac'
+          ? 'Prac'
+          : match.matchType === 'playoffs'
+            ? 'Playoffs'
+            : 'Scrim'
     const typeLabelLower = typeLabel.toLowerCase()
 
     const fields: { name: string; value: string; inline?: boolean }[] = [

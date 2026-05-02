@@ -20,7 +20,7 @@ export default class Match extends BaseModel {
   declare map: string | null
 
   @column()
-  declare matchType: 'scrim' | 'official' | 'prac'
+  declare matchType: 'scrim' | 'official' | 'prac' | 'playoffs'
 
   @column()
   declare result: 'win' | 'loss' | 'draw' | null

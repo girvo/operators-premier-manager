@@ -8,6 +8,8 @@ import { AGENT_LOOKUP } from '#constants/agents'
 
 const MAX_RETRIES = 3
 const INITIAL_RETRY_DELAY_MS = 1000
+const MAX_RETRY_AFTER_MS = 60_000
+const DEFAULT_HENRIK_RPM = 30
 
 class RateLimiter {
   private requests: number[] = []
@@ -46,7 +48,8 @@ class RateLimiter {
   }
 }
 
-const henrikRateLimiter = new RateLimiter(30, 60_000)
+const henrikRpm = env.get('HENRIK_RPM') ?? DEFAULT_HENRIK_RPM
+const henrikRateLimiter = new RateLimiter(henrikRpm, 60_000)
 
 export { RateLimiter, henrikRateLimiter }
 
@@ -174,6 +177,25 @@ export default class ValorantApiService {
     return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
+  private static parseRetryAfterMs(headerValue: string | null): number | null {
+    if (!headerValue) return null
+    const trimmed = headerValue.trim()
+    if (!trimmed) return null
+
+    const seconds = Number(trimmed)
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      return Math.min(Math.ceil(seconds * 1000), MAX_RETRY_AFTER_MS)
+    }
+
+    const dateMs = Date.parse(trimmed)
+    if (!Number.isNaN(dateMs)) {
+      const delta = dateMs - Date.now()
+      if (delta > 0) return Math.min(delta, MAX_RETRY_AFTER_MS)
+    }
+
+    return null
+  }
+
   private static async fetchWithRetry(
     url: string,
     options: RequestInit,
@@ -191,9 +213,17 @@ export default class ValorantApiService {
       }
 
       if (response.status === 429 && attempt < retries) {
-        const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
+        const retryAfterMs = this.parseRetryAfterMs(response.headers.get('retry-after'))
+        const backoffMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
+        const delay = retryAfterMs ?? backoffMs
         logger.warn(
-          { url, status: 429, attempt: attempt + 1, delayMs: delay },
+          {
+            url,
+            status: 429,
+            attempt: attempt + 1,
+            delayMs: delay,
+            source: retryAfterMs !== null ? 'retry-after' : 'backoff',
+          },
           'Rate limited, retrying'
         )
         await this.sleep(delay)
