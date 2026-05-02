@@ -11,14 +11,22 @@
     @else
       <div class="space-y-4">
         @each(match in matches.all())
-          <div class="bg-valorant-gray rounded-lg p-6 border border-valorant-red/20">
+          @let(isPlayoffs = match.matchType === 'playoffs')
+          <div class="bg-valorant-gray rounded-lg p-6 border {{ isPlayoffs ? 'border-amber-400/60 ring-1 ring-amber-400/30 shadow-[0_0_24px_-12px_rgba(251,191,36,0.45)]' : 'border-valorant-red/20' }}">
             <div class="flex items-center justify-between">
               <!-- Column 1: Info (Stacked) -->
               <div class="flex-1 flex flex-col justify-center">
                 @let(displayMap = match.valorantMap ?? match.map)
-                <span class="text-xs text-valorant-light/50 uppercase mb-1">
-                  {{ match.scheduledAt.toFormat('dd LLL yyyy') }}
-                </span>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xs text-valorant-light/50 uppercase">
+                    {{ match.scheduledAt.toFormat('dd LLL yyyy') }}
+                  </span>
+                  @if(isPlayoffs)
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-400/15 text-amber-400 border border-amber-400/40">
+                      Playoffs
+                    </span>
+                  @endif
+                </div>
                 <h3 class="text-xl font-bold text-valorant-light leading-none mb-1">
                   vs {{ match.opponentName ?? 'Official Match' }}
                 </h3>
