@@ -15,57 +15,85 @@ export default class MatchStatsSyncService {
     const snapshot = await ValorantApiService.getMatchStatsSnapshot(targetMatchId)
     const syncedPlayers = snapshot.players
     const rosterPlayers = await User.query().whereNotNull('trackerggUsername')
+
     const riotIdToUserId = new Map<string, number>()
+    const puuidToUserId = new Map<string, number>()
 
     for (const player of rosterPlayers) {
       const parsed = ValorantApiService.parseRiotId(player.trackerggUsername || '')
-      if (!parsed) continue
-      const riotIdKey = `${parsed.name}#${parsed.tag}`.toLowerCase()
-      riotIdToUserId.set(riotIdKey, player.id)
+      if (parsed) {
+        const riotIdKey = `${parsed.name}#${parsed.tag}`.toLowerCase()
+        riotIdToUserId.set(riotIdKey, player.id)
+      }
+      if (player.puuid) {
+        puuidToUserId.set(player.puuid, player.id)
+      }
     }
 
-    const rosterAgentRecords = syncedPlayers
-      .map((entry) => {
-        const userId = riotIdToUserId.get(entry.riotId)
-        if (!userId) return null
-        if (!entry.agentKey) return null
-        return {
-          matchId: match.id,
-          userId,
-          agentKey: entry.agentKey,
-          kills: entry.kills,
-          deaths: entry.deaths,
-          assists: entry.assists,
+    // Map each snapshot entry to a user (puuid first since it's stable across
+    // Premier matches, then riot id as a fallback for non-Premier).
+    // When we match by riot id and the user has no stored puuid, learn it.
+    const resolveUserId = async (entry: (typeof syncedPlayers)[number]): Promise<number | null> => {
+      if (entry.puuid) {
+        const byPuuid = puuidToUserId.get(entry.puuid)
+        if (byPuuid) return byPuuid
+      }
+      if (entry.riotId) {
+        const byRiotId = riotIdToUserId.get(entry.riotId)
+        if (byRiotId) {
+          if (entry.puuid) {
+            const user = rosterPlayers.find((u) => u.id === byRiotId)
+            if (user && !user.puuid) {
+              user.puuid = entry.puuid
+              await user.save()
+              puuidToUserId.set(entry.puuid, user.id)
+            }
+          }
+          return byRiotId
         }
-      })
-      .filter(
-        (
-          record
-        ): record is {
-          matchId: number
-          userId: number
-          agentKey: string
-          kills: number | null
-          deaths: number | null
-          assists: number | null
-        } => Boolean(record && record.userId && record.agentKey)
-      )
+      }
+      return null
+    }
 
-    const syncedPlayerRecords = syncedPlayers.map((entry) => ({
-      matchId: match.id,
-      riotId: entry.riotId,
-      playerName: entry.playerName,
-      playerTag: entry.playerTag,
-      team: entry.team,
-      agentKey: entry.agentKey,
-      kills: entry.kills,
-      deaths: entry.deaths,
-      assists: entry.assists,
-      score: entry.score,
-      headshots: entry.headshots,
-      bodyshots: entry.bodyshots,
-      legshots: entry.legshots,
-    }))
+    const rosterAgentRecords: Array<{
+      matchId: number
+      userId: number
+      agentKey: string
+      kills: number | null
+      deaths: number | null
+      assists: number | null
+    }> = []
+    for (const entry of syncedPlayers) {
+      const userId = await resolveUserId(entry)
+      if (!userId || !entry.agentKey) continue
+      rosterAgentRecords.push({
+        matchId: match.id,
+        userId,
+        agentKey: entry.agentKey,
+        kills: entry.kills,
+        deaths: entry.deaths,
+        assists: entry.assists,
+      })
+    }
+
+    const syncedPlayerRecords = syncedPlayers
+      .filter((entry) => Boolean(entry.puuid))
+      .map((entry) => ({
+        matchId: match.id,
+        riotId: entry.riotId,
+        puuid: entry.puuid,
+        playerName: entry.playerName,
+        playerTag: entry.playerTag,
+        team: entry.team,
+        agentKey: entry.agentKey,
+        kills: entry.kills,
+        deaths: entry.deaths,
+        assists: entry.assists,
+        score: entry.score,
+        headshots: entry.headshots,
+        bodyshots: entry.bodyshots,
+        legshots: entry.legshots,
+      }))
 
     await MatchPlayerAgent.query().where('matchId', match.id).delete()
     await MatchSyncedPlayer.query().where('matchId', match.id).delete()

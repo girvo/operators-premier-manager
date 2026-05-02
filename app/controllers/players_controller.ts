@@ -4,6 +4,8 @@ import WeeklyAvailability from '#models/weekly_availability'
 import TimezoneService from '#services/timezone_service'
 import PlayerNudgeService from '#services/player_nudge_service'
 import { createPlayerValidator, updatePlayerValidator } from '#validators/player_validator'
+import ValorantApiService, { RateLimitError } from '#services/valorant_api_service'
+import logger from '@adonisjs/core/services/logger'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import * as fs from 'node:fs'
@@ -232,6 +234,61 @@ export default class PlayersController {
       session.flash('error', result.message)
     }
 
+    return response.redirect().back()
+  }
+
+  async syncPuuids({ session, response }: HttpContext) {
+    const candidates = await User.query()
+      .whereNotNull('trackerggUsername')
+      .whereNull('puuid')
+      .where('isOnRoster', true)
+
+    let resolved = 0
+    let notFound = 0
+    let errors = 0
+
+    for (const user of candidates) {
+      const parsed = ValorantApiService.parseRiotId(user.trackerggUsername || '')
+      if (!parsed) {
+        notFound++
+        continue
+      }
+
+      try {
+        const puuid = await ValorantApiService.getAccountByRiotId(parsed.name, parsed.tag)
+        if (!puuid) {
+          notFound++
+          continue
+        }
+        user.puuid = puuid
+        await user.save()
+        resolved++
+      } catch (error) {
+        errors++
+        if (error instanceof RateLimitError) {
+          const seconds = error.retryAfterMs ? Math.ceil(error.retryAfterMs / 1000) : null
+          session.flash(
+            'error',
+            seconds
+              ? `Rate limited mid-sync. Resolved ${resolved}, then stopped — try again in about ${seconds}s.`
+              : `Rate limited mid-sync. Resolved ${resolved} before stopping.`
+          )
+          return response.redirect().back()
+        }
+        logger.warn(
+          { userId: user.id, error: error instanceof Error ? error.message : String(error) },
+          'Failed to look up puuid for roster user'
+        )
+      }
+    }
+
+    const parts: string[] = []
+    if (resolved > 0) parts.push(`${resolved} resolved`)
+    if (notFound > 0) parts.push(`${notFound} not found`)
+    if (errors > 0) parts.push(`${errors} errored`)
+    if (candidates.length === 0) parts.push('nothing to sync — all roster users already have a puuid')
+
+    session.flash('success', `Puuid sync: ${parts.join(', ')}.`)
     return response.redirect().back()
   }
 }

@@ -49,13 +49,18 @@ export default class MatchesBackfillController {
       })
     }
 
+    // Roughly 5 matches per day for an active player. Cap at 8 pages (80 matches)
+    // so the longest 90-day search costs at most 8 API calls per mode.
+    const maxPages = Math.min(8, Math.max(3, Math.ceil(daysBack / 5)))
+
     try {
       const apiMatches = await ValorantApiService.getRecentMatches(
         riotIdParts.name,
         riotIdParts.tag,
         undefined,
         showAll,
-        daysBack
+        daysBack,
+        maxPages
       )
 
       const existingValorantIds = await this.findExistingValorantMatchIds(

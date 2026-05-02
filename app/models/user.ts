@@ -50,6 +50,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare trackerggUsername: string | null
 
   @column()
+  declare puuid: string | null
+
+  @column()
   declare isOnRoster: boolean
 
   @column()

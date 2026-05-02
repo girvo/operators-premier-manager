@@ -25,6 +25,19 @@
               class="px-4 py-2 bg-valorant-dark border border-valorant-red/30 text-valorant-light rounded hover:bg-valorant-red/20 transition"
             >Fetch from Valorant</button>
           @endif
+          @if(match.valorantMatchId)
+            <form
+              action="/matches/{{ match.id }}/resync-details"
+              method="POST"
+              onsubmit="return confirm('Re-fetch player stats from the Valorant API?')"
+            >
+              {{ csrfField() }}
+              <button
+                type="submit"
+                class="px-4 py-2 bg-valorant-dark border border-valorant-red/30 text-valorant-light rounded hover:bg-valorant-red/20 transition"
+              >Resync details</button>
+            </form>
+          @endif
           <a
             href="/matches/{{ match.id }}/edit"
             class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"

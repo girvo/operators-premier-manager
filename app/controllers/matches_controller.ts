@@ -356,6 +356,32 @@ export default class MatchesController {
     return response.send('')
   }
 
+  async resyncDetails({ params, response, session }: HttpContext) {
+    const match = await Match.findOrFail(params.id)
+
+    if (!match.valorantMatchId) {
+      session.flash('error', 'This match has no stored Valorant match ID to resync from.')
+      return response.redirect().back()
+    }
+
+    try {
+      const result = await MatchStatsSyncService.syncFromValorantMatchId(match)
+      session.flash(
+        'success',
+        `Resynced: ${result.syncedPlayersRows} players, ${result.rosterAgentRows} roster matches.`
+      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.warn(
+        { matchId: match.id, valorantMatchId: match.valorantMatchId, error: message },
+        'Failed to resync match player stats'
+      )
+      session.flash('error', `Resync failed: ${message}`)
+    }
+
+    return response.redirect().back()
+  }
+
   async sendNotification({ params, response }: HttpContext) {
     const match = await Match.find(params.id)
 

@@ -5,12 +5,25 @@
         Players
       </h1>
       @if(auth.user?.isAdmin)
-        <a
-          href="/players/new"
-          class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
-        >
-          Add Player
-      </a>
+        <div class="flex items-center gap-2">
+          <form
+            action="/players/sync-puuids"
+            method="POST"
+            onsubmit="return confirm('Look up puuids for roster players who don\'t have one yet? Uses 1 API call per player.')"
+          >
+            {{ csrfField() }}
+            <button
+              type="submit"
+              class="px-4 py-2 bg-valorant-dark border border-valorant-red/30 text-valorant-light hover:bg-valorant-red/10 rounded transition"
+            >Sync Riot puuids</button>
+          </form>
+          <a
+            href="/players/new"
+            class="px-4 py-2 bg-valorant-red text-white rounded hover:bg-valorant-red/80 transition"
+          >
+            Add Player
+          </a>
+        </div>
       @endif
     </div>
 

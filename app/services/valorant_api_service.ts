@@ -181,6 +181,7 @@ export interface ParsedMatch {
 
 export interface MatchPlayerStatEntry {
   riotId: string
+  puuid: string | null
   playerName: string
   playerTag: string
   team: 'Red' | 'Blue' | null
@@ -327,9 +328,11 @@ export default class ValorantApiService {
     const players = json?.data?.players?.all_players ?? []
     const parsedPlayers = players
       .map((player) => {
-        const name = typeof player.name === 'string' ? player.name.trim() : null
-        const tag = typeof player.tag === 'string' ? player.tag.trim() : null
-        if (!name || !tag) return null
+        // Premier matches return empty name/tag — fall back to puuid as the identifier.
+        const name = typeof player.name === 'string' ? player.name.trim() : ''
+        const tag = typeof player.tag === 'string' ? player.tag.trim() : ''
+        const puuid = typeof player.puuid === 'string' ? player.puuid.trim() : ''
+        if (!puuid && (!name || !tag)) return null
 
         const rawAgent =
           (typeof player.character === 'string' && player.character) ||
@@ -357,7 +360,8 @@ export default class ValorantApiService {
         const legshots = this.readNumber(player.legshots) ?? this.readNumber(stats?.legshots)
 
         return {
-          riotId: `${name}#${tag}`.toLowerCase(),
+          riotId: name && tag ? `${name}#${tag}`.toLowerCase() : '',
+          puuid: puuid || null,
           playerName: name,
           playerTag: tag,
           team,
@@ -379,13 +383,38 @@ export default class ValorantApiService {
     }
   }
 
+  // Henrik's /v1/account/{name}/{tag} endpoint returns the puuid for a Riot ID.
+  // Returns null if the account isn't found.
+  static async getAccountByRiotId(name: string, tag: string): Promise<string | null> {
+    const apiKey = env.get('HENRIK_API_KEY')
+    if (!apiKey) {
+      throw new Error('HENRIK_API_KEY is not configured')
+    }
+
+    const url = `https://api.henrikdev.xyz/valorant/v1/account/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`
+    let response: Response
+    try {
+      response = await this.fetchWithRetry(url, {
+        headers: { Authorization: apiKey },
+      })
+    } catch (error) {
+      // 404s come through fetchWithRetry as a thrown Error containing the status.
+      if (error instanceof Error && error.message.includes('404')) return null
+      throw error
+    }
+
+    const json = (await response.json()) as { data?: { puuid?: unknown } }
+    const puuid = json?.data?.puuid
+    return typeof puuid === 'string' && puuid.trim() ? puuid.trim() : null
+  }
+
   static async getRecentMatches(
     name: string,
     tag: string,
     region: string = 'ap',
     showAll: boolean = false,
     daysBack: number = 14,
-    maxPages: number = 10
+    maxPages: number = 3
   ): Promise<ParsedMatch[]> {
     const apiKey = env.get('HENRIK_API_KEY')
     if (!apiKey) {

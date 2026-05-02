@@ -14,6 +14,9 @@ export default class MatchSyncedPlayer extends BaseModel {
   declare riotId: string
 
   @column()
+  declare puuid: string | null
+
+  @column()
   declare playerName: string
 
   @column()

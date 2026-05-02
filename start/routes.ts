@@ -65,6 +65,7 @@ router
     router.delete('/players/:id', [PlayersController, 'destroy']).use(middleware.admin())
     router.delete('/players/:id/logo', [PlayersController, 'destroyLogo']).use(middleware.admin())
     router.post('/players/:id/nudge', [PlayersController, 'nudge']).use(middleware.admin())
+    router.post('/players/sync-puuids', [PlayersController, 'syncPuuids']).use(middleware.admin())
 
     router.get('/availability', [AvailabilityController, 'index'])
     router.get('/availability/compare', [AvailabilityController, 'compare']).use(middleware.admin())
@@ -89,6 +90,9 @@ router
       .use(middleware.admin())
     router
       .post('/matches/:id/fetch-valorant/save', [MatchesController, 'fetchFromValorantSave'])
+      .use(middleware.admin())
+    router
+      .post('/matches/:id/resync-details', [MatchesController, 'resyncDetails'])
       .use(middleware.admin())
     router
       .post('/matches/:id/notify', [MatchesController, 'sendNotification'])
