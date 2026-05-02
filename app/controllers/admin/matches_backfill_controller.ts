@@ -53,6 +53,8 @@ export default class MatchesBackfillController {
     // so the longest 90-day search costs at most 8 API calls per mode.
     const maxPages = Math.min(8, Math.max(3, Math.ceil(daysBack / 5)))
 
+    const premierTeamName = env.get('PREMIER_TEAM_NAME') ?? DEFAULT_PREMIER_TEAM_NAME
+
     try {
       const apiMatches = await ValorantApiService.getRecentMatches(
         riotIdParts.name,
@@ -60,7 +62,9 @@ export default class MatchesBackfillController {
         undefined,
         showAll,
         daysBack,
-        maxPages
+        maxPages,
+        player.puuid,
+        premierTeamName
       )
 
       const existingValorantIds = await this.findExistingValorantMatchIds(

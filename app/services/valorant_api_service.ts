@@ -10,6 +10,8 @@ const MAX_RETRIES = 3
 const INITIAL_RETRY_DELAY_MS = 1000
 const MAX_RETRY_AFTER_MS = 300_000
 const DEFAULT_HENRIK_RPM = 30
+// TODO: Swap this out later for non-beta API
+const HENRIK_API_URL = 'https://beta.api.henrikdev.xyz/valorant'
 
 class RateLimiter {
   private requests: number[] = []
@@ -304,7 +306,7 @@ export default class ValorantApiService {
       throw new Error('HENRIK_API_KEY is not configured')
     }
 
-    const url = `https://api.henrikdev.xyz/valorant/v2/match/${encodeURIComponent(matchId)}`
+    const url = `${HENRIK_API_URL}/v2/match/${encodeURIComponent(matchId)}`
     const response = await this.fetchWithRetry(url, {
       headers: {
         Authorization: apiKey,
@@ -391,7 +393,7 @@ export default class ValorantApiService {
       throw new Error('HENRIK_API_KEY is not configured')
     }
 
-    const url = `https://api.henrikdev.xyz/valorant/v1/account/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`
+    const url = `${HENRIK_API_URL}/v1/account/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`
     let response: Response
     try {
       response = await this.fetchWithRetry(url, {
@@ -414,7 +416,9 @@ export default class ValorantApiService {
     region: string = 'ap',
     showAll: boolean = false,
     daysBack: number = 14,
-    maxPages: number = 3
+    maxPages: number = 3,
+    puuid: string | null = null,
+    premierTeamName: string | null = null
   ): Promise<ParsedMatch[]> {
     const apiKey = env.get('HENRIK_API_KEY')
     if (!apiKey) {
@@ -423,7 +427,7 @@ export default class ValorantApiService {
 
     const encodedName = encodeURIComponent(name)
     const encodedTag = encodeURIComponent(tag)
-    const baseUrl = `https://api.henrikdev.xyz/valorant/v4/matches/${region}/pc/${encodedName}/${encodedTag}`
+    const baseUrl = `${HENRIK_API_URL}/v4/matches/${region}/pc/${encodedName}/${encodedTag}`
 
     // v4 API has max size=10 per request, need pagination for more matches
     const fetchMatchesPage = async (start: number, mode?: string) => {
@@ -526,7 +530,13 @@ export default class ValorantApiService {
           return null
         }
 
-        const playerTeam = this.findPlayerTeamV4(match, name, tag)
+        const playerTeam = this.findPlayerTeamV4WithFallbacks(
+          match,
+          name,
+          tag,
+          puuid,
+          premierTeamName
+        )
         if (!playerTeam) {
           return null
         }
@@ -572,7 +582,7 @@ export default class ValorantApiService {
       throw new Error('HENRIK_API_KEY is not configured')
     }
 
-    const url = `https://api.henrikdev.xyz/valorant/v4/match/${region}/${encodeURIComponent(matchId)}`
+    const url = `${HENRIK_API_URL}/v4/match/${region}/${encodeURIComponent(matchId)}`
     const response = await this.fetchWithRetry(url, {
       headers: { Authorization: apiKey },
     })
@@ -595,9 +605,7 @@ export default class ValorantApiService {
     // Strategy 2: Premier team name (Henrik returns empty player names for Premier).
     if (!ourTeam && premierTeamName) {
       const wanted = premierTeamName.trim().toLowerCase()
-      const ourSide = match.teams.find(
-        (t) => t.premier_roster?.name?.toLowerCase() === wanted
-      )
+      const ourSide = match.teams.find((t) => t.premier_roster?.name?.toLowerCase() === wanted)
       if (ourSide && (ourSide.team_id === 'Red' || ourSide.team_id === 'Blue')) {
         ourTeam = ourSide.team_id
       }
@@ -634,13 +642,22 @@ export default class ValorantApiService {
   private static getMatchTypeV4(
     match: HenrikV4Match
   ): { matchType: 'Premier' | 'Custom' | 'Other'; label: string | null } | null {
+    const queueId = match.metadata.queue.id.toLowerCase()
+    const queueName = match.metadata.queue.name
+
+    // Skirmish queues (e.g. "Skirmish B") have premier_roster populated but
+    // aren't real Premier matches — classify as Other so they're excluded by
+    // default and only show when showAll is on.
+    if (queueId.includes('skirmish') || queueName.toLowerCase().includes('skirmish')) {
+      return { matchType: 'Other', label: queueName || null }
+    }
+
     // Check premier roster info on teams
     if (match.teams.some((t) => t.premier_roster?.id)) {
       return { matchType: 'Premier', label: 'Premier' }
     }
 
     // Check queue id
-    const queueId = match.metadata.queue.id.toLowerCase()
     if (queueId === 'premier') {
       return { matchType: 'Premier', label: 'Premier' }
     }
@@ -658,7 +675,10 @@ export default class ValorantApiService {
   ): 'Red' | 'Blue' | null {
     const player = match.players.find(
       (p) =>
-        p.name.toLowerCase() === name.toLowerCase() && p.tag.toLowerCase() === tag.toLowerCase()
+        Boolean(p.name) &&
+        Boolean(p.tag) &&
+        p.name.toLowerCase() === name.toLowerCase() &&
+        p.tag.toLowerCase() === tag.toLowerCase()
     )
     if (!player) {
       return null
@@ -667,6 +687,37 @@ export default class ValorantApiService {
       return null
     }
     return player.team_id
+  }
+
+  // Riot removed name/tag from match details (April 2026), so name-only matching
+  // returns null on every recent match. Fall through: name+tag → puuid → Premier
+  // team name. Any of those is enough to identify which side is "us".
+  private static findPlayerTeamV4WithFallbacks(
+    match: HenrikV4Match,
+    name: string,
+    tag: string,
+    puuid: string | null,
+    premierTeamName: string | null
+  ): 'Red' | 'Blue' | null {
+    const byName = this.findPlayerTeamV4(match, name, tag)
+    if (byName) return byName
+
+    if (puuid) {
+      const byPuuid = match.players.find((p) => p.puuid === puuid)
+      if (byPuuid && (byPuuid.team_id === 'Red' || byPuuid.team_id === 'Blue')) {
+        return byPuuid.team_id
+      }
+    }
+
+    if (premierTeamName) {
+      const wanted = premierTeamName.trim().toLowerCase()
+      const team = match.teams.find((t) => t.premier_roster?.name?.toLowerCase() === wanted)
+      if (team && (team.team_id === 'Red' || team.team_id === 'Blue')) {
+        return team.team_id
+      }
+    }
+
+    return null
   }
 
   private static calculateScoresV4(

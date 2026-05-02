@@ -6,6 +6,7 @@ import WeeklyAvailability from '#models/weekly_availability'
 import { createMatchValidator, updateMatchValidator } from '#validators/match_validator'
 import { valorantScoreValidator } from '#validators/valorant_validator'
 import { DateTime } from 'luxon'
+import env from '#start/env'
 import ValorantApiService from '#services/valorant_api_service'
 import MatchStatsSyncService from '#services/match_stats_sync_service'
 import MatchSyncedPlayersOrderService from '#services/match_synced_players_order_service'
@@ -296,7 +297,11 @@ export default class MatchesController {
         riotIdParts.name,
         riotIdParts.tag,
         undefined,
-        showAll
+        showAll,
+        undefined,
+        undefined,
+        player.puuid,
+        env.get('PREMIER_TEAM_NAME') ?? 'OPERATORS'
       )
 
       return view.render('partials/valorant_fetch/step2_select_match', {

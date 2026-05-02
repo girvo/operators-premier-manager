@@ -78,22 +78,45 @@ export default class MatchStatsSyncService {
 
     const syncedPlayerRecords = syncedPlayers
       .filter((entry) => Boolean(entry.puuid))
-      .map((entry) => ({
-        matchId: match.id,
-        riotId: entry.riotId,
-        puuid: entry.puuid,
-        playerName: entry.playerName,
-        playerTag: entry.playerTag,
-        team: entry.team,
-        agentKey: entry.agentKey,
-        kills: entry.kills,
-        deaths: entry.deaths,
-        assists: entry.assists,
-        score: entry.score,
-        headshots: entry.headshots,
-        bodyshots: entry.bodyshots,
-        legshots: entry.legshots,
-      }))
+      .map((entry) => {
+        // Premier matches return empty names from Henrik — backfill from the
+        // matched roster user so the display isn't a row of agent names with
+        // no player identity. Opponent rows stay anonymous (we have no record).
+        let playerName = entry.playerName
+        let playerTag = entry.playerTag
+        if (!playerName && entry.puuid) {
+          const userId = puuidToUserId.get(entry.puuid)
+          if (userId) {
+            const user = rosterPlayers.find((u) => u.id === userId)
+            if (user) {
+              const parsed = ValorantApiService.parseRiotId(user.trackerggUsername || '')
+              if (parsed) {
+                playerName = parsed.name
+                playerTag = parsed.tag
+              } else if (user.fullName) {
+                playerName = user.fullName
+              }
+            }
+          }
+        }
+
+        return {
+          matchId: match.id,
+          riotId: entry.riotId,
+          puuid: entry.puuid,
+          playerName,
+          playerTag,
+          team: entry.team,
+          agentKey: entry.agentKey,
+          kills: entry.kills,
+          deaths: entry.deaths,
+          assists: entry.assists,
+          score: entry.score,
+          headshots: entry.headshots,
+          bodyshots: entry.bodyshots,
+          legshots: entry.legshots,
+        }
+      })
 
     await MatchPlayerAgent.query().where('matchId', match.id).delete()
     await MatchSyncedPlayer.query().where('matchId', match.id).delete()
