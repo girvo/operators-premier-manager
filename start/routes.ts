@@ -23,6 +23,7 @@ const AdminMatchesController = () => import('#controllers/admin/matches_controll
 const MatchesBackfillController = () =>
   import('#controllers/admin/matches_backfill_controller')
 const ScheduleController = () => import('#controllers/admin/schedule_controller')
+const SlotsController = () => import('#controllers/slots_controller')
 
 router.get('/uploads/*', async ({ request, response }) => {
   const filePath = app.makePath('storage', request.url())
@@ -49,6 +50,9 @@ router.get('/match-availability/respond/:token', [MatchAvailabilityResponseContr
 router
   .group(() => {
     router.get('/dashboard', [DashboardController, 'index'])
+
+    router.post('/slots/spin', [SlotsController, 'spin'])
+    router.post('/slots/reset', [SlotsController, 'reset']).use(middleware.admin())
 
     router.get('/settings/profile', [SettingsController, 'showProfile'])
     router.put('/settings/profile', [SettingsController, 'updateProfile'])

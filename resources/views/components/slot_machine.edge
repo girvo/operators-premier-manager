@@ -1,0 +1,426 @@
+{{-- Slot machine: floating button + modal --}}
+<style>
+  @keyframes slots-shake-mild {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-2px, 1px); }
+    40% { transform: translate(2px, -1px); }
+    60% { transform: translate(-1px, -2px); }
+    80% { transform: translate(1px, 2px); }
+  }
+  @keyframes slots-shake-medium {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-5px, -3px); }
+    20% { transform: translate(5px, 3px); }
+    30% { transform: translate(-4px, 4px); }
+    40% { transform: translate(4px, -4px); }
+    50% { transform: translate(-3px, 2px); }
+    60% { transform: translate(3px, -2px); }
+    70% { transform: translate(-2px, 3px); }
+    80% { transform: translate(2px, -3px); }
+    90% { transform: translate(-1px, 1px); }
+  }
+  @keyframes slots-shake-heavy {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    10% { transform: translate(-9px, -6px) rotate(-1deg); }
+    20% { transform: translate(8px, 6px) rotate(1deg); }
+    30% { transform: translate(-7px, 7px) rotate(-1deg); }
+    40% { transform: translate(7px, -7px) rotate(1deg); }
+    50% { transform: translate(-6px, 4px) rotate(-0.5deg); }
+    60% { transform: translate(6px, -4px) rotate(0.5deg); }
+    70% { transform: translate(-4px, 5px) rotate(-0.5deg); }
+    80% { transform: translate(4px, -5px) rotate(0.5deg); }
+    90% { transform: translate(-2px, 2px); }
+  }
+  .slots-shake-mild { animation: slots-shake-mild 350ms ease-in-out; }
+  .slots-shake-medium { animation: slots-shake-medium 600ms ease-in-out; }
+  .slots-shake-heavy { animation: slots-shake-heavy 900ms ease-in-out; }
+
+  @keyframes slots-reel-land {
+    0% { transform: translateY(-12px) scale(0.92); }
+    50% { transform: translateY(4px) scale(1.08); }
+    75% { transform: translateY(-2px) scale(0.98); }
+    100% { transform: translateY(0) scale(1); }
+  }
+  .slots-reel-land { animation: slots-reel-land 280ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+  @keyframes slots-win-glow {
+    0%, 100% { box-shadow: 0 0 12px 2px rgba(251, 191, 36, 0.55), inset 0 0 8px rgba(251, 191, 36, 0.25); border-color: rgba(251, 191, 36, 0.9); }
+    50% { box-shadow: 0 0 24px 6px rgba(251, 191, 36, 0.85), inset 0 0 16px rgba(251, 191, 36, 0.45); border-color: rgba(252, 211, 77, 1); }
+  }
+  .slots-reel-win { animation: slots-win-glow 900ms ease-in-out 2; }
+
+  @keyframes slots-jackpot-flash {
+    0%, 100% { background-color: rgb(38, 38, 38); }
+    25% { background-color: rgba(251, 191, 36, 0.18); }
+    50% { background-color: rgba(252, 211, 77, 0.28); }
+    75% { background-color: rgba(251, 191, 36, 0.14); }
+  }
+  .slots-jackpot-flash { animation: slots-jackpot-flash 1400ms ease-in-out; }
+
+  @keyframes slots-tense-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: rgba(251, 191, 36, 0.3); }
+    50% { box-shadow: 0 0 16px 3px rgba(239, 68, 68, 0.45); border-color: rgba(252, 165, 165, 0.7); }
+  }
+  .slots-tense { animation: slots-tense-pulse 280ms ease-in-out infinite; }
+</style>
+
+<button
+  type="button"
+  id="slots-fab"
+  onclick="document.getElementById('slots-modal').classList.remove('hidden')"
+  aria-label="Open slot machine"
+  class="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-amber-500 hover:bg-amber-400 text-2xl shadow-lg shadow-amber-500/30 transition flex items-center justify-center"
+>🎰</button>
+
+<div
+  id="slots-modal"
+  class="hidden fixed inset-0 z-50 flex items-center justify-center"
+>
+  <div
+    class="absolute inset-0 bg-black/70"
+    onclick="document.getElementById('slots-modal').classList.add('hidden')"
+  ></div>
+  <div
+    id="slots-panel"
+    class="relative bg-valorant-gray border border-amber-400/40 rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
+  >
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-bold text-amber-400">Lucky Spinner</h2>
+      <button
+        type="button"
+        onclick="document.getElementById('slots-modal').classList.add('hidden')"
+        class="text-valorant-light/60 hover:text-white text-2xl leading-none"
+        aria-label="Close"
+      >&times;</button>
+    </div>
+
+    <div class="flex items-center justify-between mb-4">
+      <div class="text-sm text-valorant-light/60">Balance</div>
+      <div id="slots-balance" class="text-2xl font-bold text-amber-400">${{ balance }}</div>
+    </div>
+
+    <div id="slots-reels" class="grid grid-cols-3 gap-2 mb-4">
+      <div class="reel bg-valorant-dark border border-amber-400/30 rounded h-24 flex items-center justify-center text-5xl select-none transition-colors" data-reel="0">🍒</div>
+      <div class="reel bg-valorant-dark border border-amber-400/30 rounded h-24 flex items-center justify-center text-5xl select-none transition-colors" data-reel="1">🍋</div>
+      <div class="reel bg-valorant-dark border border-amber-400/30 rounded h-24 flex items-center justify-center text-5xl select-none transition-colors" data-reel="2">🔔</div>
+    </div>
+
+    <div id="slots-result" class="text-center mb-4 min-h-[1.5rem] text-sm">
+      <span class="text-valorant-light/40">Place a bet and spin.</span>
+    </div>
+
+    @let(slotBetAmounts = [10, 50, 100, 500])
+    <div class="flex items-center gap-2 mb-3" role="group" aria-label="Bet amount">
+      @each(amount in slotBetAmounts)
+        @let(activeBet = amount === 10)
+        <button
+          type="button"
+          data-bet="{{ amount }}"
+          class="slots-bet flex-1 py-1.5 rounded text-sm border transition {{ activeBet ? 'bg-amber-500/20 text-amber-400 border-amber-400/40' : 'bg-valorant-dark text-valorant-light/70 border-valorant-light/10 hover:border-amber-400/40' }}"
+        >${{ amount }}</button>
+      @end
+    </div>
+
+    <button
+      type="button"
+      id="slots-spin"
+      class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold text-lg rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+    >SPIN</button>
+
+    <div class="mt-4 pt-3 border-t border-amber-400/10 text-xs text-valorant-light/50">
+      <details class="cursor-pointer">
+        <summary class="hover:text-valorant-light">Payouts</summary>
+        <ul class="mt-2 space-y-0.5 text-valorant-light/70">
+          <li>⭐⭐⭐ — 250×</li>
+          <li>💎💎💎 — 75×</li>
+          <li>🔔🔔🔔 — 20×</li>
+          <li>🍒🍒🍒 — 6×</li>
+          <li>🍋🍋🍋 — 3×</li>
+          <li>🍒🍒 (any) — 2×</li>
+        </ul>
+      </details>
+      <p class="mt-2 text-valorant-light/40">Out of credits? Ask an admin to reset your balance.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script>
+  (function () {
+    const SYMBOLS = {
+      star: '⭐',
+      diamond: '💎',
+      bell: '🔔',
+      cherry: '🍒',
+      lemon: '🍋',
+    };
+    const SYMBOL_KEYS = Object.keys(SYMBOLS);
+    const RARE_SYMBOLS = new Set(['star', 'diamond', 'bell']);
+
+    const panelEl = document.getElementById('slots-panel');
+    const balanceEl = document.getElementById('slots-balance');
+    const resultEl = document.getElementById('slots-result');
+    const spinBtn = document.getElementById('slots-spin');
+    const reelEls = Array.from(document.querySelectorAll('#slots-reels .reel'));
+    const betButtons = Array.from(document.querySelectorAll('.slots-bet'));
+
+    let currentBet = 10;
+    let spinning = false;
+    let lastDisplayedBalance = Number(balanceEl.textContent.replace(/[^\d]/g, '')) || 0;
+
+    function getCsrfToken() {
+      const meta = document.querySelector('meta[name="csrf-token"]');
+      return meta ? meta.getAttribute('content') : null;
+    }
+
+    function setBalanceImmediate(value) {
+      balanceEl.textContent = '$' + value;
+      lastDisplayedBalance = value;
+    }
+
+    function animateBalance(toValue, duration) {
+      const fromValue = lastDisplayedBalance;
+      if (fromValue === toValue) return;
+      const start = performance.now();
+      const dur = duration || 700;
+      function step(now) {
+        const t = Math.min(1, (now - start) / dur);
+        // ease-out cubic
+        const eased = 1 - Math.pow(1 - t, 3);
+        const v = Math.round(fromValue + (toValue - fromValue) * eased);
+        balanceEl.textContent = '$' + v;
+        if (t < 1) requestAnimationFrame(step);
+        else lastDisplayedBalance = toValue;
+      }
+      requestAnimationFrame(step);
+    }
+
+    function setResult(text, kind) {
+      resultEl.innerHTML = '';
+      const span = document.createElement('span');
+      span.textContent = text;
+      if (kind === 'win') span.className = 'text-amber-400 font-semibold';
+      else if (kind === 'jackpot') span.className = 'text-amber-300 font-bold animate-pulse text-lg';
+      else if (kind === 'loss') span.className = 'text-valorant-light/50';
+      else span.className = 'text-valorant-light/40';
+      resultEl.appendChild(span);
+    }
+
+    function shake(intensity) {
+      if (!intensity) return;
+      const cls =
+        intensity === 'heavy' ? 'slots-shake-heavy' :
+        intensity === 'medium' ? 'slots-shake-medium' :
+        'slots-shake-mild';
+      panelEl.classList.remove('slots-shake-mild', 'slots-shake-medium', 'slots-shake-heavy');
+      // force reflow so animation can re-trigger if same class is reapplied
+      void panelEl.offsetWidth;
+      panelEl.classList.add(cls);
+      setTimeout(() => panelEl.classList.remove(cls), 1000);
+    }
+
+    function highlightWinningReels(indices) {
+      indices.forEach((i) => {
+        const el = reelEls[i];
+        el.classList.remove('slots-reel-win');
+        void el.offsetWidth;
+        el.classList.add('slots-reel-win');
+      });
+    }
+
+    function jackpotFlash() {
+      panelEl.classList.remove('slots-jackpot-flash');
+      void panelEl.offsetWidth;
+      panelEl.classList.add('slots-jackpot-flash');
+      setTimeout(() => panelEl.classList.remove('slots-jackpot-flash'), 1500);
+    }
+
+    function bounceReel(index) {
+      const el = reelEls[index];
+      el.classList.remove('slots-reel-land');
+      void el.offsetWidth;
+      el.classList.add('slots-reel-land');
+    }
+
+    function fireConfetti(opts) {
+      if (typeof confetti !== 'function') return;
+      // origin from approximately the center of the modal
+      const rect = panelEl.getBoundingClientRect();
+      const originX = (rect.left + rect.width / 2) / window.innerWidth;
+      const originY = (rect.top + rect.height / 2) / window.innerHeight;
+      confetti(Object.assign({
+        particleCount: 80,
+        spread: 70,
+        origin: { x: originX, y: originY },
+        colors: ['#fbbf24', '#fcd34d', '#f59e0b', '#fde68a'],
+        zIndex: 60,
+      }, opts || {}));
+    }
+
+    function celebrate(multiplier, isJackpot) {
+      // Tier the celebration to the payout multiplier.
+      // 1=2cherry, 2=lemons, 3-6=cherries, 10-25=bell/diamond, 75=diamond, 100+=jackpot star
+      if (isJackpot || multiplier >= 100) {
+        // sky-darkening jackpot: multi-burst from both sides + heavy shake + screen flash
+        jackpotFlash();
+        shake('heavy');
+        const burst = (delay) => setTimeout(() => {
+          fireConfetti({ particleCount: 200, spread: 100, startVelocity: 55, origin: { x: 0.15, y: 0.6 }, angle: 60 });
+          fireConfetti({ particleCount: 200, spread: 100, startVelocity: 55, origin: { x: 0.85, y: 0.6 }, angle: 120 });
+          fireConfetti({ particleCount: 250, spread: 160, startVelocity: 45, scalar: 1.2 });
+        }, delay);
+        burst(0);
+        burst(250);
+        burst(500);
+        burst(800);
+      } else if (multiplier >= 50) {
+        // huge: dual cannons + heavy shake
+        shake('heavy');
+        fireConfetti({ particleCount: 150, spread: 90, startVelocity: 50, origin: { x: 0.2, y: 0.7 }, angle: 60 });
+        fireConfetti({ particleCount: 150, spread: 90, startVelocity: 50, origin: { x: 0.8, y: 0.7 }, angle: 120 });
+        setTimeout(() => fireConfetti({ particleCount: 250, spread: 140 }), 200);
+      } else if (multiplier >= 15) {
+        // big: medium shake + chunky burst
+        shake('medium');
+        fireConfetti({ particleCount: 220, spread: 100, startVelocity: 45 });
+      } else if (multiplier >= 5) {
+        // decent: mild shake + decent puff
+        shake('mild');
+        fireConfetti({ particleCount: 120, spread: 70 });
+      } else if (multiplier >= 2) {
+        // small win: little puff, no shake
+        fireConfetti({ particleCount: 50, spread: 50, startVelocity: 25 });
+      } else {
+        // 1x cherry-back: tiny puff
+        fireConfetti({ particleCount: 25, spread: 40, startVelocity: 20 });
+      }
+    }
+
+    betButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (spinning) return;
+        currentBet = Number(btn.dataset.bet);
+        betButtons.forEach((b) => {
+          if (b === btn) {
+            b.className = 'slots-bet flex-1 py-1.5 rounded text-sm border transition bg-amber-500/20 text-amber-400 border-amber-400/40';
+          } else {
+            b.className = 'slots-bet flex-1 py-1.5 rounded text-sm border transition bg-valorant-dark text-valorant-light/70 border-valorant-light/10 hover:border-amber-400/40';
+          }
+        });
+      });
+    });
+
+    // Animate reels with staggered stops, optional near-miss tension on the 3rd reel.
+    function animateReels(finalSymbols) {
+      // Detect near-miss: first two reels match a rare symbol but third doesn't.
+      const isNearMiss =
+        finalSymbols[0] === finalSymbols[1] &&
+        finalSymbols[1] !== finalSymbols[2] &&
+        RARE_SYMBOLS.has(finalSymbols[0]);
+
+      // Base durations; if near-miss, drag the third reel out for suspense.
+      const reelDurations = isNearMiss ? [700, 950, 1900] : [700, 950, 1200];
+
+      const startTime = performance.now();
+      const landed = [false, false, false];
+
+      return new Promise((resolve) => {
+        function tick(now) {
+          const elapsed = now - startTime;
+          let allDone = true;
+
+          // Apply tense pulse to reel 3 once the first two have landed during a near-miss
+          if (isNearMiss && landed[1] && !landed[2]) {
+            reelEls[2].classList.add('slots-tense');
+          }
+
+          reelEls.forEach((el, i) => {
+            if (elapsed >= reelDurations[i]) {
+              if (!landed[i]) {
+                el.textContent = SYMBOLS[finalSymbols[i]];
+                bounceReel(i);
+                if (i === 2) reelEls[2].classList.remove('slots-tense');
+                landed[i] = true;
+              }
+            } else {
+              allDone = false;
+              const k = SYMBOL_KEYS[Math.floor(Math.random() * SYMBOL_KEYS.length)];
+              el.textContent = SYMBOLS[k];
+            }
+          });
+          if (allDone) resolve();
+          else requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }
+
+    function winningReelIndices(reels) {
+      if (reels[0] === reels[1] && reels[1] === reels[2]) return [0, 1, 2];
+      // 2-cherry (any positions)
+      if (reels.filter((r) => r === 'cherry').length === 2) {
+        return reels.map((r, i) => (r === 'cherry' ? i : -1)).filter((i) => i >= 0);
+      }
+      return [];
+    }
+
+    spinBtn.addEventListener('click', async () => {
+      if (spinning) return;
+      spinning = true;
+      spinBtn.disabled = true;
+      // Clear previous win highlights
+      reelEls.forEach((el) => el.classList.remove('slots-reel-win'));
+      setResult('Spinning...', 'neutral');
+
+      // Optimistically debit the bet visually so balance count-up on win feels meaningful
+      const beforeBalance = lastDisplayedBalance;
+      setBalanceImmediate(Math.max(0, beforeBalance - currentBet));
+
+      try {
+        const res = await fetch('/slots/spin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken() || '',
+          },
+          body: JSON.stringify({ bet: currentBet }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          // Roll back the optimistic debit if the spin failed
+          if (typeof data.balance === 'number') setBalanceImmediate(data.balance);
+          else setBalanceImmediate(beforeBalance);
+          setResult(data.error || 'Spin failed.', 'loss');
+          return;
+        }
+
+        await animateReels(data.reels);
+
+        const winIndices = winningReelIndices(data.reels);
+        if (data.win && winIndices.length > 0) {
+          highlightWinningReels(winIndices);
+          const isJackpot = data.reels.every((r) => r === 'star');
+          const multiplier = data.payout / data.bet;
+          celebrate(multiplier, isJackpot);
+          // Animate balance up after a tiny beat so the reels finish settling first
+          setTimeout(() => animateBalance(data.balance, 900), 150);
+          setResult(
+            (isJackpot ? 'JACKPOT! ' : '') + (data.payoutLabel || 'You win!') + ' +$' + data.payout,
+            isJackpot ? 'jackpot' : 'win'
+          );
+        } else {
+          setBalanceImmediate(data.balance);
+          setResult('No win — try again.', 'loss');
+        }
+      } catch (err) {
+        // Roll back optimistic debit on network error
+        setBalanceImmediate(beforeBalance);
+        setResult('Network error.', 'loss');
+      } finally {
+        spinning = false;
+        spinBtn.disabled = false;
+      }
+    });
+  })();
+</script>

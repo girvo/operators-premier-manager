@@ -36,6 +36,24 @@ start/
 
 **IMPORTANT**: All Edge `@` tags MUST be on their own line to be parsed correctly. Never put `@tag()` inline with HTML on the same line - Edge will output it as literal text.
 
+### Edge.js scope: `@include` vs `@!component`
+
+The single most error-prone area in Edge.js v6 is variable scope across templates. Internalize these rules:
+
+- **`@let` is a real JS `let`** — block-scoped. A binding declared inside `@if(foo)` is NOT visible after the `@endif`. The CLAUDE memory note about "Cannot access before initialization" is one symptom of this; "X is not defined" at runtime is another.
+- **`@include('path')` inlines the partial into the parent's scope.** The partial sees every `@let` the parent has declared *up to that point in execution*. This sounds convenient but is the trap: if the parent declared `@let(match = ...)` inside a conditional that didn't run, and *anywhere later in the parent template* — including inside a different included partial — references `match`, you get `ReferenceError: match is not defined` reported at the `@include` line, even when neither the partial nor the line in question references `match` directly. The error message points at the include site, not the actual reference.
+- **`@!component('components/foo', { props })` has ISOLATED scope.** The component only sees the props you pass it (accessed as plain variables: `{{ balance }}`, not `{{ $props.balance }}`). It does NOT inherit the parent's `@let` bindings, which means it can't break when the parent's conditional `@let`s don't get declared.
+
+**Rule of thumb**: prefer `@!component` over `@include` whenever the partial doesn't genuinely need the parent's scope. Use `@include` only when the partial truly needs to read the parent's local variables (e.g., the existing `partials/match_availability_buttons.edge` which reads `match` and `compact`).
+
+**If an `@include` errors with "X is not defined" at the include line**: don't bother grepping the partial for X — the partial doesn't reference it. The cause is almost always a parent `@let(X = ...)` declared inside a conditional that didn't execute. Either hoist the `@let` to before any conditional, or convert the include to a component.
+
+### Looking up Edge.js docs
+
+- Primary docs: <https://edgejs.dev/docs/> — best source for current behavior. Sections: `templates_state` (variables, `@let`, `@each`), `partials` (`@include`), `components/introduction` (`@component` / `@!component`).
+- Adonis-flavored docs: <https://docs.adonisjs.com/guides/views-and-templates/edgejs> — integration-specific patterns.
+- The codebase ships with edge.js v6.4.0 (see `node_modules/.pnpm/edge.js@6.4.0/`); when behavior is ambiguous, the compiled JS in `build/index.js` and `build/js-stringify-*.js` is authoritative.
+
 **Controllers**: Return `view.render('pages/...')` for full pages, or partials for htmx requests. Check `request.header('HX-Request')` to detect htmx.
 
 **Auth**: Two roles: `admin` and `player`. Admins can mutate; players read-only. Use `middleware.admin()` on routes.

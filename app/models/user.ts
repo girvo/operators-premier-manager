@@ -53,6 +53,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare puuid: string | null
 
   @column()
+  declare slotBalance: number
+
+  @column()
   declare isOnRoster: boolean
 
   @column()

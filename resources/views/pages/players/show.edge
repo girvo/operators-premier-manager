@@ -31,6 +31,19 @@
             Edit Player
           </a>
           @include('partials/player_nudge_controls')
+          <form
+            action="/slots/reset"
+            method="POST"
+            onsubmit="return confirm('Reset {{ player.fullName ?? player.email }}\'s slot balance to $5000?')"
+          >
+            {{ csrfField() }}
+            <input type="hidden" name="userId" value="{{ player.id }}" />
+            <button
+              type="submit"
+              class="px-3 py-1.5 text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-400/30 rounded transition"
+              title="Current balance: ${{ player.slotBalance }}"
+            >Reset slot balance (${{ player.slotBalance }})</button>
+          </form>
         </div>
       @endif
     </div>

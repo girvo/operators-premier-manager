@@ -9,8 +9,8 @@
       </p>
     </div>
 
+    @let(mapSlug = nextMatch && nextMatch.map ? nextMatch.map.toLowerCase().replace(/\s+/g, '-') : null)
     @if(nextMatch)
-      @let(mapSlug = nextMatch.map ? nextMatch.map.toLowerCase().replace(/\s+/g, '-') : null)
       <div class="relative rounded-lg border border-valorant-red/20 bg-valorant-gray">
         @if(mapSlug)
           <div class="absolute right-0 top-0 bottom-0 w-1/2 md:w-2/5 overflow-hidden rounded-r-lg">
@@ -135,5 +135,6 @@
         </div>
       </div>
     @endif
+    @!component('components/slot_machine', { balance: auth.user.slotBalance })
   </div>
 @end
