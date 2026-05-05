@@ -8,11 +8,23 @@
 
     <div class="bg-valorant-gray rounded-lg border border-valorant-red/20 p-6">
       <p class="text-sm text-valorant-light/70 mb-4">
-        Select a map for each week. Each week creates 4 matches: Prac Wed 6pm, Prac Wed 7pm, Official Thu 6pm, Official Thu 7pm.
+        Select a starting Wednesday and a map for each week. Each week creates 4 matches: Prac Wed 7pm, Prac Wed 8pm, Official Thu 7pm, Official Thu 8pm (Sydney time).
       </p>
 
       <form action="/admin/schedule" method="POST" id="bulk-schedule-form">
         {{ csrfField() }}
+
+        <div class="flex items-center gap-4 mb-6">
+          <label for="start-date" class="text-sm font-medium text-valorant-light">Start Wednesday</label>
+          <input
+            type="date"
+            id="start-date"
+            name="startDate"
+            value="{{ startDateIso }}"
+            required
+            class="bg-valorant-dark border border-valorant-red/30 rounded px-3 py-2 text-sm text-valorant-light focus:border-valorant-red focus:outline-none"
+          />
+        </div>
 
         <div id="weeks-container" class="space-y-4">
           <div class="week-row flex items-center gap-4" data-week-index="0">
@@ -65,12 +77,47 @@
 
   <script>
     (() => {
-      const weeks = {{{ JSON.stringify(weeks) }}};
       const mapsJson = {{{ JSON.stringify(maps.map(m => m.name)) }}};
       const mapsOptionsHtml = mapsJson.map(name => `<option value="${name}">${name}</option>`).join('');
       const container = document.getElementById('weeks-container');
       const addBtn = document.getElementById('add-week-btn');
       const countEl = document.getElementById('week-count');
+      const startDateInput = document.getElementById('start-date');
+
+      const dayShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const monthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      const fmt = (d) => `${dayShort[d.getDay()]} ${d.getDate()} ${monthShort[d.getMonth()]}`;
+
+      const computeWeeks = () => {
+        const value = startDateInput.value;
+        if (!value) return [];
+        const [y, m, d] = value.split('-').map(Number);
+        const start = new Date(y, m - 1, d);
+        return Array.from({ length: 7 }, (_, i) => {
+          const wed = new Date(start);
+          wed.setDate(wed.getDate() + i * 7);
+          const thu = new Date(wed);
+          thu.setDate(thu.getDate() + 1);
+          return {
+            index: i,
+            label: `Week ${i + 1}`,
+            wedDate: fmt(wed),
+            thuDate: fmt(thu),
+          };
+        });
+      };
+
+      const refreshLabels = () => {
+        const weeks = computeWeeks();
+        const rows = container.querySelectorAll('.week-row');
+        rows.forEach((row, i) => {
+          const week = weeks[i];
+          if (!week) return;
+          row.querySelector('.text-sm.font-medium').textContent = week.label;
+          row.querySelector('.text-xs').textContent = week.wedDate + ' / ' + week.thuDate;
+        });
+      };
 
       const updateState = () => {
         const rows = container.querySelectorAll('.week-row');
@@ -92,7 +139,7 @@
         const nextIndex = rows.length;
         if (nextIndex >= 7) return;
 
-        const week = weeks[nextIndex];
+        const week = computeWeeks()[nextIndex];
         const row = document.createElement('div');
         row.className = 'week-row flex items-center gap-4';
         row.dataset.weekIndex = nextIndex;
@@ -125,19 +172,12 @@
         if (e.target.closest('.remove-week-btn')) {
           const row = e.target.closest('.week-row');
           row.remove();
-
-          // Re-index remaining rows
-          const rows = container.querySelectorAll('.week-row');
-          rows.forEach((r, i) => {
-            r.dataset.weekIndex = i;
-            const week = weeks[i];
-            r.querySelector('.text-sm.font-medium').textContent = week.label;
-            r.querySelector('.text-xs').textContent = week.wedDate + ' / ' + week.thuDate;
-          });
-
+          refreshLabels();
           updateState();
         }
       });
+
+      startDateInput.addEventListener('change', refreshLabels);
 
       updateState();
     })();

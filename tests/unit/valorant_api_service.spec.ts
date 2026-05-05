@@ -19,7 +19,9 @@ function makeHenrikV4Match(overrides: {
 }) {
   const name = overrides.playerName ?? 'TestPlayer'
   const tag = overrides.playerTag ?? 'NA1'
-  const startedAt = overrides.startedAt ?? '2026-04-01T12:00:00.000Z'
+  // Default to "now" so the daysBack cutoff (default 14 days) doesn't drop the
+  // match as the test suite ages.
+  const startedAt = overrides.startedAt ?? new Date().toISOString()
   const queueName = overrides.queueName ?? overrides.queueId
 
   const redTeam = {

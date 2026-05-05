@@ -217,17 +217,25 @@ export default class MatchesBackfillController {
       valorantMatchId: payload.valorantMatchId,
     })
 
+    let statsSyncError: string | null = null
     try {
       await MatchStatsSyncService.syncFromValorantMatchId(match, payload.valorantMatchId)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      statsSyncError = error instanceof Error ? error.message : String(error)
       logger.warn(
-        { matchId: match.id, valorantMatchId: payload.valorantMatchId, error: errorMessage },
+        { matchId: match.id, valorantMatchId: payload.valorantMatchId, error: statsSyncError },
         'Failed to sync player stats during match backfill'
       )
     }
 
-    session.flash('success', `Match backfilled (#${match.id}).`)
+    if (statsSyncError) {
+      session.flash(
+        'success',
+        `Match backfilled (#${match.id}), but player stats sync failed: ${statsSyncError}. Use "Resync details" on the match page to retry.`
+      )
+    } else {
+      session.flash('success', `Match backfilled (#${match.id}).`)
+    }
     response.header('HX-Redirect', `/matches/${match.id}`)
     return response.send('')
   }

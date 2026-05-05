@@ -11,7 +11,7 @@ const INITIAL_RETRY_DELAY_MS = 1000
 const MAX_RETRY_AFTER_MS = 300_000
 const DEFAULT_HENRIK_RPM = 30
 // TODO: Swap this out later for non-beta API
-const HENRIK_API_URL = 'https://beta.api.henrikdev.xyz/valorant'
+const HENRIK_API_URL = 'https://api.henrikdev.xyz/valorant'
 
 class RateLimiter {
   private requests: number[] = []
@@ -140,6 +140,7 @@ const henrikV4MatchSchema = vine
           .object({
             id: vine.string(),
             name: vine.string(),
+            mode_type: vine.string().optional(),
           })
           .allowUnknownProperties(),
         premier: vine
@@ -644,11 +645,18 @@ export default class ValorantApiService {
   ): { matchType: 'Premier' | 'Custom' | 'Other'; label: string | null } | null {
     const queueId = match.metadata.queue.id.toLowerCase()
     const queueName = match.metadata.queue.name
+    const queueModeType = (match.metadata.queue.mode_type || '').toLowerCase()
+    const mapName = match.metadata.map.name.toLowerCase()
 
-    // Skirmish queues (e.g. "Skirmish B") have premier_roster populated but
-    // aren't real Premier matches — classify as Other so they're excluded by
-    // default and only show when showAll is on.
-    if (queueId.includes('skirmish') || queueName.toLowerCase().includes('skirmish')) {
+    // Skirmish matches come back as queue.id 'custom' with queue.mode_type 'Skirmish'
+    // and a map name like "Skirmish B" — they aren't real Premier matches.
+    // Classify as Other so they're excluded by default and only show when showAll is on.
+    if (
+      queueId.includes('skirmish') ||
+      queueName.toLowerCase().includes('skirmish') ||
+      queueModeType.includes('skirmish') ||
+      mapName.includes('skirmish')
+    ) {
       return { matchType: 'Other', label: queueName || null }
     }
 

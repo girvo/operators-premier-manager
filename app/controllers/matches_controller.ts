@@ -317,7 +317,7 @@ export default class MatchesController {
     }
   }
 
-  async fetchFromValorantSave({ params, request, response, view }: HttpContext) {
+  async fetchFromValorantSave({ params, request, response, view, session }: HttpContext) {
     const match = await Match.findOrFail(params.id)
 
     let payload: {
@@ -347,16 +347,23 @@ export default class MatchesController {
 
     await match.save()
 
+    let statsSyncError: string | null = null
     try {
       await MatchStatsSyncService.syncFromValorantMatchId(match, payload.matchId)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      statsSyncError = error instanceof Error ? error.message : String(error)
       logger.warn(
-        { matchId: match.id, valorantMatchId: payload.matchId, error: errorMessage },
+        { matchId: match.id, valorantMatchId: payload.matchId, error: statsSyncError },
         'Failed to sync match player stats from Valorant API'
       )
     }
 
+    if (statsSyncError) {
+      session.flash(
+        'error',
+        `Score saved, but player stats sync failed: ${statsSyncError}. Use "Resync details" to retry.`
+      )
+    }
     response.header('HX-Trigger', 'valorantScoreSaved')
     return response.send('')
   }

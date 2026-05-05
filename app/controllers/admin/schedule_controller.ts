@@ -23,28 +23,32 @@ export default class ScheduleController {
       }
     })
 
-    return view.render('pages/admin/schedule/index', { maps, weeks })
+    return view.render('pages/admin/schedule/index', {
+      maps,
+      weeks,
+      startDateIso: nextWednesday.toISODate(),
+    })
   }
 
-  async store({ request, response, session, auth }: HttpContext) {
-    const user = auth.user!
+  async store({ request, response, session }: HttpContext) {
     const data = await request.validateUsing(bulkScheduleValidator)
 
-    const now = DateTime.now().setZone(user.timezone)
-    const nextWednesday = this.#getNextWednesday(now)
+    // Matches are anchored to Sydney local time: 7pm/8pm year-round in Sydney.
+    // Brisbane (no DST) sees 7pm/8pm in winter and 6pm/7pm in summer as AEDT shifts UTC.
+    const startWed = DateTime.fromISO(data.startDate, { zone: 'Australia/Sydney' })
 
     let matchCount = 0
 
     for (let i = 0; i < data.maps.length; i++) {
       const mapName = data.maps[i]
-      const wed = nextWednesday.plus({ weeks: i })
+      const wed = startWed.plus({ weeks: i })
       const thu = wed.plus({ days: 1 })
 
       const schedules = [
-        { date: wed, hour: 18, matchType: 'prac' as const },
         { date: wed, hour: 19, matchType: 'prac' as const },
-        { date: thu, hour: 18, matchType: 'official' as const },
+        { date: wed, hour: 20, matchType: 'prac' as const },
         { date: thu, hour: 19, matchType: 'official' as const },
+        { date: thu, hour: 20, matchType: 'official' as const },
       ]
 
       for (const schedule of schedules) {
